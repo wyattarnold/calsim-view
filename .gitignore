@@ -1,3 +1,20 @@
+.vscode/
+*.code-workspace
+.DS_Store
+*.log
+
+# Reference material (large PDFs, XML docs, raw CalSim source files incl. GeoSchematic) — local only, not tracked in git
+# network/ and study/ compiled artifacts ARE tracked
+reference/
+
+# Old package directory — renamed to csview/; delete manually after closing VS Code
+calsim/
+
+# Frontend (Node.js / Vite)
+node_modules/
+.vite/
+csview/app/frontend/dist/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
