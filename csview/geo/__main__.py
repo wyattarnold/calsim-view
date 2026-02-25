@@ -54,6 +54,19 @@ def main() -> None:
         help="Output directory (default: ./network/).",
     )
     parser.add_argument("--verbose", "-v", action="store_true")
+    parser.add_argument(
+        "--diagnose",
+        action="store_true",
+        help="Run topology diagnostics (requires --wresl) and write network_diagnostics.json.",
+    )
+    parser.add_argument(
+        "--fix-topology",
+        action="store_true",
+        help=(
+            "Patch from_node/to_node mismatches using WRESL-derived endpoints "
+            "(requires --diagnose). Does not modify source GeoJSON."
+        ),
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -68,10 +81,69 @@ def main() -> None:
     gn = load_from_dir(args.geo_dir, wresl_dir=args.wresl)
 
     # -----------------------------------------------------------------------
-    # 2. Write output directory
+    # 2. Optional topology diagnostics + in-memory patches
     # -----------------------------------------------------------------------
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
+
+    report = None
+    if args.diagnose:
+        if args.wresl is None:
+            print("\nWARNING: --diagnose requires --wresl; skipping diagnostics.")
+        else:
+            from csview.geo.diagnostics import run_diagnostics
+            from csview.geo.loader import rebuild_geojson
+            from csview.geo.wresl_parser import parse_connectivity, parse_system_tables
+
+            wresl_cat = parse_system_tables(args.wresl)
+            connectivity = parse_connectivity(args.wresl)
+            report = run_diagnostics(gn, connectivity, wresl_catalog=wresl_cat)
+
+            # Mark arcs with GeoJSON geometry that never appear in any
+            # WRESL flow-balance equation as solver_active=False.
+            no_conn_ids = {i.feature_id for i in report.by_kind("arc_no_connectivity")}
+            for arc_id in no_conn_ids:
+                if arc_id in gn.arcs:
+                    gn.arcs[arc_id].solver_active = False
+            if no_conn_ids:
+                print(f"  solver_active=False applied to {len(no_conn_ids)} arcs.")
+
+            # Optional: patch from_node / to_node for confirmed mismatches.
+            if args.fix_topology:
+                n_from = n_to = 0
+                for iss in report.by_kind("from_node_mismatch"):
+                    if iss.feature_id in gn.arcs and iss.wresl_value:
+                        gn.arcs[iss.feature_id].from_node = iss.wresl_value
+                        n_from += 1
+                for iss in report.by_kind("to_node_mismatch"):
+                    if iss.feature_id in gn.arcs and iss.wresl_value:
+                        gn.arcs[iss.feature_id].to_node = iss.wresl_value
+                        n_to += 1
+                print(f"  Topology fixes: {n_from} from_node, {n_to} to_node patched.")
+
+            # Annotate nodes with arc variables that the solver references but
+            # have no geometry in the GeoSchematic.
+            no_geo_ids = {i.feature_id for i in report.by_kind("arc_no_geo")}
+            for arc_id in no_geo_ids:
+                for node_id in {report.wresl_from.get(arc_id),
+                                report.wresl_to.get(arc_id)}:
+                    if node_id and node_id in gn.nodes:
+                        if arc_id not in gn.nodes[node_id].missing_arcs:
+                            gn.nodes[node_id].missing_arcs.append(arc_id)
+
+            # Annotate geo arcs with their probable WRESL counterpart when
+            # the two differ only in downstream node label (arc_endpoint_suggestion).
+            for geo_arc_id, wresl_arc_id in report.arc_suggestions.items():
+                if geo_arc_id in gn.arcs:
+                    gn.arcs[geo_arc_id].wresl_suggestion = wresl_arc_id
+
+            # Rebuild GeoJSON to include solver_active, patched topology, and
+            # missing_arcs / wresl_suggestion annotations.
+            rebuild_geojson(gn)
+
+    # -----------------------------------------------------------------------
+    # 3. Write output artifacts
+    # -----------------------------------------------------------------------
 
     # catalog.json
     catalog = {
@@ -91,22 +163,26 @@ def main() -> None:
                 "c2vsim_sw":    node.c2vsim_sw,
                 "calsim2_id":   node.calsim2_id,
                 "dss_variables": node.dss_variables,
+                "missing_arcs":  node.missing_arcs,
             }
             for cs3_id, node in gn.nodes.items()
         },
         "arcs": {
             arc_id: {
-                "arc_id":      arc.arc_id,
-                "name":        arc.name,
-                "arc_type":    arc.arc_type,
-                "sub_type":    arc.sub_type,
-                "from_node":   arc.from_node,
-                "to_node":     arc.to_node,
-                "hydro_region": arc.hydro_region,
-                "description": arc.description,
-                "coordinates": arc.coordinates,
-                "units":       arc.units,
-                "kind":        arc.kind,
+                "arc_id":          arc.arc_id,
+                "name":            arc.name,
+                "arc_type":        arc.arc_type,
+                "sub_type":        arc.sub_type,
+                "from_node":       arc.from_node,
+                "to_node":         arc.to_node,
+                "hydro_region":    arc.hydro_region,
+                "description":     arc.description,
+                "coordinates":     arc.coordinates,
+                "units":           arc.units,
+                "kind":            arc.kind,
+                "capacity_cfs":    arc.capacity_cfs,
+                "solver_active":   arc.solver_active,
+                "wresl_suggestion": arc.wresl_suggestion,
             }
             for arc_id, arc in gn.arcs.items()
         },
@@ -142,6 +218,17 @@ def main() -> None:
             "  NOTE: no variable->node mappings built."
             " Run the results builder next to populate them."
         )
+
+    # -----------------------------------------------------------------------
+    # 4. Print diagnostics summary
+    # -----------------------------------------------------------------------
+    if report is not None:
+        print(f"\n{report.summary()}")
+        diag_path = out / "network_diagnostics.json"
+        diag_path.write_text(
+            json.dumps(report.to_dict(), indent=2), encoding="utf-8"
+        )
+        print(f"  Diagnostics written to: {diag_path}")
 
 
 if __name__ == "__main__":

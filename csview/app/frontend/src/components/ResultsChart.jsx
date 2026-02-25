@@ -146,9 +146,12 @@ function ToggleLegend({ keys, hidden, onToggle, keyLabels = {} }) {
 function ChartTooltip({ active, payload, label, yUnit = "", keyLabels = {} }) {
   if (!active || !payload?.length) return null;
   // Remap _stk_{key} entries → original key + unclamped value from the full row.
-  // Filter out _top_{key} entries (outline lines, not data).
+  // Filter out _top_{key}, _stk_rev_{key}, _top_rev_{key} entries (visual-only).
   const items = payload
-    .filter((p) => !String(p.dataKey).startsWith("_top_"))
+    .filter((p) => {
+      const dk = String(p.dataKey);
+      return !dk.startsWith("_top_") && !dk.startsWith("_stk_rev_") && !dk.startsWith("_top_rev_");
+    })
     .map((p) => {
       const dk = String(p.dataKey);
       if (dk.startsWith("_stk_")) {
@@ -276,53 +279,89 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
     : (() => { for (const k of keys) { const u = metadata?.[k]?.units; if (u) return ` ${u}`; } return ""; })();
 
   const data = buildChartData(series, dateRange, negateKeys, convertFn, cfsKeys.size > 0 ? cfsKeys : null);
-  const visibleKeys = keys.filter((k) => !hidden.has(k));
-
-  const allVals = data.flatMap((row) =>
-    visibleKeys.map((k) => row[k]).filter((v) => v != null && !isNaN(v))
-  );
-  const yDomain = useMemo(() => {
-    if (allVals.length === 0) return ["auto", "auto"];
-    const mn = Math.min(...allVals);
-    const mx = Math.max(...allVals);
-    const pad = (mx - mn) * 0.05 || Math.abs(mx) * 0.05 || 1;
-    return [Math.min(mn - pad, 0), Math.max(mx + pad, 0)];
-  }, [hidden, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clamped stacking values + cumulative tops.
   //
-  // CalSim flow series occasionally dip negative even for "inflow" arcs (model
-  // deficits / routing artefacts).  If we stack raw values the cumulative tops
-  // are non-monotone and the outline Lines cross each other.  Fix: clamp each
-  // series to its expected sign before accumulating so the cumulative is
-  // guaranteed monotone.  The original (unclamped) values stay in `row[k]` for
-  // the tooltip.
+  // Channels can carry negative flows (reverse direction).  After
+  // buildChartData negates "out" keys, a reverse-flow "out" arc turns
+  // positive.  We clamp each key to its expected sign for monotone
+  // stacking (prevents outline line crossings), and place the
+  // reverse-sign portion in the *opposite* stack as a synthetic
+  // `_stk_rev_` / `_top_rev_` key so it remains visible.
   //
-  // Only visible keys contribute — hidden Areas are excluded from Recharts'
-  // own stack, so our manual tops must match.
+  // Only visible keys contribute — hidden Areas are excluded from
+  // Recharts' own stack, so our manual tops must match.
   const stackedData = useMemo(() => {
     if (data.length === 0) return data;
     const inKeys  = keys.filter((k) => !negateKeys.has(k) && !hidden.has(k));
     const outKeys = keys.filter((k) =>  negateKeys.has(k) && !hidden.has(k));
     return data.map((row) => {
       const extra = {};
-      let acc = 0;
+      // In-stack: expected inflow (≥ 0) + reverse outflow (≥ 0)
+      let accIn = 0;
       for (const k of inKeys) {
-        const v = Math.max(row[k] ?? 0, 0);   // clamp inflow ≥ 0
+        const v = Math.max(row[k] ?? 0, 0);
         extra[`_stk_${k}`] = v;
-        acc += v;
-        extra[`_top_${k}`] = acc;
+        accIn += v;
+        extra[`_top_${k}`] = accIn;
       }
-      acc = 0;
       for (const k of outKeys) {
-        const v = Math.min(row[k] ?? 0, 0);   // clamp outflow ≤ 0
+        const v = Math.max(row[k] ?? 0, 0);  // reverse outflow → positive
+        extra[`_stk_rev_${k}`] = v;
+        accIn += v;
+        extra[`_top_rev_${k}`] = accIn;
+      }
+      // Out-stack: expected outflow (≤ 0) + reverse inflow (≤ 0)
+      let accOut = 0;
+      for (const k of outKeys) {
+        const v = Math.min(row[k] ?? 0, 0);
         extra[`_stk_${k}`] = v;
-        acc += v;
-        extra[`_top_${k}`] = acc;
+        accOut += v;
+        extra[`_top_${k}`] = accOut;
+      }
+      for (const k of inKeys) {
+        const v = Math.min(row[k] ?? 0, 0);  // reverse inflow → negative
+        extra[`_stk_rev_${k}`] = v;
+        accOut += v;
+        extra[`_top_rev_${k}`] = accOut;
       }
       return { ...row, ...extra };
     });
   }, [data, keys, negateKeys, hidden]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Derive y-domain from actual cumulative tops (not individual values)
+  // so the axis scales to the full stacked extent.
+  const yDomain = useMemo(() => {
+    if (stackedData.length === 0) return ["auto", "auto"];
+    let mn = 0, mx = 0;
+    for (const row of stackedData) {
+      for (const k of Object.keys(row)) {
+        if (k.startsWith("_top_") || k.startsWith("_top_rev_")) {
+          const v = row[k];
+          if (typeof v === "number" && !isNaN(v)) {
+            if (v < mn) mn = v;
+            if (v > mx) mx = v;
+          }
+        }
+      }
+    }
+    const pad = (mx - mn) * 0.05 || 1;
+    return [mn - pad, mx + pad];
+  }, [stackedData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Only render reverse-flow Areas/Lines for keys that actually have
+  // non-zero reverse values (avoids flat placeholder lines at y=0).
+  const hasReverseFlow = useMemo(() => {
+    const s = new Set();
+    for (const row of stackedData) {
+      for (const k of keys) {
+        if (s.has(k)) continue;
+        const v = row[`_stk_rev_${k}`];
+        if (v != null && v !== 0) s.add(k);
+      }
+    }
+    return s;
+  }, [stackedData, keys]);
 
   const yearTicks = useMemo(() => {
     const seen = new Set();
@@ -359,10 +398,24 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
                 stackId={negateKeys.has(key) ? "out" : "in"}
                 hide={hidden.has(key)} dot={false} connectNulls isAnimationActive={false} />
             ))}
+            {/* Pass 1b: reverse-flow fills in the opposite stack (same color, lighter) */}
+            {keys.filter((k) => hasReverseFlow.has(k)).map((key, i) => (
+              <Area key={`_rev_${key}`} type="monotone" dataKey={`_stk_rev_${key}`} stroke="none"
+                fill={seriesColor(key, keys.indexOf(key))} fillOpacity={0.15}
+                stackId={negateKeys.has(key) ? "in" : "out"}
+                hide={hidden.has(key)} dot={false} connectNulls isAnimationActive={false}
+                legendType="none" />
+            ))}
             {/* Pass 2: outline Line at the cumulative top of each band */}
             {keys.map((key, i) => (
               <Line key={`_line_${key}`} type="monotone" dataKey={`_top_${key}`}
                 stroke={seriesColor(key, i)} strokeWidth={1.5} dot={false}
+                hide={hidden.has(key)} connectNulls activeDot={false} isAnimationActive={false} />
+            ))}
+            {/* Pass 2b: dashed outline for reverse-flow cumulative tops */}
+            {keys.filter((k) => hasReverseFlow.has(k)).map((key) => (
+              <Line key={`_revline_${key}`} type="monotone" dataKey={`_top_rev_${key}`}
+                stroke={seriesColor(key, keys.indexOf(key))} strokeWidth={1} strokeDasharray="4 2" dot={false}
                 hide={hidden.has(key)} connectNulls activeDot={false} isAnimationActive={false} />
             ))}
           </ComposedChart>

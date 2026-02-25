@@ -70,16 +70,19 @@ function nodePointStyle(feature, selectedFeature, highlightType) {
 }
 
 function arcLineStyle(feature, selectedFeature, highlightType) {
-  const { feature_id, arc_type } = feature.properties;
+  const { feature_id, arc_type, solver_active, wresl_suggestion } = feature.properties;
   const isSelected = feature_id === selectedFeature;
   const as = ARC_STYLE[arc_type] || DEFAULT_ARC_STYLE;
   const dimmed = highlightType && arc_type !== highlightType && !isSelected;
+  // Only truly inactive if solver_active is false AND no suggestion match
+  const inactive = solver_active === false && !wresl_suggestion;
 
   const baseOpacity = as.o ?? 0.75;
   return {
     color: isSelected ? "#facc15" : as.color,
     weight: isSelected ? as.w + 1.5 : as.w,
-    opacity: isSelected ? 1.0 : dimmed ? 0.08 : baseOpacity,
+    opacity: isSelected ? 1.0 : dimmed ? 0.08 : inactive ? (baseOpacity * 0.4) : baseOpacity,
+    dashArray: inactive && !isSelected ? "5 5" : undefined,
   };
 }
 

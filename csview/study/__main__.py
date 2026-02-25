@@ -308,7 +308,22 @@ def build_results(
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     arc_ids: Set[str] = {a.upper() for a in catalog.get("arcs", {}).keys()}
     cs3_ids: Set[str] = {n.upper() for n in catalog.get("nodes", {}).keys()}
-    logger.info("Catalog: %d arcs, %d nodes", len(arc_ids), len(cs3_ids))
+
+    # Also include wresl_suggestion target arc IDs so their DSS variables are
+    # extracted even though they have no GeoSchematic geometry.  This enables
+    # the app's fallback: when a geo arc has no direct DSS data, the study
+    # router serves the suggestion's time series instead.
+    suggestion_ids: Set[str] = set()
+    for arc_data in catalog.get("arcs", {}).values():
+        ws = arc_data.get("wresl_suggestion")
+        if ws:
+            suggestion_ids.add(ws.upper())
+    arc_ids_plus = arc_ids | suggestion_ids
+
+    logger.info(
+        "Catalog: %d arcs, %d nodes (+%d wresl_suggestion targets)",
+        len(arc_ids), len(cs3_ids), len(suggestion_ids),
+    )
 
     # -----------------------------------------------------------------------
     # Resolve DSS files (study_meta.json hints take priority over auto-discovery)
@@ -357,7 +372,7 @@ def build_results(
     # Read DV file
     # -----------------------------------------------------------------------
     logger.info("Reading DV file...")
-    df_dv, matched_map, wresl_meta = _read_and_match_dss(dv_path, arc_ids, cs3_ids)
+    df_dv, matched_map, wresl_meta = _read_and_match_dss(dv_path, arc_ids_plus, cs3_ids)
 
     # -----------------------------------------------------------------------
     # Read GWOUT file (optional) and merge into df_dv
@@ -365,7 +380,7 @@ def build_results(
     df_raw = df_dv
     if gwout_path is not None:
         logger.info("Reading GWOUT file...")
-        df_gw, gw_matched, gw_wresl = _read_and_match_dss(gwout_path, arc_ids, cs3_ids)
+        df_gw, gw_matched, gw_wresl = _read_and_match_dss(gwout_path, arc_ids_plus, cs3_ids)
         new_cols = [c for c in df_gw.columns if c not in df_dv.columns]
         if new_cols:
             df_raw = pd.concat([df_dv, df_gw[new_cols]], axis=1)
@@ -384,7 +399,7 @@ def build_results(
     # -----------------------------------------------------------------------
     if sv_path is not None:
         logger.info("Reading SV file...")
-        df_sv, sv_matched, sv_wresl = _read_and_match_dss(sv_path, arc_ids, cs3_ids)
+        df_sv, sv_matched, sv_wresl = _read_and_match_dss(sv_path, arc_ids_plus, cs3_ids)
         new_cols = [c for c in df_sv.columns if c not in df_raw.columns]
         if new_cols:
             df_raw = pd.concat([df_raw, df_sv[new_cols]], axis=1)

@@ -41,6 +41,7 @@ class NodeDetail(BaseModel):
     lon: float
     lat: float
     dss_variables: List[str] = []
+    missing_arcs: List[str] = []
 
 
 class ArcDetail(BaseModel):
@@ -56,6 +57,9 @@ class ArcDetail(BaseModel):
     description: Optional[str]
     units: Optional[str]
     kind: Optional[str]
+    capacity_cfs: Optional[float] = None
+    solver_active: bool = True
+    wresl_suggestion: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -110,3 +114,6 @@ class FeatureResultSeries(BaseModel):
     study: str
     series: Dict[str, List[List]]          # {prmname: [[date, val], ...]}
     metadata: Dict[str, Dict[str, Any]]    # {prmname: {units, kind, c_part, ...}}
+    # Set when results belong to a suggested WRESL counterpart arc rather than
+    # the requested feature directly (arc_endpoint_suggestion diagnostic match).
+    wresl_suggestion_used: Optional[str] = None

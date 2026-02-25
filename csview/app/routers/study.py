@@ -126,6 +126,8 @@ def get_feature_result(
                     continue
                 direction = "out" if from_n == cs3_id else "in"
                 arc_series_map = store.get_feature_series(arc.arc_id)
+                if not arc_series_map and arc.wresl_suggestion:
+                    arc_series_map = store.get_feature_series(arc.wresl_suggestion)
                 if not arc_series_map:
                     continue
                 for var, arc_series in arc_series_map.items():
@@ -136,9 +138,32 @@ def get_feature_result(
                     meta_out[var]   = arc_meta
 
     if not series_out:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No results found for feature '{feature_id}' in study '{store.name}'",
+        # For arc features with no direct DSS match, check if the arc has a
+        # wresl_suggestion (diagnostic arc_endpoint_suggestion match) and fall
+        # back to the suggestion's results so the panel shows useful data.
+        suggestion_used: Optional[str] = None
+        if network is not None:
+            arc = network.lookup_arc(feature_id)
+            if arc is not None and arc.wresl_suggestion:
+                sugg_series = store.get_feature_series(arc.wresl_suggestion)
+                if sugg_series:
+                    suggestion_used = arc.wresl_suggestion
+                    for var, s in sugg_series.items():
+                        series_out[var] = _series_to_rows(s)
+                        meta_out[var] = store.get_variable_meta(var)
+
+        if not series_out:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No results found for feature '{feature_id}' in study '{store.name}'",
+            )
+
+        return FeatureResultSeries(
+            feature_id=feature_id,
+            study=store.name,
+            series=series_out,
+            metadata=meta_out,
+            wresl_suggestion_used=suggestion_used,
         )
 
     return FeatureResultSeries(

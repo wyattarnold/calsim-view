@@ -121,6 +121,11 @@ class GeoNode:
     # e.g. for node "SHSTA": ["S_SHSTA", "E_SHSTA", "A_SHSTA"]
     dss_variables: List[str] = field(default_factory=list)
 
+    # Populated by topology diagnostics (--diagnose).
+    # Arc variables that reference this node in WRESL equations but have no
+    # geometry in the GeoSchematic (arc_no_geo diagnostic hits).
+    missing_arcs: List[str] = field(default_factory=list)
+
 
 @dataclass
 class GeoArc:
@@ -142,7 +147,19 @@ class GeoArc:
 
     # Populated from WRESL join
     units: Optional[str] = None
-    kind: Optional[str] = None       # WRESL kind string, e.g. "CHANNEL"
+    kind: Optional[str] = None        # WRESL kind string, e.g. "CHANNEL"
+    capacity_cfs: Optional[float] = None  # upper bound from define statement
+
+    # Populated by topology diagnostics (--diagnose)
+    # False when arc has GeoJSON geometry but is never referenced in any
+    # WRESL constraints-Connectivity equation (schematic-only arc).
+    solver_active: bool = True
+
+    # Populated by the arc_endpoint_suggestion diagnostic check.
+    # When a geo arc (arc_no_connectivity) shares the same from-node as a
+    # WRESL arc (arc_no_geo), this holds the probable WRESL counterpart ID.
+    # e.g. geo arc D_OMR028_DMC003 -> wresl_suggestion = 'D_OMR028_DMC000'
+    wresl_suggestion: Optional[str] = None
 
     @property
     def default_units(self) -> str:

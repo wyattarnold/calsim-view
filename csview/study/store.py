@@ -86,8 +86,10 @@ class StudyStore:
         if self._df is None:
             logger.info("Loading results from %s", self.parquet_path)
             self._df = pd.read_parquet(self.parquet_path)
-            # Snap to end-of-month so dates display as e.g. 1921-10-31
-            # rather than 1921-10-01 regardless of how pydsstools stamped them.
+            # DSS uses end-of-period timestamps: a value for September
+            # is stamped October 31.  Shift back one month then snap to
+            # end-of-month so dates reflect the actual period.
+            self._df.index = self._df.index - pd.DateOffset(months=1)
             self._df.index = self._df.index + pd.offsets.MonthEnd(0)
             logger.info(
                 "  Loaded: %d variables x %d time steps",

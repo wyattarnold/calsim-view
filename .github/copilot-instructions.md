@@ -37,15 +37,40 @@ with every edit to that file.
 - The Parquet file is loaded lazily on first results request; keep `StudyStore`
   construction lightweight.
 
+## WRESL / CalSim 3 domain knowledge
+
+- **Connectivity file naming is inconsistent.** Not all files are named exactly
+  `constraints-Connectivity.wresl` — some have prefixes
+  (`UpperStanislaus_constraints-connectivity.wresl`), suffixes
+  (`constraints-Connectivity_Common.wresl`), or entirely different names
+  (`Connectivity-table.wresl`). Any glob must use `*.wresl` filtered by
+  `"connectivity" in name.lower()`.
+- **`arc_no_geo` only flags `C_/I_/E_/S_` prefixes.**  Delivery (`D_`),
+  return-flow (`R_/RP_/RU_`) arcs in WRESL intentionally have no GeoSchematic
+  geometry. To cross-reference WRESL arcs against the GeoSchematic, use
+  `all_wresl_arcs - geo_arc_ids` (not the `arc_no_geo` subset).
+- **WRESL files on Windows use cp1252.** Always read with
+  `encoding="utf-8", errors="replace"` to handle stray characters.
+
+## Build ordering and dependencies
+
+When rebuilding both network AND study artifacts, **always rebuild network
+first** — the study builder reads `catalog.json` (arc IDs, node IDs,
+`wresl_suggestion` targets) to decide which DSS variables to extract.
+
+The study builder includes `wresl_suggestion` target arc IDs in its matching
+set so their DSS data is extracted even though they have no GeoSchematic
+geometry. This enables the app's "suggested WRESL arc" fallback.
+
 ## Frontend build
 
-After any change to files under `calsim/app/frontend/src/`:
+After any change to files under `csview/app/frontend/src/`:
 
 ```bash
-cd calsim/app/frontend && npm run build
+cd csview/app/frontend && npm run build
 ```
 
-The compiled output lands in `calsim/app/static/`. The server must be
+The compiled output lands in `csview/app/static/`. The server must be
 restarted (or `--reload` must be active) to serve the new bundle.
 
 ## Python environment
@@ -59,6 +84,18 @@ C:\Users\warnold\Miniconda3\envs\py38\python.exe
 ```bat
 python -m csview.app --network-dir data/network/ --study data/study/study_a
 ```
+
+## Running the network builder
+
+```bat
+C:\Users\warnold\Miniconda3\envs\py38\python.exe -m csview.geo ^
+    --geo-dir reference/geoschematic ^
+    --wresl reference/calsim-studies/study_a/Run/System ^
+    --out data/network ^
+    --diagnose --fix-topology
+```
+
+Runs in ~10 s; safe to run foreground/blocking.
 
 ## Running the study builder (SLOW — 3–5 min)
 

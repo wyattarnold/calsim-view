@@ -71,6 +71,7 @@ def _node_detail(n: GeoNode) -> NodeDetail:
         lon=n.lon,
         lat=n.lat,
         dss_variables=list(n.dss_variables),
+        missing_arcs=list(n.missing_arcs),
     )
 
 
@@ -87,6 +88,9 @@ def _arc_detail(a: GeoArc) -> ArcDetail:
         description=a.description or None,
         units=a.units or None,
         kind=a.kind or None,
+        capacity_cfs=a.capacity_cfs,
+        solver_active=a.solver_active,
+        wresl_suggestion=a.wresl_suggestion,
     )
 
 

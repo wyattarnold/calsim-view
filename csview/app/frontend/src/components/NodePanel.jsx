@@ -210,10 +210,11 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
     enabled: !!featureId,
   });
 
-  const { data: results, isLoading: resultsLoading } = useQuery({
+  const { data: results, isLoading: resultsLoading, isError: resultsError } = useQuery({
     queryKey: ["featureResults", featureId, activeStudy],
     queryFn: () => fetchFeatureResults(featureId, activeStudy),
     enabled: !!featureId,
+    retry: false,
   });
 
   // Derive sorted unique years from any result series
@@ -320,6 +321,26 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
               </Section>
             )}
 
+            {/* Missing WRESL arcs — arcs in solver equations but absent from schematic */}
+            {feature.feature_kind === "node" && feature.missing_arcs?.length > 0 && (
+              <Section title="Solver-Only Arcs" defaultOpen={false}>
+                <p className="text-xs text-gray-500 mb-2">
+                  These arc variables reference this node in WRESL flow-balance equations but
+                  have no geometry in the GeoSchematic.
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {feature.missing_arcs.map((a) => (
+                    <span
+                      key={a}
+                      className="font-mono text-xs px-1.5 py-0.5 rounded bg-gray-800 text-amber-400 border border-gray-700"
+                    >
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              </Section>
+            )}
+
             {/* Arc topology */}
             {feature.feature_kind === "arc" && (feature.from_node || feature.to_node) && (
               <Section title="Arc Details" defaultOpen={false}>
@@ -329,6 +350,40 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
                   <MetaRow label="Sub-Type" value={feature.sub_type} />
                   <MetaRow label="From Node" value={feature.from_node} />
                   <MetaRow label="To Node" value={feature.to_node} />
+                  {feature.capacity_cfs != null && (
+                    <MetaRow
+                      label="Capacity"
+                      value={`${feature.capacity_cfs.toLocaleString()} CFS`}
+                    />
+                  )}
+                  <div className="flex gap-2 text-sm">
+                    <span className="text-gray-400 shrink-0 w-36">Solver</span>
+                    {feature.solver_active === false ? (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-600">
+                        schematic only
+                      </span>
+                    ) : (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-green-950 text-green-400 border border-green-800">
+                        solver active
+                      </span>
+                    )}
+                  </div>
+                  {feature.wresl_suggestion && (
+                    <div className="mt-2 p-2 rounded bg-amber-950 border border-amber-800">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Suggested WRESL arc</span>
+                        <span
+                          className="font-mono text-xs px-1.5 py-0.5 rounded bg-gray-800 text-amber-300 border border-amber-700"
+                          title="Same from-node, different downstream label — probable WRESL counterpart of this geo arc"
+                        >
+                          {feature.wresl_suggestion}
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-600 mt-1">
+                        Geo arc has no WRESL match; this may be the same physical connection.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </Section>
             )}
@@ -338,6 +393,18 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
         {/* Model Results */}
         {results && Object.keys(results.series).length > 0 ? (
           <Section title="Model Results">
+            {results.wresl_suggestion_used && (
+              <div className="mb-3 px-3 py-2 rounded bg-amber-950 border border-amber-800 flex items-start gap-2">
+                <span className="text-amber-400 mt-0.5 shrink-0">⚑</span>
+                <div>
+                  <span className="text-xs text-amber-400 font-semibold">Results from suggested match</span>
+                  <span className="font-mono text-xs ml-2 px-1.5 py-0.5 rounded bg-gray-800 text-amber-300 border border-amber-700">
+                    {results.wresl_suggestion_used}
+                  </span>
+                  <p className="text-xs text-amber-700 mt-0.5">This geo arc has no DSS data; showing results for the probable WRESL counterpart.</p>
+                </div>
+              </div>
+            )}
             <ResultsChart
               series={results.series}
               metadata={results.metadata}
@@ -347,6 +414,23 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
         ) : resultsLoading ? (
           <Section title="Model Results">
             <p className="text-gray-500 text-sm">Loading results…</p>
+          </Section>
+        ) : resultsError && feature?.wresl_suggestion ? (
+          <Section title="Model Results">
+            <div className="px-3 py-2 rounded bg-amber-950 border border-amber-800">
+              <p className="text-xs text-amber-400 font-semibold">No DSS output</p>
+              <p className="text-xs text-amber-700 mt-1">
+                This geo arc and its probable WRESL counterpart{" "}
+                <span className="font-mono text-amber-300 px-1 py-0.5 rounded bg-gray-800 border border-amber-700">
+                  {feature.wresl_suggestion}
+                </span>{" "}
+                have no model results in this study.
+              </p>
+            </div>
+          </Section>
+        ) : resultsError ? (
+          <Section title="Model Results">
+            <p className="text-gray-500 text-sm italic">No result data for this feature.</p>
           </Section>
         ) : results && Object.keys(results.series).length === 0 ? (
           <Section title="Model Results">

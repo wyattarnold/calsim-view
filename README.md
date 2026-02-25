@@ -19,7 +19,6 @@ resources model network and inspect simulation results. It provides:
 
 ## Requirements
 
-- Python 3.8 (Miniconda recommended: `C:\Users\warnold\Miniconda3\envs\py38`)
 - Python dependencies: `fastapi`, `uvicorn`, `pandas`, `pyarrow`, `pydsstools` (see `pyproject.toml`)
 - Node 18+ / npm 9+ (only needed to rebuild the frontend from source)
 

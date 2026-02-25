@@ -1,6 +1,6 @@
 {
   "study": "danube_hist",
-  "built_at": "2026-02-24T22:49:36.744687Z",
+  "built_at": "2026-02-25T05:49:03.208533Z",
   "dv_file": "reference\\calsim-studies\\study_a\\DSS\\output\\DCR2023_DV_9.3.1_Danube_Hist_v1.7.dss",
   "gwout_file": "reference\\calsim-studies\\study_a\\DSS\\output\\CVGroundwaterOut.dss",
   "sv_file": "reference\\calsim-studies\\study_a\\DSS\\input\\DCR2023_SV_Danube_Hist_v1.7.dss",
@@ -16389,6 +16389,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_ALD002_EDC004": {
+      "feature_id": "D_ALD002_EDC004",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_ALD002_EDC004",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_ALMNR_BVT003": {
       "feature_id": "D_ALMNR_BVT003",
       "feature_kind": "arc",
@@ -16418,6 +16426,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_AMR017_WTPBJM",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_ANG015_ANC000": {
+      "feature_id": "D_ANG015_ANC000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_ANG015_ANC000",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -16466,6 +16482,22 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_ASL013_64_PA2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_BCK006_ESC004": {
+      "feature_id": "D_BCK006_ESC004",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BCK006_ESC004",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_BCM003_WSPNT_NU": {
+      "feature_id": "D_BCM003_WSPNT_NU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BCM003_WSPNT_NU",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -16565,6 +16597,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_BSC010_SFY043": {
+      "feature_id": "D_BSC010_SFY043",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BSC010_SFY043",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_BSH003_CMN005": {
+      "feature_id": "D_BSH003_CMN005",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BSH003_CMN005",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_BSL000_SAC141": {
       "feature_id": "D_BSL000_SAC141",
       "feature_kind": "arc",
@@ -16634,6 +16682,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_BTVLY_CRB002",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_BVC007_BVT000": {
+      "feature_id": "D_BVC007_BVT000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BVC007_BVT000",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -16709,6 +16765,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA095_CAALOS": {
+      "feature_id": "D_CAA095_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA095_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA109_73_PA3": {
       "feature_id": "D_CAA109_73_PA3",
       "feature_kind": "arc",
@@ -16778,6 +16842,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_CAA172_90_PA1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_CBC000_NIDBR_NA": {
+      "feature_id": "D_CBC000_NIDBR_NA",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_CBC000_NIDBR_NA",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -17061,6 +17133,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CSD014_NIDDC_NA1": {
+      "feature_id": "D_CSD014_NIDDC_NA1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_CSD014_NIDDC_NA1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_CSL005_25_NA": {
       "feature_id": "D_CSL005_25_NA",
       "feature_kind": "arc",
@@ -17069,11 +17149,27 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CSM033_RNCHO": {
+      "feature_id": "D_CSM033_RNCHO",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_CSM033_RNCHO",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_CWD009_02_NA": {
       "feature_id": "D_CWD009_02_NA",
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_CWD009_02_NA",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_CYN009_LBC001": {
+      "feature_id": "D_CYN009_LBC001",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_CYN009_LBC001",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -17101,6 +17197,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DER004_NIDDC_NA2": {
+      "feature_id": "D_DER004_NIDDC_NA2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_DER004_NIDDC_NA2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_DER011_NIDDC_NA2": {
+      "feature_id": "D_DER011_NIDDC_NA2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_DER011_NIDDC_NA2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_DER018_NWT013": {
       "feature_id": "D_DER018_NWT013",
       "feature_kind": "arc",
@@ -17122,6 +17234,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_DES006_GRSVL",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_DES006_NIDDC_NA1": {
+      "feature_id": "D_DES006_NIDDC_NA1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_DES006_NIDDC_NA1",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -17805,6 +17925,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_LBEAR_COL002": {
+      "feature_id": "D_LBEAR_COL002",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_LBEAR_COL002",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_LBR002_LBC001": {
       "feature_id": "D_LBR002_LBC001",
       "feature_kind": "arc",
@@ -17882,6 +18010,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_LRB004_BLT000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_LST004_WPT005": {
+      "feature_id": "D_LST004_WPT005",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_LST004_WPT005",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -18053,6 +18189,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_MFM007_WSPNT_NU": {
+      "feature_id": "D_MFM007_WSPNT_NU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_MFM007_WSPNT_NU",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_MFS013_SPH000": {
+      "feature_id": "D_MFS013_SPH000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_MFS013_SPH000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_MFS017_JWS004": {
       "feature_id": "D_MFS017_JWS004",
       "feature_kind": "arc",
@@ -18090,6 +18242,22 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_MID021_63_NA4",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_MID021_BCK033": {
+      "feature_id": "D_MID021_BCK033",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_MID021_BCK033",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_MIL003_UTC001": {
+      "feature_id": "D_MIL003_UTC001",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_MIL003_UTC001",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -18341,6 +18509,30 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_NFS008_CVT000": {
+      "feature_id": "D_NFS008_CVT000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_NFS008_CVT000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_NFS033_SDT000": {
+      "feature_id": "D_NFS033_SDT000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_NFS033_SDT000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_NLC003_NCT001": {
+      "feature_id": "D_NLC003_NCT001",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_NLC003_NCT001",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_NLL016_LCCWD": {
       "feature_id": "D_NLL016_LCCWD",
       "feature_kind": "arc",
@@ -18362,6 +18554,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_NTOMA_FSC003",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_NWT013_NIDDC_NA2": {
+      "feature_id": "D_NWT013_NIDDC_NA2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_NWT013_NIDDC_NA2",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -18413,6 +18613,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_OMR028_DMC000": {
+      "feature_id": "D_OMR028_DMC000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_OMR028_DMC000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_OROVL_13_NU1": {
       "feature_id": "D_OROVL_13_NU1",
       "feature_kind": "arc",
@@ -18458,6 +18666,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_PCH000_SCVWD",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_PLC007_GDD010": {
+      "feature_id": "D_PLC007_GDD010",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_PLC007_GDD010",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19021,6 +19237,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_SFA040_WRT000": {
+      "feature_id": "D_SFA040_WRT000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_SFA040_WRT000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_SFA066_EDC000": {
       "feature_id": "D_SFA066_EDC000",
       "feature_kind": "arc",
@@ -19050,6 +19274,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_SFF029_SFT000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_SFM005_MHILL_NU": {
+      "feature_id": "D_SFM005_MHILL_NU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_SFM005_MHILL_NU",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19090,6 +19322,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_SJR062_50_PA1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_SJR070_SJRRRECAP": {
+      "feature_id": "D_SJR070_SJRRRECAP",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_SJR070_SJRRRECAP",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19181,6 +19421,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_SLC003_SCT001": {
+      "feature_id": "D_SLC003_SCT001",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_SLC003_SCT001",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_SLT009_SCT000": {
       "feature_id": "D_SLT009_SCT000",
       "feature_kind": "arc",
@@ -19234,6 +19482,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_SPLDG_SYC000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_SSJ004_61_PA1": {
+      "feature_id": "D_SSJ004_61_PA1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_SSJ004_61_PA1",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19330,6 +19586,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_SYC002_BRR074",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_TBAUD_AMADR_NU": {
+      "feature_id": "D_TBAUD_AMADR_NU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_TBAUD_AMADR_NU",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19485,6 +19749,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_UNVLY_SLV017": {
+      "feature_id": "D_UNVLY_SLV017",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_UNVLY_SLV017",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_VCT002_ORP000": {
       "feature_id": "D_VCT002_ORP000",
       "feature_kind": "arc",
@@ -19613,6 +19885,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_WLF013_NIDDC_NA3": {
+      "feature_id": "D_WLF013_NIDDC_NA3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WLF013_NIDDC_NA3",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_WSE003_LBC040": {
       "feature_id": "D_WSE003_LBC040",
       "feature_kind": "arc",
@@ -19682,6 +19962,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_WTPBTB_21_PU",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPBUK_03_SU": {
+      "feature_id": "D_WTPBUK_03_SU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPBUK_03_SU",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19770,6 +20058,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_WTPDWS_60S_NU1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPEDH_ELDID_NU3": {
+      "feature_id": "D_WTPEDH_ELDID_NU3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPEDH_ELDID_NU3",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19917,6 +20213,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_WTPRS1_ELDID_NU1": {
+      "feature_id": "D_WTPRS1_ELDID_NU1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPRS1_ELDID_NU1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPRSA_ELDID_NU1": {
+      "feature_id": "D_WTPRSA_ELDID_NU1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPRSA_ELDID_NU1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_WTPRSV_26N_PU1": {
       "feature_id": "D_WTPRSV_26N_PU1",
       "feature_kind": "arc",
@@ -20010,6 +20322,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_WTPVNY_26S_PU6",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPWAL_GDPUD_NU": {
+      "feature_id": "D_WTPWAL_GDPUD_NU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPWAL_GDPUD_NU",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -30749,6 +31069,14 @@
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
+    "R_AWWWTP_ESC005": {
+      "feature_id": "R_AWWWTP_ESC005",
+      "feature_kind": "arc",
+      "c_part": "RETURN-FLOW",
+      "b_part": "R_AWWWTP_ESC005",
+      "units": "CFS",
+      "kind": "RETURN-FLOW"
+    },
     "R_CCWWTP_SAC287": {
       "feature_id": "R_CCWWTP_SAC287",
       "feature_kind": "arc",
@@ -30770,6 +31098,14 @@
       "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_DCWWTP_DCK012",
+      "units": "CFS",
+      "kind": "RETURN-FLOW"
+    },
+    "R_DVWWTP_WLW005": {
+      "feature_id": "R_DVWWTP_WLW005",
+      "feature_kind": "arc",
+      "c_part": "RETURN-FLOW",
+      "b_part": "R_DVWWTP_WLW005",
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
@@ -30802,6 +31138,22 @@
       "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_EDWWTP_DEE020",
+      "units": "CFS",
+      "kind": "RETURN-FLOW"
+    },
+    "R_ELDID_NU3_EDWWTP": {
+      "feature_id": "R_ELDID_NU3_EDWWTP",
+      "feature_kind": "arc",
+      "c_part": "RETURN-FLOW",
+      "b_part": "R_ELDID_NU3_EDWWTP",
+      "units": "CFS",
+      "kind": "RETURN-FLOW"
+    },
+    "R_GRSVL_WLF021": {
+      "feature_id": "R_GRSVL_WLF021",
+      "feature_kind": "arc",
+      "c_part": "RETURN-FLOW",
+      "b_part": "R_GRSVL_WLF021",
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },

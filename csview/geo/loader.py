@@ -74,7 +74,7 @@ def load_from_dir(
     _build_geojson(gn)
 
     logger.info(
-        "GeoNetwork ready: %d nodes, %d arcs, %d variable→node mappings",
+        "GeoNetwork ready: %d nodes, %d arcs, %d variable->node mappings",
         len(gn.nodes),
         len(gn.arcs),
         len(gn.variable_to_node),
@@ -125,6 +125,7 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
             c2vsim_sw=d.get("c2vsim_sw", ""),
             calsim2_id=d.get("calsim2_id", ""),
             dss_variables=d.get("dss_variables", []),
+            missing_arcs=d.get("missing_arcs", []),
         )
 
     # Arcs
@@ -141,6 +142,9 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
             coordinates=d.get("coordinates", []),
             units=d.get("units"),
             kind=d.get("kind"),
+            capacity_cfs=d.get("capacity_cfs"),
+            solver_active=d.get("solver_active", True),
+            wresl_suggestion=d.get("wresl_suggestion"),
         )
 
     gn.variable_to_node = cat.get("variable_to_node", {})
@@ -164,12 +168,21 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
             setattr(gn, attr, json.loads(p.read_text(encoding="utf-8")))
 
     logger.info(
-        "GeoNetwork loaded from catalog: %d nodes, %d arcs, %d variable→node mappings",
+        "GeoNetwork loaded from catalog: %d nodes, %d arcs, %d variable->node mappings",
         len(gn.nodes),
         len(gn.arcs),
         len(gn.variable_to_node),
     )
     return gn
+
+
+def rebuild_geojson(gn: GeoNetwork) -> None:
+    """Rebuild the in-memory GeoJSON FeatureCollection from current node/arc state.
+
+    Call this after patching arc topology (from_node / to_node / solver_active)
+    to ensure the GeoJSON served to the frontend reflects the corrected data.
+    """
+    _build_geojson(gn)
 
 
 # ---------------------------------------------------------------------------
@@ -276,6 +289,8 @@ def _enrich_from_wresl(gn: GeoNetwork, wresl_dir: Path) -> None:
         if wv:
             arc.kind = wv.kind
             arc.units = wv.units
+            if wv.capacity is not None:
+                arc.capacity_cfs = wv.capacity
             enriched += 1
     logger.info("WRESL enrichment: %d/%d arcs updated", enriched, len(gn.arcs))
 
@@ -299,7 +314,7 @@ def _build_variable_index_from_wresl(gn: GeoNetwork, wresl_dir: Path) -> None:
         if body in gn.nodes:
             gn.variable_to_node[varname.upper()] = body
             count += 1
-    logger.info("Built variable→node index: %d entries", count)
+    logger.info("Built variable->node index: %d entries", count)
 
 
 def _strip_prefix(name: str) -> str:
@@ -323,15 +338,18 @@ def _build_geojson(gn: GeoNetwork) -> None:
             "properties": {
                 "feature_id":   arc.arc_id,
                 "feature_kind": "arc",
-                "arc_type":     arc.arc_type,
-                "name":         arc.name,
-                "sub_type":     arc.sub_type,
-                "from_node":    arc.from_node,
-                "to_node":      arc.to_node,
-                "hydro_region": arc.hydro_region,
-                "description":  arc.description,
-                "units":        arc.units,
-                "kind":         arc.kind,
+                "arc_type":       arc.arc_type,
+                "name":           arc.name,
+                "sub_type":       arc.sub_type,
+                "from_node":      arc.from_node,
+                "to_node":        arc.to_node,
+                "hydro_region":   arc.hydro_region,
+                "description":    arc.description,
+                "units":          arc.units,
+                "kind":           arc.kind,
+                "capacity_cfs":   arc.capacity_cfs,
+                "solver_active":  arc.solver_active,
+                "wresl_suggestion": arc.wresl_suggestion,
             },
         }
         features.append(feat)
@@ -355,6 +373,7 @@ def _build_geojson(gn: GeoNetwork) -> None:
                 "c2vsim_sw":    node.c2vsim_sw,
                 "calsim2_id":   node.calsim2_id,
                 "dss_variables": node.dss_variables,
+                "missing_arcs":  node.missing_arcs,
             },
         }
         features.append(feat)
