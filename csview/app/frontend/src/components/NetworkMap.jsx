@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
@@ -19,82 +19,74 @@ L.Icon.Default.mergeOptions({
 
 // Point nodes: circle marker styles  {color, radius (r), stroke weight (w), fillOpacity (fo)}
 const NODE_STYLE = {
-  "Reservoir":            { color: "#3b82f6", r: 9,  w: 1.5, fo: 0.92 },
-  "Groundwater":          { color: "#10b981", r: 6,  w: 1.2, fo: 0.80 },
-  "Groundwater Storage":  { color: "#059669", r: 8,  w: 1.5, fo: 0.88 },
-  "Demand-Agricultural":  { color: "#f59e0b", r: 6,  w: 1.2, fo: 0.85 },
-  "Demand-Urban":         { color: "#f97316", r: 6,  w: 1.2, fo: 0.85 },
-  "Demand-Refuge":        { color: "#84cc16", r: 5,  w: 1.0, fo: 0.80 },
-  "Shortage":             { color: "#ef4444", r: 5,  w: 1.2, fo: 0.85 },
-  "Contract":             { color: "#eab308", r: 4,  w: 1.0, fo: 0.80 },
-  "Return Flow":          { color: "#a3e635", r: 4,  w: 1.0, fo: 0.75 },
-  "Evaporation":          { color: "#475569", r: 3,  w: 0.5, fo: 0.55 },
-  "Water Quality":        { color: "#22d3ee", r: 4,  w: 0.8, fo: 0.70 },
-  "Power":                { color: "#a855f7", r: 5,  w: 1.0, fo: 0.80 },
+  "Reservoir":              { color: "#3b82f6", r: 9,  w: 1.5, fo: 0.92 },
+  "Demand-Agricultural":    { color: "#eab308", r: 6,  w: 1.2, fo: 0.85 },
+  "Demand-Urban":           { color: "#f43f5e", r: 6,  w: 1.2, fo: 0.85 },
+  "Demand-Refuge":          { color: "#84cc16", r: 5,  w: 1.0, fo: 0.80 },
+  "Water Treatment Plant":  { color: "#06b6d4", r: 5,  w: 1.2, fo: 0.85 },
+  "Wastewater Treatment Plant": { color: "#7c3aed", r: 5,  w: 1.2, fo: 0.85 },
 };
 
 const DEFAULT_NODE_STYLE = { color: "#6b7280", r: 3, w: 0.5, fo: 0.55 };
 
-// LineString arc nodes: {color, weight}
+// LineString arc styles: {color, w, o?}  (o defaults to 0.75)
 const ARC_STYLE = {
-  "Channel":              { color: "#60a5fa", w: 1.8 },   // light blue
+  "Channel":              { color: "#3b82f6", w: 2.8, o: 1.0 }, // vivid blue, thick, full opacity
   "Diversion":            { color: "#34d399", w: 1.5 },   // emerald
   "Inflow":               { color: "#2dd4bf", w: 1.5 },   // teal
   "Return Flow":          { color: "#a3e635", w: 1.2 },   // lime
-  "Minimum Flow":         { color: "#38bdf8", w: 1.2 },   // sky
   "Surface Runoff":       { color: "#86efac", w: 1.0 },   // light green
-  "Seepage":              { color: "#64748b", w: 1.0 },   // slate
-  "Deep Percolation":     { color: "#6b7280", w: 1.0 },   // gray
-  "Tile Drain":           { color: "#78716c", w: 1.0 },   // stone
-  "Groundwater":          { color: "#059669", w: 1.2 },   // green
-  "Evaporation":          { color: "#475569", w: 0.8 },   // dark slate
+  "Seepage":              { color: "#94a3b8", w: 1.0 },   // light slate-blue
+  "Tile Drain":           { color: "#b5a99a", w: 1.0 },   // warm stone
+  "Evaporation":          { color: "#fbbf24", w: 0.8 },   // amber
   "Spill":                { color: "#7dd3fc", w: 1.2 },   // pale sky
-  "Closure Term":         { color: "#4b5563", w: 0.8 },   // gray
+  "Closure Term":         { color: "#9ca3af", w: 0.8 },   // medium gray
   "Delta Accretion":      { color: "#a78bfa", w: 1.2 },   // violet
   "Delta Depletion":      { color: "#f472b6", w: 1.2 },   // pink
 };
 
 const DEFAULT_ARC_STYLE = { color: "#4b5563", w: 1.0 };
 
+const ARROW_MIN_ZOOM = 11;
+
 // ---------------------------------------------------------------------------
 // Style helpers
 // ---------------------------------------------------------------------------
 
-function nodePointStyle(feature, selectedFeature) {
+function nodePointStyle(feature, selectedFeature, highlightType) {
   const { feature_id, node_type } = feature.properties;
   const isSelected = feature_id === selectedFeature;
   const ns = NODE_STYLE[node_type] || DEFAULT_NODE_STYLE;
+  const dimmed = highlightType && node_type !== highlightType && !isSelected;
 
   return {
     radius: isSelected ? ns.r + 4 : ns.r,
     fillColor: ns.color,
     color: isSelected ? "#ffffff" : "#111827",
     weight: isSelected ? 2.5 : ns.w,
-    opacity: 1,
-    fillOpacity: isSelected ? 1 : ns.fo,
+    opacity: dimmed ? 0.15 : 1,
+    fillOpacity: isSelected ? 1 : dimmed ? 0.08 : ns.fo,
   };
 }
 
-function arcLineStyle(feature, selectedFeature) {
+function arcLineStyle(feature, selectedFeature, highlightType) {
   const { feature_id, arc_type } = feature.properties;
   const isSelected = feature_id === selectedFeature;
   const as = ARC_STYLE[arc_type] || DEFAULT_ARC_STYLE;
+  const dimmed = highlightType && arc_type !== highlightType && !isSelected;
 
+  const baseOpacity = as.o ?? 0.75;
   return {
     color: isSelected ? "#facc15" : as.color,
     weight: isSelected ? as.w + 1.5 : as.w,
-    opacity: isSelected ? 1.0 : 0.75,
+    opacity: isSelected ? 1.0 : dimmed ? 0.08 : baseOpacity,
   };
 }
 
-function featureStyle(feature, selectedFeature) {
+function featureStyle(feature, selectedFeature, highlightType) {
   const { feature_kind } = feature.properties;
-
-  if (feature_kind === "node") {
-    return nodePointStyle(feature, selectedFeature);
-  }
-  // feature_kind === "arc"
-  return arcLineStyle(feature, selectedFeature);
+  if (feature_kind === "node") return nodePointStyle(feature, selectedFeature, highlightType);
+  return arcLineStyle(feature, selectedFeature, highlightType);
 }
 
 function pointToLayer(feature, latlng) {
@@ -152,9 +144,19 @@ function MapFlyTo({ featureId, geojson }) {
 // GeoJSON Layer — mounted once, styles updated reactively
 // ---------------------------------------------------------------------------
 
-function GeoJSONLayer({ geojson, selectedFeature, onFeatureClick }) {
+function GeoJSONLayer({ geojson, selectedFeature, highlightType, onFeatureClick }) {
   const layerRef = useRef(null);
   const map = useMap();
+  const [mapZoom, setMapZoom] = useState(() => map.getZoom());
+  const [moveSeq, setMoveSeq] = useState(0);
+
+  useEffect(() => {
+    const onZoom = () => setMapZoom(map.getZoom());
+    const onMove = () => setMoveSeq((s) => s + 1);
+    map.on("zoomend", onZoom);
+    map.on("moveend", onMove);
+    return () => { map.off("zoomend", onZoom); map.off("moveend", onMove); };
+  }, [map]);
 
   // Fit California bounds on first load
   useEffect(() => {
@@ -169,9 +171,20 @@ function GeoJSONLayer({ geojson, selectedFeature, onFeatureClick }) {
   // Reactively update styles without remounting
   useEffect(() => {
     if (!layerRef.current) return;
+    const showArrows = mapZoom >= ARROW_MIN_ZOOM;
     layerRef.current.eachLayer((layer) => {
       if (!layer.feature || !layer.setStyle) return;
-      layer.setStyle(featureStyle(layer.feature, selectedFeature));
+      layer.setStyle(featureStyle(layer.feature, selectedFeature, highlightType));
+      // leaflet-arrowheads renders separate SVG layers — update their opacity independently
+      if (layer._arrowheads) {
+        const { feature_id, arc_type } = layer.feature.properties;
+        const isSelected = feature_id === selectedFeature;
+        const dimmed = highlightType && arc_type !== highlightType && !isSelected;
+        const arrowOpacity = !showArrows ? 0 : isSelected ? 1.0 : dimmed ? 0.08 : 0.75;
+        layer._arrowheads.eachLayer((ah) =>
+          ah.setStyle({ opacity: arrowOpacity, fillOpacity: arrowOpacity })
+        );
+      }
       if (
         layer.feature.properties.feature_id === selectedFeature &&
         layer.bringToFront
@@ -179,7 +192,7 @@ function GeoJSONLayer({ geojson, selectedFeature, onFeatureClick }) {
         layer.bringToFront();
       }
     });
-  }, [selectedFeature]);
+  }, [selectedFeature, highlightType, mapZoom, moveSeq]);
 
   if (!geojson) return null;
 
@@ -187,7 +200,7 @@ function GeoJSONLayer({ geojson, selectedFeature, onFeatureClick }) {
     <GeoJSON
       ref={layerRef}
       data={geojson}
-      style={(feature) => featureStyle(feature, selectedFeature)}
+      style={(feature) => featureStyle(feature, selectedFeature, highlightType)}
       pointToLayer={pointToLayer}
       onEachFeature={(feature, layer) => {
         const { feature_id, node_type, arc_type, feature_kind, description, name } = feature.properties;
@@ -222,33 +235,60 @@ function GeoJSONLayer({ geojson, selectedFeature, onFeatureClick }) {
 // Map legend
 // ---------------------------------------------------------------------------
 
-function Legend() {
+function Legend({ highlightType, onHighlight }) {
   return (
     <div
-      className="absolute bottom-8 left-3 z-[1000] bg-gray-900/90 border border-gray-700 rounded p-2 text-xs text-gray-300 pointer-events-none"
+      className="absolute bottom-8 left-3 z-[1000] bg-gray-900/90 border border-gray-700 rounded p-2 text-xs text-gray-300"
       style={{ backdropFilter: "blur(4px)", maxHeight: "calc(100vh - 120px)", overflowY: "auto" }}
     >
       <p className="font-semibold text-gray-400 mb-1.5">Nodes</p>
-      {Object.entries(NODE_STYLE).map(([type, { color, r }]) => (
-        <div key={type} className="flex items-center gap-1.5 mb-0.5">
-          <span style={{
-            display: "inline-block",
-            width: Math.max(r * 2, 6),
-            height: Math.max(r * 2, 6),
-            borderRadius: "50%",
-            background: color,
-            flexShrink: 0,
-          }} />
-          <span className="text-gray-400 text-[10px]">{type}</span>
-        </div>
-      ))}
+      {Object.entries(NODE_STYLE).map(([type, { color, r }]) => {
+        const active = highlightType === type;
+        return (
+          <button
+            key={type}
+            onClick={() => onHighlight(active ? null : type)}
+            className={`flex items-center gap-1.5 mb-0.5 w-full text-left rounded px-0.5 transition-colors ${
+              active ? "bg-white/10" : "hover:bg-white/5"
+            }`}
+          >
+            <span style={{
+              display: "inline-block",
+              width: Math.max(r * 2, 6), height: Math.max(r * 2, 6),
+              borderRadius: "50%", background: color, flexShrink: 0,
+              outline: active ? `2px solid ${color}` : "none", outlineOffset: 1,
+            }} />
+            <span className={`text-[10px] ${active ? "text-white font-semibold" : "text-gray-400"}`}>{type}</span>
+          </button>
+        );
+      })}
       <p className="font-semibold text-gray-400 mt-2 mb-1.5">Arcs</p>
-      {Object.entries(ARC_STYLE).map(([type, { color }]) => (
-        <div key={type} className="flex items-center gap-1.5 mb-0.5">
-          <span style={{ display: "inline-block", width: 16, height: 2, background: color, flexShrink: 0, borderRadius: 1 }} />
-          <span className="text-gray-400 text-[10px]">{type}</span>
-        </div>
-      ))}
+      {Object.entries(ARC_STYLE).map(([type, { color }]) => {
+        const active = highlightType === type;
+        return (
+          <button
+            key={type}
+            onClick={() => onHighlight(active ? null : type)}
+            className={`flex items-center gap-1.5 mb-0.5 w-full text-left rounded px-0.5 transition-colors ${
+              active ? "bg-white/10" : "hover:bg-white/5"
+            }`}
+          >
+            <span style={{
+              display: "inline-block", width: 16, height: active ? 3 : 2,
+              background: color, flexShrink: 0, borderRadius: 1,
+            }} />
+            <span className={`text-[10px] ${active ? "text-white font-semibold" : "text-gray-400"}`}>{type}</span>
+          </button>
+        );
+      })}
+      {highlightType && (
+        <button
+          onClick={() => onHighlight(null)}
+          className="mt-2 w-full text-[10px] text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 rounded px-1 py-0.5 transition-colors"
+        >
+          clear filter
+        </button>
+      )}
     </div>
   );
 }
@@ -258,6 +298,7 @@ function Legend() {
 // ---------------------------------------------------------------------------
 
 export default function NetworkMap({ selectedFeature, flyToFeature, onFeatureClick }) {
+  const [highlightType, setHighlightType] = useState(null);
   const { data: geojson, isLoading } = useQuery({
     queryKey: ["network"],
     queryFn: fetchNetwork,
@@ -289,6 +330,7 @@ export default function NetworkMap({ selectedFeature, flyToFeature, onFeatureCli
             <GeoJSONLayer
               geojson={geojson}
               selectedFeature={selectedFeature}
+              highlightType={highlightType}
               onFeatureClick={onFeatureClick}
             />
             <MapResizeHandler />
@@ -296,7 +338,7 @@ export default function NetworkMap({ selectedFeature, flyToFeature, onFeatureCli
           </>
         )}
       </MapContainer>
-      <Legend />
+      <Legend highlightType={highlightType} onHighlight={setHighlightType} />
     </div>
   );
 }

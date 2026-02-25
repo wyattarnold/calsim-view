@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import {
   ComposedChart,
   LineChart,
   Line,
-  AreaChart,
   Area,
   XAxis,
   YAxis,
@@ -24,23 +23,37 @@ function seriesColor(key, index) {
   return COLORS[index % COLORS.length];
 }
 
-function shortKey(key) {
-  if (key === "storage")  return "Storage";
-  if (key === "flow")     return "Flow";
-  if (key.startsWith("flow_out_")) return "(out) " + key.slice(9);
-  if (key.startsWith("flow_in_"))  return "(in) "  + key.slice(8);
-  if (key === "evaporation") return "(out) evaporation";
-  if (key.startsWith("shortage_volume_")) return "ShortVol " + key.slice(16);
-  if (key.startsWith("shortage_cost_"))   return "ShortCost " + key.slice(14);
-  return key;
+/** Display label for a series key, using an optional override map. */
+function shortKey(key, keyLabels = {}) {
+  return keyLabels[key] ?? key;
 }
 
-function buildChartData(seriesMap, dateRange, negateKeys = null) {
+// ---------------------------------------------------------------------------
+// Unit conversion helpers
+// ---------------------------------------------------------------------------
+
+function daysInMonth(dateKey) {
+  const year  = Number(dateKey.slice(0, 4));
+  const month = Number(dateKey.slice(5, 7));
+  return new Date(year, month, 0).getDate();
+}
+
+function cfsToTaf(value, dateKey) {
+  return value * daysInMonth(dateKey) * 86400 / 43560 / 1000;
+}
+
+// ---------------------------------------------------------------------------
+// Data builders
+// ---------------------------------------------------------------------------
+
+function buildChartData(seriesMap, dateRange, negateKeys = null, convertFn = null, convertKeys = null) {
+  // convertKeys: Set of keys to apply convertFn to; null = apply to all keys.
   const [startYear, endYear] = dateRange ?? [null, null];
   const dateMap = new Map();
 
   for (const [key, rows] of Object.entries(seriesMap)) {
     const sign = negateKeys?.has(key) ? -1 : 1;
+    const shouldConvert = convertFn && (convertKeys === null || convertKeys.has(key));
     for (const row of rows) {
       if (!Array.isArray(row) || row.length < 2) continue;
       const [dateRaw, value] = row;
@@ -49,7 +62,8 @@ function buildChartData(seriesMap, dateRange, negateKeys = null) {
       if (startYear && year < startYear) continue;
       if (endYear && year > endYear) continue;
       if (!dateMap.has(dateKey)) dateMap.set(dateKey, { date: dateKey });
-      const num = typeof value === "number" ? value : Number(value);
+      let num = typeof value === "number" ? value : Number(value);
+      if (shouldConvert) num = convertFn(num, dateKey);
       dateMap.get(dateKey)[key] = sign * num;
     }
   }
@@ -57,73 +71,50 @@ function buildChartData(seriesMap, dateRange, negateKeys = null) {
   return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
-// CalSim node types that have "storage" semantics
-// CalSim 3 WRESL kind strings that belong to each chart group.
+// ---------------------------------------------------------------------------
+// Series splitting
+// ---------------------------------------------------------------------------
+
 const KIND_STORAGE = new Set([
   "STORAGE", "STORAGE-ZONE", "GW-STORAGE", "GROUNDWATER",
 ]);
-const KIND_FLOW = new Set([
-  "CHANNEL", "FLOW", "ADD-FLOW", "INFLOW", "DIVERSION",
-  "DELIVERY", "AG-DELIVERY", "URBAN-DELIVERY", "URBAN-DEMAND",
-  "RETURN-FLOW", "SEEPAGE", "GROUNDWATER-FLOW",
-]);
-// CalSim 3 variable-name prefix → chart group (used when kind is unknown)
-const PREFIX_GROUP = {
-  "S_":    "storage",
-  "E_":    "other",    // evaporation — standalone
-  "C_":    "flow",
-  "D_":    "flow",
-  "I_":    "flow",
-  "R_":    "flow",
-  "G_":    "flow",
-  "T_":    "flow",
-  "WTS_":  "flow",
-  "SHRTG_": "shortage",
-};
 
-function groupSeries(series, metadata) {
-  const groups = { storage: {}, flow: {}, shortage: {}, other: {} };
+/**
+ * Split the flat series/metadata into logical groups:
+ *   arcFlows  â€” series the backend tagged with direction "in" / "out"
+ *   storage   â€” series with a storage kind
+ *   balance   â€” everything else (node water-budget terms, single arc, etc.)
+ */
+// C-part kinds to suppress entirely from all charts.
+const SUPPRESSED_KINDS = new Set(["ANNUAL-APPLIED-WATER"]);
+
+function splitSeries(series, metadata) {
+  const arcFlows = {};
+  const storage  = {};
+  const balance  = {};
 
   for (const [key, data] of Object.entries(series)) {
-    // Prefer the explicit `kind` from results metadata
-    const kind = ((metadata?.[key]?.kind) || "").toUpperCase().replace(/ /g, "-");
-    if (kind && KIND_STORAGE.has(kind)) {
-      groups.storage[key] = data;
-    } else if (kind === "SHORTAGE") {
-      groups.shortage[key] = data;
-    } else if (kind && KIND_FLOW.has(kind)) {
-      groups.flow[key] = data;
+    // Suppress surface-area variables (A_* prefix).
+    if (/^A_/i.test(key)) continue;
+    const meta  = metadata?.[key] ?? {};
+    const kind  = (meta.kind || "").toUpperCase().replace(/ /g, "-");
+    if (SUPPRESSED_KINDS.has(kind)) continue;
+    if (meta.direction) {
+      arcFlows[key] = data;
+    } else if (KIND_STORAGE.has(kind)) {
+      storage[key] = data;
     } else {
-      // Fallback: CalSim variable-name prefix heuristic
-      const up = key.toUpperCase();
-      let matched = false;
-      for (const [pfx, grp] of Object.entries(PREFIX_GROUP)) {
-        if (up.startsWith(pfx)) {
-          groups[grp][key] = data;
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) groups.other[key] = data;
+      balance[key] = data;
     }
   }
-  return groups;
-}
-
-/** Return the dominant unit for a group from metadata, or a fallback string. */
-function groupUnit(groupData, metadata, fallback) {
-  for (const key of Object.keys(groupData)) {
-    const u = metadata?.[key]?.units;
-    if (u) return ` ${u}`;
-  }
-  return fallback;
+  return { arcFlows, storage, balance };
 }
 
 // ---------------------------------------------------------------------------
 // Toggleable legend
 // ---------------------------------------------------------------------------
 
-function ToggleLegend({ keys, hidden, onToggle }) {
+function ToggleLegend({ keys, hidden, onToggle, keyLabels = {} }) {
   if (keys.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-1 mt-1 mb-2">
@@ -140,7 +131,7 @@ function ToggleLegend({ keys, hidden, onToggle }) {
             }`}
           >
             <span style={{ display: "inline-block", width: 12, height: 2, background: seriesColor(key, i), borderRadius: 1 }} />
-            {shortKey(key)}
+            {shortKey(key, keyLabels)}
           </button>
         );
       })}
@@ -152,23 +143,31 @@ function ToggleLegend({ keys, hidden, onToggle }) {
 // Custom tooltip
 // ---------------------------------------------------------------------------
 
-function ChartTooltip({ active, payload, label, yUnit = "" }) {
+function ChartTooltip({ active, payload, label, yUnit = "", keyLabels = {} }) {
   if (!active || !payload?.length) return null;
-  const items = payload.filter((p) => !String(p.dataKey).startsWith("_top_"));
+  // Remap _stk_{key} entries → original key + unclamped value from the full row.
+  // Filter out _top_{key} entries (outline lines, not data).
+  const items = payload
+    .filter((p) => !String(p.dataKey).startsWith("_top_"))
+    .map((p) => {
+      const dk = String(p.dataKey);
+      if (dk.startsWith("_stk_")) {
+        const origKey = dk.slice(5);
+        const origVal = p.payload?.[origKey];
+        return { ...p, dataKey: origKey, value: origVal };
+      }
+      return p;
+    });
   if (items.length === 0) return null;
   return (
     <div style={{
-      background: "rgba(17, 24, 39, 0.85)",
-      border: "1px solid #374151",
-      borderRadius: 4,
-      fontSize: 11,
-      padding: "6px 10px",
-      backdropFilter: "blur(4px)",
+      background: "rgba(17, 24, 39, 0.85)", border: "1px solid #374151",
+      borderRadius: 4, fontSize: 11, padding: "6px 10px", backdropFilter: "blur(4px)",
     }}>
       <p style={{ color: "#9ca3af", marginBottom: 4 }}>{label}</p>
       {items.map((item) => (
         <p key={item.dataKey} style={{ color: item.color, margin: "1px 0" }}>
-          {shortKey(String(item.dataKey))}: {typeof item.value === "number" ? item.value.toFixed(2) : item.value}{yUnit}
+          {shortKey(String(item.dataKey), keyLabels)}: {typeof item.value === "number" ? Math.abs(item.value).toFixed(2) : item.value}{yUnit}
         </p>
       ))}
     </div>
@@ -176,15 +175,15 @@ function ChartTooltip({ active, payload, label, yUnit = "" }) {
 }
 
 // ---------------------------------------------------------------------------
-// Single chart
+// Single chart  (plain lines)
 // ---------------------------------------------------------------------------
 
-function Chart({ title, series, yLabel, yUnit = "", dateRange, refBounds = [], stacked = false, negateKeys = null }) {
+function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, refBounds = [], keyLabels = {}, convertFn = null }) {
   const [hidden, setHidden] = useState(new Set());
   const [collapsed, setCollapsed] = useState(false);
-
   const keys = Object.keys(series);
-  const data = buildChartData(series, dateRange, negateKeys);
+  const cfsKeys = useMemo(() => new Set(keys.filter((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS")), [keys, metadata]); // eslint-disable-line react-hooks/exhaustive-deps
+  const data = buildChartData(series, dateRange, null, convertFn, cfsKeys.size > 0 ? cfsKeys : null);
   const visibleKeys = keys.filter((k) => !hidden.has(k));
 
   const allVals = data.flatMap((row) =>
@@ -196,98 +195,320 @@ function Chart({ title, series, yLabel, yUnit = "", dateRange, refBounds = [], s
     const mn = Math.min(...allVals);
     const mx = Math.max(...allVals);
     const pad = (mx - mn) * 0.05 || Math.abs(mx) * 0.05 || 1;
-    return [mn - pad, mx + pad];
+    return [Math.min(mn - pad, 0), Math.max(mx + pad, 0)];
   }, [hidden, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const stackedLineData = useMemo(() => {
-    if (!stacked || data.length === 0) return data;
-    const inKeys  = keys.filter((k) => !negateKeys?.has(k));
-    const outKeys = keys.filter((k) =>  negateKeys?.has(k));
+  const yearTicks = useMemo(() => {
+    const seen = new Set();
+    return data.filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; }).map((r) => r.date);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (keys.length === 0 || data.length === 0) return null;
+
+  function toggle(key) { setHidden((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
+
+  return (
+    <div className="mb-5">
+      <button onClick={() => setCollapsed((c) => !c)}
+        className="flex items-center gap-1 w-full text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 mb-1">
+        <span className="text-gray-600">{collapsed ? "\u25B8" : "\u25BE"}</span>{title}
+      </button>
+      {!collapsed && <ToggleLegend keys={keys} hidden={hidden} onToggle={toggle} keyLabels={keyLabels} />}
+      {!collapsed && (
+        <ResponsiveContainer width="100%" height={180}>
+          <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
+            <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
+              tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
+            <Tooltip content={<ChartTooltip yUnit={yUnit} keyLabels={keyLabels} />} />
+            <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
+            {data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
+              <ReferenceLine key={`oct-${r.date}`} x={r.date} stroke="#374151" strokeWidth={0.5} opacity={0.7} />
+            )}
+            {meanVal > 0 && (
+              <ReferenceLine y={meanVal} stroke="#374151" strokeDasharray="4 2"
+                label={{ value: "avg", position: "right", fontSize: 8, fill: "#4b5563" }} />
+            )}
+            {keys.map((key, i) => (
+              <Line key={key} type="monotone" dataKey={key} stroke={seriesColor(key, i)}
+                hide={hidden.has(key)} dot={false} strokeWidth={1.5} connectNulls activeDot={{ r: 3 }} isAnimationActive={false} />
+            ))}
+            {refBounds.map((b) => (
+              <ReferenceLine key={b.type} y={b.bound} stroke={REF_COLORS[b.type] ?? "#6b7280"}
+                strokeDasharray="6 3" strokeWidth={1.5} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Stacked area chart  (in/out flows)
+// ---------------------------------------------------------------------------
+
+function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null }) {
+  const [hidden, setHidden] = useState(new Set());
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Sort: (in) keys first, (out) keys after — drives render order and stacking order
+  const keys = Object.keys(series).sort((a, b) => {
+    const da = metadata?.[a]?.direction === "out" ? 1 : 0;
+    const db = metadata?.[b]?.direction === "out" ? 1 : 0;
+    return da - db;
+  });
+  const negateKeys = useMemo(
+    () => new Set(keys.filter((k) => metadata?.[k]?.direction === "out")),
+    [keys, metadata] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const keyLabels = useMemo(
+    () => Object.fromEntries(keys.map((k) => [k, (metadata?.[k]?.direction === "out" ? "(out) " : "(in) ") + k])),
+    [keys, metadata] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const cfsKeys = useMemo(
+    () => new Set(keys.filter((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS")),
+    [keys, metadata] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const yUnit = cfsKeys.size > 0
+    ? (convertFn ? " TAF" : " CFS")
+    : (() => { for (const k of keys) { const u = metadata?.[k]?.units; if (u) return ` ${u}`; } return ""; })();
+
+  const data = buildChartData(series, dateRange, negateKeys, convertFn, cfsKeys.size > 0 ? cfsKeys : null);
+  const visibleKeys = keys.filter((k) => !hidden.has(k));
+
+  const allVals = data.flatMap((row) =>
+    visibleKeys.map((k) => row[k]).filter((v) => v != null && !isNaN(v))
+  );
+  const yDomain = useMemo(() => {
+    if (allVals.length === 0) return ["auto", "auto"];
+    const mn = Math.min(...allVals);
+    const mx = Math.max(...allVals);
+    const pad = (mx - mn) * 0.05 || Math.abs(mx) * 0.05 || 1;
+    return [Math.min(mn - pad, 0), Math.max(mx + pad, 0)];
+  }, [hidden, data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clamped stacking values + cumulative tops.
+  //
+  // CalSim flow series occasionally dip negative even for "inflow" arcs (model
+  // deficits / routing artefacts).  If we stack raw values the cumulative tops
+  // are non-monotone and the outline Lines cross each other.  Fix: clamp each
+  // series to its expected sign before accumulating so the cumulative is
+  // guaranteed monotone.  The original (unclamped) values stay in `row[k]` for
+  // the tooltip.
+  //
+  // Only visible keys contribute — hidden Areas are excluded from Recharts'
+  // own stack, so our manual tops must match.
+  const stackedData = useMemo(() => {
+    if (data.length === 0) return data;
+    const inKeys  = keys.filter((k) => !negateKeys.has(k) && !hidden.has(k));
+    const outKeys = keys.filter((k) =>  negateKeys.has(k) && !hidden.has(k));
     return data.map((row) => {
       const extra = {};
       let acc = 0;
-      for (const k of inKeys)  { acc += hidden.has(k) ? 0 : (row[k] ?? 0); extra[`_top_${k}`] = acc; }
+      for (const k of inKeys) {
+        const v = Math.max(row[k] ?? 0, 0);   // clamp inflow ≥ 0
+        extra[`_stk_${k}`] = v;
+        acc += v;
+        extra[`_top_${k}`] = acc;
+      }
       acc = 0;
-      for (const k of outKeys) { acc += hidden.has(k) ? 0 : (row[k] ?? 0); extra[`_top_${k}`] = acc; }
+      for (const k of outKeys) {
+        const v = Math.min(row[k] ?? 0, 0);   // clamp outflow ≤ 0
+        extra[`_stk_${k}`] = v;
+        acc += v;
+        extra[`_top_${k}`] = acc;
+      }
       return { ...row, ...extra };
     });
-  }, [stacked, data, keys, negateKeys, hidden]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, keys, negateKeys, hidden]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const yearTicks = useMemo(() => {
+    const seen = new Set();
+    return data.filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; }).map((r) => r.date);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (keys.length === 0 || data.length === 0) return null;
+
+  function toggle(key) { setHidden((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
+
+  return (
+    <div className="mb-5">
+      <button onClick={() => setCollapsed((c) => !c)}
+        className="flex items-center gap-1 w-full text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 mb-1">
+        <span className="text-gray-600">{collapsed ? "\u25B8" : "\u25BE"}</span>{title}
+      </button>
+      {!collapsed && <ToggleLegend keys={keys} hidden={hidden} onToggle={toggle} keyLabels={keyLabels} />}
+      {!collapsed && (
+        <ResponsiveContainer width="100%" height={180}>
+          <ComposedChart data={stackedData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
+            <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
+              tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
+            <Tooltip content={<ChartTooltip yUnit={yUnit} keyLabels={keyLabels} />} />
+            <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
+            {data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
+              <ReferenceLine key={`oct-${r.date}`} x={r.date} stroke="#374151" strokeWidth={0.5} opacity={0.7} />
+            )}
+            {/* Pass 1: stacked fills using clamped _stk_ values, no stroke */}
+            {keys.map((key, i) => (
+              <Area key={key} type="monotone" dataKey={`_stk_${key}`} stroke="none"
+                fill={seriesColor(key, i)} fillOpacity={0.3}
+                stackId={negateKeys.has(key) ? "out" : "in"}
+                hide={hidden.has(key)} dot={false} connectNulls isAnimationActive={false} />
+            ))}
+            {/* Pass 2: outline Line at the cumulative top of each band */}
+            {keys.map((key, i) => (
+              <Line key={`_line_${key}`} type="monotone" dataKey={`_top_${key}`}
+                stroke={seriesColor(key, i)} strokeWidth={1.5} dot={false}
+                hide={hidden.has(key)} connectNulls activeDot={false} isAnimationActive={false} />
+            ))}
+          </ComposedChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Water Balance stacked-area chart (GP/DG/RU above zero, DL/DP/EV/OS/RP/LF below)
+// ---------------------------------------------------------------------------
+
+const WB_TERMS = {
+  "GW-PUMPING":        { label: "GP", positive: true  },
+  "SW-DELIVERY-GROSS": { label: "DG", positive: true  },
+  "SW_DELIVERY-GROSS": { label: "DG", positive: true  },
+  "DELIVERY-LOSS":     { label: "DL", positive: false },
+  "DEEP-PERCOLATION":  { label: "DP", positive: false },
+  "PERCOLATION-LOSS":  { label: "DP", positive: false },
+  "EVAPORATIVE-LOSS":  { label: "EV", positive: false },
+  "EVAPORATION":       { label: "EV", positive: false },
+  "OPERATING-SPILL":   { label: "OS", positive: false },
+  "OPERATIONAL-SPILL": { label: "OS", positive: false },
+  "SPILL-LOSS":        { label: "OS", positive: false },
+  "RIPARIAN-MISC-ET":  { label: "RP", positive: false },
+  "REUSE":             { label: "RU", positive: true  },
+  "LATERAL-FLOW-LOSS": { label: "LF", positive: false },
+};
+
+const WB_ORDER   = ["GP", "DG", "RU", "DL", "DP", "EV", "OS", "RP", "LF"];
+const WB_COLORS  = {
+  GP: "#10b981", DG: "#3b82f6", RU: "#14b8a6",
+  DL: "#ef4444", DP: "#f59e0b", EV: "#f97316",
+  OS: "#8b5cf6", RP: "#ec4899", LF: "#eab308",
+};
+const WB_POSITIVE = new Set(["GP", "DG", "RU"]);
+
+function WaterBalanceChart({ series, metadata, dateRange, convertFn = null }) {
+  const [hidden, setHidden]       = useState(new Set());
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Aggregate raw series into per-term totals: { label: [[dateKey, sumVal], ...] }
+  const { wbSeries, wbUnits, presentLabels } = useMemo(() => {
+    const agg = {};       // label → { dateKey: sum }
+    const unitForLabel = {};
+    for (const [key, rows] of Object.entries(series)) {
+      const rawCpart = (metadata?.[key]?.c_part || metadata?.[key]?.kind || "").toUpperCase().replace(/ /g, "-");
+      const term = WB_TERMS[rawCpart];
+      if (!term) continue;
+      const { label } = term;
+      if (!agg[label]) agg[label] = {};
+      const u = (metadata?.[key]?.units || "").toUpperCase();
+      if (u) unitForLabel[label] = u;
+      for (const row of rows) {
+        if (!Array.isArray(row) || row.length < 2) continue;
+        const dateKey = String(row[0]).slice(0, 10);
+        const val = typeof row[1] === "number" ? row[1] : Number(row[1]);
+        if (!isNaN(val)) agg[label][dateKey] = (agg[label][dateKey] ?? 0) + val;
+      }
+    }
+    const wbSeries = {};
+    for (const [label, dateMap] of Object.entries(agg)) {
+      wbSeries[label] = Object.entries(dateMap).map(([d, v]) => [d, v]);
+    }
+    const presentLabels = WB_ORDER.filter((l) => l in wbSeries);
+    return { wbSeries, wbUnits: unitForLabel, presentLabels };
+  }, [series, metadata]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const negateLabels = useMemo(
+    () => new Set(presentLabels.filter((l) => !WB_POSITIVE.has(l))),
+    [presentLabels], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const cfsLabels = useMemo(
+    () => new Set(presentLabels.filter((l) => (wbUnits[l] || "").toUpperCase() === "CFS")),
+    [presentLabels, wbUnits], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const yUnit = cfsLabels.size > 0
+    ? (convertFn ? " TAF" : " CFS")
+    : (() => { for (const l of presentLabels) { const u = wbUnits[l]; if (u) return ` ${u}`; } return ""; })();
+
+  const data = buildChartData(wbSeries, dateRange, negateLabels, convertFn, cfsLabels.size > 0 ? cfsLabels : null);
+
+  const visibleLabels = presentLabels.filter((l) => !hidden.has(l));
+  const allVals = data.flatMap((row) =>
+    visibleLabels.map((l) => row[l]).filter((v) => v != null && !isNaN(v))
+  );
+  const yDomain = useMemo(() => {
+    if (allVals.length === 0) return ["auto", "auto"];
+    const mn = Math.min(...allVals);
+    const mx = Math.max(...allVals);
+    const pad = (mx - mn) * 0.05 || Math.abs(mx) * 0.05 || 1;
+    return [Math.min(mn - pad, 0), Math.max(mx + pad, 0)];
+  }, [hidden, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const yearTicks = useMemo(() => {
     const seen = new Set();
     return data
       .filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; })
-      .map((row) => row.date);
+      .map((r) => r.date);
   }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (keys.length === 0 || data.length === 0) return null;
+  if (presentLabels.length === 0 || data.length === 0) return null;
 
-  function toggleSeries(key) {
-    setHidden((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
-  }
+  function toggle(l) { setHidden((p) => { const n = new Set(p); n.has(l) ? n.delete(l) : n.add(l); return n; }); }
 
   return (
     <div className="mb-5">
-      <button
-        onClick={() => setCollapsed((c) => !c)}
-        className="flex items-center gap-1 w-full text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 mb-1"
-      >
-        <span className="text-gray-600">{collapsed ? "▸" : "▾"}</span>
-        {title}
+      <button onClick={() => setCollapsed((c) => !c)}
+        className="flex items-center gap-1 w-full text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 mb-1">
+        <span className="text-gray-600">{collapsed ? "\u25B8" : "\u25BE"}</span>Water Balance
       </button>
-      {!collapsed && <ToggleLegend keys={keys} hidden={hidden} onToggle={toggleSeries} />}
+      {!collapsed && (
+        <div className="flex flex-wrap gap-1 mt-1 mb-2">
+          {presentLabels.map((label) => (
+            <button key={label} onClick={() => toggle(label)}
+              className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border transition-opacity ${
+                hidden.has(label) ? "opacity-30 border-gray-700 text-gray-600" : "opacity-100 border-gray-600 text-gray-300"
+              }`}
+            >
+              <span style={{ display: "inline-block", width: 12, height: 2, background: WB_COLORS[label], borderRadius: 1 }} />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {!collapsed && (
         <ResponsiveContainer width="100%" height={180}>
-          {stacked ? (
-            <ComposedChart data={stackedLineData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
-              <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
-                tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
-              <Tooltip content={<ChartTooltip yUnit={yUnit} />} />
-              <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
-              {keys.map((key, i) => (
-                <Area key={key} type="monotone" dataKey={key} stroke="none" fill={seriesColor(key, i)}
-                  fillOpacity={0.25} stackId={negateKeys?.has(key) ? "out" : "in"}
-                  hide={hidden.has(key)} dot={false} connectNulls isAnimationActive={false} />
-              ))}
-              {[...keys].reverse().map((key) => {
-                const i = keys.indexOf(key);
-                return (
-                  <Line key={`_line_${key}`} type="monotone" dataKey={`_top_${key}`}
-                    stroke={seriesColor(key, i)} strokeWidth={1} dot={false}
-                    hide={hidden.has(key)} connectNulls activeDot={false} isAnimationActive={false} />
-                );
-              })}
-            </ComposedChart>
-          ) : (
-            <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
-              <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
-                tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)}
-                label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", style: { fontSize: 8, fill: "#4b5563" } } : undefined} />
-              <Tooltip content={<ChartTooltip yUnit={yUnit} />} />
-              {data.filter((row) => row.date.slice(5, 7) === "09")
-                .map((row) => <ReferenceLine key={`oct-${row.date}`} x={row.date} stroke="#374151" strokeWidth={0.5} opacity={0.7} />)}
-              {meanVal > 0 && (
-                <ReferenceLine y={meanVal} stroke="#374151" strokeDasharray="4 2"
-                  label={{ value: "avg", position: "right", fontSize: 8, fill: "#4b5563" }} />
-              )}
-              {keys.map((key, i) => (
-                <Line key={key} type="monotone" dataKey={key} stroke={seriesColor(key, i)}
-                  hide={hidden.has(key)} dot={false} strokeWidth={1.5} connectNulls activeDot={{ r: 3 }} />
-              ))}
-              {refBounds.map((b) => (
-                <ReferenceLine key={b.type} y={b.bound} stroke={REF_COLORS[b.type] ?? "#6b7280"}
-                  strokeDasharray="6 3" strokeWidth={1.5} />
-              ))}
-            </LineChart>
-          )}
+          <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
+            <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
+              tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
+            <Tooltip content={<ChartTooltip yUnit={yUnit} />} />
+            <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
+            {data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
+              <ReferenceLine key={`oct-${r.date}`} x={r.date} stroke="#374151" strokeWidth={0.5} opacity={0.7} />
+            )}
+            {presentLabels.map((label) => (
+              <Area key={label} type="monotone" dataKey={label}
+                stroke={WB_COLORS[label]} fill={WB_COLORS[label]}
+                fillOpacity={0.3} strokeWidth={1.5}
+                stackId={WB_POSITIVE.has(label) ? "in" : "out"}
+                hide={hidden.has(label)} dot={false} connectNulls isAnimationActive={false} />
+            ))}
+          </ComposedChart>
         </ResponsiveContainer>
       )}
     </div>
@@ -299,18 +520,84 @@ function Chart({ title, series, yLabel, yUnit = "", dateRange, refBounds = [], s
 // ---------------------------------------------------------------------------
 
 export default function ResultsChart({ series, metadata, dateRange }) {
-  const groups = groupSeries(series, metadata);
+  const [displayUnit, setDisplayUnit] = useState("CFS");
+  const convertFn = displayUnit === "TAF" ? cfsToTaf : null;
 
-  const storageUnit = groupUnit(groups.storage, metadata, " TAF");
-  const flowUnit    = groupUnit(groups.flow,    metadata, " CFS");
-  const shortUnit   = groupUnit(groups.shortage, metadata, " CFS");
+  const { arcFlows, storage, balance } = splitSeries(series, metadata);
+
+  const hasArcFlows = Object.keys(arcFlows).length > 0;
+  const hasCfsArcFlows = Object.keys(arcFlows).some((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS");
+  const hasCfsBalance = Object.keys(balance).some((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS");
+  const showToggle = hasCfsArcFlows || hasCfsBalance;
+  const storageUnit = (() => { for (const k of Object.keys(storage)) { const u = metadata?.[k]?.units; if (u) return ` ${u}`; } return " TAF"; })();
+
+  // Split balance into WB terms (→ stacked area) and everything else (→ line chart).
+  const wbCpartSet = useMemo(() => new Set(Object.keys(WB_TERMS)), []);
+  const otherBalance = useMemo(() => {
+    const out = {};
+    for (const [k, v] of Object.entries(balance)) {
+      const cp = (metadata?.[k]?.c_part || metadata?.[k]?.kind || "").toUpperCase().replace(/ /g, "-");
+      if (!wbCpartSet.has(cp)) out[k] = v;
+    }
+    return out;
+  }, [balance, metadata, wbCpartSet]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hasCfsOther = Object.keys(otherBalance).some((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS");
+  const otherUnit = (() => {
+    if (hasCfsOther) return displayUnit === "TAF" ? " TAF" : " CFS";
+    for (const k of Object.keys(otherBalance)) { const u = metadata?.[k]?.units; if (u) return ` ${u}`; }
+    return "";
+  })();
 
   return (
     <div>
-      <Chart title="Storage"  series={groups.storage}  yUnit={storageUnit} dateRange={dateRange} />
-      <Chart title="Flow"     series={groups.flow}     yUnit={flowUnit}    dateRange={dateRange} />
-      <Chart title="Shortage" series={groups.shortage} yUnit={shortUnit}   dateRange={dateRange} />
-      <Chart title="Other"    series={groups.other}                        dateRange={dateRange} />
+      {/* CFS/TAF toggle */}
+      {showToggle && (
+        <div className="flex items-center gap-1 mb-3">
+          <span className="text-[10px] text-gray-500 mr-1">Units:</span>
+          {["CFS", "TAF"].map((u) => (
+            <button key={u} onClick={() => setDisplayUnit(u)}
+              className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                displayUnit === u
+                  ? "border-blue-500 text-blue-400 bg-blue-950"
+                  : "border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-400"
+              }`}>{u}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Arc Flows — stacked in/out */}
+      {hasArcFlows && (
+        <StackedFlowChart
+          title="Arc Flows"
+          series={arcFlows}
+          metadata={metadata}
+          dateRange={dateRange}
+          convertFn={hasCfsArcFlows ? convertFn : null}
+        />
+      )}
+
+      {/* Storage â€” plain lines, always TAF */}
+      <LineChartPanel title="Storage" series={storage} metadata={metadata} yUnit={storageUnit} dateRange={dateRange} />
+
+      {/* Water Balance — stacked area by GP/DG/RU/DL/DP/EV/OS/RP/LF terms */}
+      <WaterBalanceChart
+        series={balance}
+        metadata={metadata}
+        dateRange={dateRange}
+        convertFn={hasCfsBalance ? convertFn : null}
+      />
+
+      {/* Other balance / single arc — plain lines */}
+      <LineChartPanel
+        title={hasArcFlows ? "Other" : "Flow"}
+        series={otherBalance}
+        metadata={metadata}
+        yUnit={otherUnit}
+        dateRange={dateRange}
+        convertFn={hasCfsOther ? convertFn : null}
+      />
     </div>
   );
 }
+

@@ -86,6 +86,9 @@ class StudyStore:
         if self._df is None:
             logger.info("Loading results from %s", self.parquet_path)
             self._df = pd.read_parquet(self.parquet_path)
+            # Snap to end-of-month so dates display as e.g. 1921-10-31
+            # rather than 1921-10-01 regardless of how pydsstools stamped them.
+            self._df.index = self._df.index + pd.offsets.MonthEnd(0)
             logger.info(
                 "  Loaded: %d variables x %d time steps",
                 len(self._df.columns),
@@ -149,18 +152,26 @@ class StudyStore:
         Returns a dict keyed by variable name.
         """
         result: Dict[str, pd.Series] = {}
-        # Try as arc (exact match)
+        meta = self._ensure_meta()
+        # Try direct match (arc features: arc_id == DSS variable name)
         s = self.get_series(feature_id)
         if s is not None:
             result[feature_id] = s
-            return result
-        # For node features we look at dss_variables in the metadata
-        meta = self._ensure_meta()
-        node_vars = meta.get("node_dss_variables", {}).get(feature_id.upper(), [])
-        for var in node_vars:
-            s = self.get_series(var)
-            if s is not None:
-                result[var] = s
+        # For node features without a direct match, look up node_dss_variables
+        if not result:
+            node_vars = meta.get("node_dss_variables", {}).get(feature_id.upper(), [])
+            for var in node_vars:
+                s = self.get_series(var)
+                if s is not None:
+                    result[var] = s
+        # For arc features with override DSS variable mappings, append them
+        # alongside any direct match (allows split-flow arcs like C_SAC000)
+        arc_vars = meta.get("arc_dss_variables", {}).get(feature_id.upper(), [])
+        for var in arc_vars:
+            if var not in result:
+                s = self.get_series(var)
+                if s is not None:
+                    result[var] = s
         return result
 
     def get_variable_meta(self, prmname: str) -> Dict[str, Any]:

@@ -42,8 +42,93 @@ logger = logging.getLogger(__name__)
 # DSS variable helpers
 # ---------------------------------------------------------------------------
 
-# Common one-character prefixes for node variables:  S_ SHSTA, D_ DELTA, etc.
-_NODE_PREFIXES = ("S_", "D_", "G_", "T_", "WTS_", "EG_", "C2V_", "SWP_", "CVP_")
+# Prefixes that map a DSS variable name to a GeoSchematic node cs3_id.
+# Rules:
+#   • Longer prefixes MUST appear before shorter ones that share the same
+#     leading characters (e.g. "GP_" before "G_") to prevent partial stripping.
+#   • Add new prefixes in length-descending order within each group.
+#
+# Prefix glossary (CalSim 3 DV naming conventions):
+#   AW_      agricultural water (applied)
+#   C2V_     C2VSim-linked demand node
+#   CVP_     Central Valley Project delivery
+#   DG_      demand — groundwater component
+#   DL_      demand — delivery level
+#   DN_      demand — native surface water
+#   DP_      demand — delivery percent
+#   EG_      estimated groundwater
+#   EL_      evapotranspiration (local?)
+#   EV_      evapotranspiration
+#   GP_      groundwater pumping
+#   LF_      local flows / local surface water
+#   MF_      minimum flow requirement
+#   OS_      outflow / seepage
+#   PEAKAW_  peak agricultural water demand
+#   RP_      riparian recovery / return flow
+#   RU_      return flow — urban
+#   SHRTG_   shortage
+#   SL_      seepage loss
+#   SUMAW_   sum of agricultural water deliveries
+#   SUMUD_   sum of urban demand
+#   SWP_     State Water Project delivery
+#   SWDEM_   surface water demand (e.g. SWDEM_02_PADV → node 02_PA with DV suffix stripped)
+#   WTS_     water transfer / wheeling supply
+#   XNM_TOTAL_ total non-market exchange
+_NODE_PREFIXES = (
+    # Longest compound prefixes first
+    "XNM_TOTAL_",
+    "SWDEM_",
+    "PEAKAW_",
+    "SUMAW_",
+    "SUMUD_",
+    "SHRTG_",
+    # 4-character prefixes
+    "C2V_",
+    "CVP_",
+    "SWP_",
+    "WTS_",
+    # 3-character prefixes — longer before shorter with same root
+    "AW_",
+    "DG_",
+    "DL_",
+    "DN_",
+    "DP_",
+    "EG_",
+    "EL_",
+    "EV_",
+    "GP_",
+    "LF_",
+    "MF_",
+    "OS_",
+    "RP_",
+    "RU_",
+    "SL_",
+    # 2-character prefixes (single letter + underscore)
+    "A_",
+    "C_",
+    "D_",
+    "E_",
+    "F_",
+    "G_",
+    "R_",
+    "S_",
+    "T_",
+    "X_",
+)
+
+
+# Arc features whose flow is split across multiple DSS variables that don't
+# share the arc's name.  These are explicitly extracted and stored under
+# arc_dss_variables in results_meta.json so the app can look them up.
+# Key: arc_id (uppercase); Value: list of DSS variable names to extract.
+ARC_DSS_OVERRIDES: Dict[str, List[str]] = {
+    "C_SAC000_MIN": ["NDOI_MIN"],
+    "C_SAC000_ADD": ["NDOI_ADD"],
+}
+
+# CalSim DV naming appends short tags to node IDs for some variable families.
+# After stripping the prefix, also try removing these to find a node match.
+_NODE_TRAILING_TAGS = ("DV",)
 
 
 def _strip_prefix(varname: str, cs3_ids: Set[str]) -> Optional[str]:
@@ -54,6 +139,12 @@ def _strip_prefix(varname: str, cs3_ids: Set[str]) -> Optional[str]:
             candidate = upper[len(pfx):]
             if candidate in cs3_ids:
                 return candidate
+            # Try stripping known trailing tags (e.g. "DV" in SWDEM_02_PADV)
+            for tag in _NODE_TRAILING_TAGS:
+                if candidate.endswith(tag):
+                    trimmed = candidate[: -len(tag)]
+                    if trimmed in cs3_ids:
+                        return trimmed
     return None
 
 
@@ -150,9 +241,21 @@ def _read_and_match_dss(
     except Exception:
         pass
 
-    df = dss.read_all(matched_var_names)
+    # Read each matched variable; capture DSS-native units from series.attrs
+    # (read_timeseries populates attrs['units'] from the ts object).
+    frames: Dict[str, pd.Series] = {}
+    for var in matched_var_names:
+        try:
+            s = dss.read_timeseries(var)
+            frames[var] = s
+            dss_units = s.attrs.get("units", "")
+            if dss_units and var in wresl_meta:
+                wresl_meta[var]["dss_units"] = dss_units
+        except Exception as exc:
+            logger.debug("Skipping %s: %s", var, exc)
     dss.close()
-    logger.info("  Read complete: %d variables \u00d7 %d time steps", len(df.columns), len(df))
+    df = pd.concat(frames, axis=1) if frames else pd.DataFrame()
+    logger.info("  Read complete: %d variables \u00d7 %d time steps", len(df.columns), len(df) if not df.empty else 0)
 
     matched_map = {var: (fid, fkind) for var, fid, fkind in matched}
     return df, matched_map, wresl_meta
@@ -232,6 +335,24 @@ def build_results(
         else:
             logger.warning("gwout_file not found: %s — skipping", p)
 
+    sv_path: Optional[Path] = None
+    sv_hint = source_meta.get("sv_file")
+    if sv_hint:
+        p = study_dir / sv_hint
+        if p.exists():
+            sv_path = p
+            logger.info("SV file: %s", sv_path)
+        else:
+            logger.warning("sv_file not found: %s — skipping", p)
+    else:
+        # Auto-discover SV in DSS/input/ (SV files are inputs, not outputs)
+        input_dir = study_dir / "DSS" / "input"
+        sv_candidates = sorted(input_dir.glob("*.dss")) if input_dir.exists() else []
+        preferred = [p for p in sv_candidates if "_SV_" in p.name.upper()]
+        sv_path = (preferred or sv_candidates or [None])[0]
+        if sv_path:
+            logger.info("SV file (auto-discovered): %s", sv_path)
+
     # -----------------------------------------------------------------------
     # Read DV file
     # -----------------------------------------------------------------------
@@ -259,6 +380,74 @@ def build_results(
                 logger.info("No variables from GWOUT matched GeoSchematic features — nothing merged")
 
     # -----------------------------------------------------------------------
+    # Read SV file (optional) and merge new-only columns
+    # -----------------------------------------------------------------------
+    if sv_path is not None:
+        logger.info("Reading SV file...")
+        df_sv, sv_matched, sv_wresl = _read_and_match_dss(sv_path, arc_ids, cs3_ids)
+        new_cols = [c for c in df_sv.columns if c not in df_raw.columns]
+        if new_cols:
+            df_raw = pd.concat([df_raw, df_sv[new_cols]], axis=1)
+            matched_map.update(sv_matched)
+            wresl_meta.update(sv_wresl)
+            logger.info("Merged %d SV variables into DataFrame", len(new_cols))
+        else:
+            logger.info("No new variables from SV (%d already in DV/GWOUT)", len(df_sv.columns))
+
+    # -----------------------------------------------------------------------
+    # Extract arc DSS override variables (e.g. NDOI_MIN / NDOI_ADD for C_SAC000)
+    # These don't match any GeoSchematic feature name so they are pulled
+    # explicitly from the DV file and merged into df_raw.
+    # -----------------------------------------------------------------------
+    arc_dss_vars: Dict[str, List[str]] = {}
+    if ARC_DSS_OVERRIDES:
+        from csview.study.dss_reader import DssFile
+        dss_ov = DssFile(dv_path)
+        dss_ov.open()
+        override_frames: Dict[str, pd.Series] = {}
+        override_meta: Dict[str, dict] = {}
+        try:
+            cat_ov = dss_ov.catalog()
+        except Exception:
+            cat_ov = {}
+        for arc_id_upper, dss_vars in ARC_DSS_OVERRIDES.items():
+            extracted: List[str] = []
+            for dv in dss_vars:
+                if dv in df_raw.columns:
+                    extracted.append(dv)
+                    continue
+                try:
+                    s = dss_ov.read_timeseries(dv)
+                    override_frames[dv] = s
+                    paths = cat_ov.get(dv, [])
+                    preferred = next(
+                        (p for p in paths if p.e.upper() == "1MON"),
+                        paths[0] if paths else None,
+                    )
+                    override_meta[dv] = {
+                        "c_part": preferred.c if preferred else "FLOW",
+                        "b_part": preferred.b if preferred else "",
+                        "dss_units": s.attrs.get("units", "CFS"),
+                    }
+                    extracted.append(dv)
+                    logger.info("  Extracted override variable %s for arc %s", dv, arc_id_upper)
+                except Exception as exc:
+                    logger.warning("  Could not read override variable %s: %s", dv, exc)
+            if extracted:
+                arc_dss_vars[arc_id_upper] = extracted
+        dss_ov.close()
+        if override_frames:
+            df_ov = pd.concat(override_frames, axis=1)
+            new_ov_cols = [c for c in df_ov.columns if c not in df_raw.columns]
+            if new_ov_cols:
+                df_raw = pd.concat([df_raw, df_ov[new_ov_cols]], axis=1)
+                for dv in new_ov_cols:
+                    om = override_meta.get(dv, {})
+                    matched_map[dv] = (dv, "arc")
+                    wresl_meta[dv] = om
+                logger.info("  Merged %d arc override variables", len(new_ov_cols))
+
+    # -----------------------------------------------------------------------
     # Clip to simulation_period
     # -----------------------------------------------------------------------
     sim_period = source_meta.get("simulation_period", {})
@@ -284,9 +473,29 @@ def build_results(
             "feature_kind": fkind,
             "c_part": wm.get("c_part", ""),
             "b_part": wm.get("b_part", ""),
-            "units": _infer_units(wm.get("c_part", ""), fkind),
+            "units": wm.get("dss_units") or _infer_units(wm.get("c_part", ""), fkind),
             "kind": wm.get("c_part", ""),
         }
+
+    # -----------------------------------------------------------------------
+    # Normalise arc units: convert any TAF arc columns → CFS so all flow
+    # variables share the same unit (CFS) in the Parquet.
+    # TAF→CFS: multiply by (1000 * 43560) / (days_in_month * 86400)
+    # -----------------------------------------------------------------------
+    if not df_raw.empty:
+        taf_arc_cols = [
+            v for v, m in meta_vars.items()
+            if m["feature_kind"] == "arc" and m["units"].upper() == "TAF"
+            and v in df_raw.columns
+        ]
+        if taf_arc_cols:
+            days = df_raw.index.days_in_month.values  # shape (n_rows,)
+            cfs_factor = (1000 * 43560) / (days * 86400)  # shape (n_rows,)
+            import numpy as np
+            df_raw[taf_arc_cols] = df_raw[taf_arc_cols].multiply(cfs_factor, axis=0)
+            for v in taf_arc_cols:
+                meta_vars[v]["units"] = "CFS"
+            logger.info("Converted %d TAF arc columns → CFS", len(taf_arc_cols))
 
     # -----------------------------------------------------------------------
     # Write Parquet
@@ -319,10 +528,12 @@ def build_results(
         "built_at": datetime.utcnow().isoformat() + "Z",
         "dv_file": str(dv_path),
         "gwout_file": str(gwout_path) if gwout_path else None,
+        "sv_file": str(sv_path) if sv_path else None,
         "simulation_period": sim_period if (sim_start or sim_end) else None,
         "date_range": {"start": date_start, "end": date_end},
         "variables": meta_vars,
         "node_dss_variables": node_dss_vars,
+        "arc_dss_variables": arc_dss_vars,
     }
     if source_meta.get("description"):
         meta_doc["description"] = source_meta["description"]
@@ -345,6 +556,8 @@ def _infer_units(c_part: str, feature_kind: str) -> str:
     if "STORAGE" in cp or "SHORTAGE" in cp:
         return "TAF"
     if "GROUNDWATER" in cp or "GW" in cp:
+        return "TAF"
+    if "DEMAND" in cp:
         return "TAF"
     return ""
 

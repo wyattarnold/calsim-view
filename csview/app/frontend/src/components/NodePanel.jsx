@@ -45,6 +45,7 @@ const DROUGHT_PRESETS = [
 
 function YearRangeSlider({ years, startIdx, endIdx, onStartChange, onEndChange }) {
   const [nearStart, setNearStart] = useState(false);
+  const dragRef = useRef(null); // { startX, startStartIdx, startEndIdx, trackWidth }
 
   if (years.length === 0) return null;
   const max = years.length - 1;
@@ -52,11 +53,49 @@ function YearRangeSlider({ years, startIdx, endIdx, onStartChange, onEndChange }
   const endPct   = max > 0 ? (endIdx   / max) * 100 : 100;
 
   function handleTrackPointerMove(e) {
+    if (dragRef.current) return; // don't flip nearStart while panning
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const startFrac = max > 0 ? startIdx / max : 0;
     const endFrac   = max > 0 ? endIdx   / max : 1;
     setNearStart(Math.abs(x - startFrac) <= Math.abs(x - endFrac));
+  }
+
+  function handleCenterPointerDown(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const trackEl = e.currentTarget.parentElement;
+    const rect = trackEl.getBoundingClientRect();
+    dragRef.current = {
+      startX: e.clientX,
+      startStartIdx: startIdx,
+      startEndIdx: endIdx,
+      trackWidth: rect.width,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function handleCenterPointerMove(e) {
+    if (!dragRef.current) return;
+    const { startX, startStartIdx, startEndIdx, trackWidth } = dragRef.current;
+    const window = startEndIdx - startStartIdx;
+    const deltaFrac = (e.clientX - startX) / trackWidth;
+    const deltaIdx = Math.round(deltaFrac * max);
+    let newStart = startStartIdx + deltaIdx;
+    let newEnd   = startEndIdx   + deltaIdx;
+    // clamp so window doesn't go out of bounds
+    if (newStart < 0)   { newEnd -= newStart;   newStart = 0; }
+    if (newEnd   > max) { newStart -= (newEnd - max); newEnd = max; }
+    newStart = Math.max(0, newStart);
+    newEnd   = Math.min(max, newEnd);
+    if (newEnd - newStart === window) {
+      onStartChange(newStart);
+      onEndChange(newEnd);
+    }
+  }
+
+  function handleCenterPointerUp(e) {
+    dragRef.current = null;
   }
 
   function applyPreset(startYear, endYear) {
@@ -117,13 +156,26 @@ function YearRangeSlider({ years, startIdx, endIdx, onStartChange, onEndChange }
               style={{ left: `${startPct}%`, right: `${100 - endPct}%` }}
             />
           </div>
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-400 border border-gray-900 pointer-events-none"
+          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-400 border border-gray-900 pointer-events-none"
             style={{ left: `calc(${startPct}% - 6px)`, zIndex: 10 }}
           />
           <div
             className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-400 border border-gray-900 pointer-events-none"
             style={{ left: `calc(${endPct}% - 6px)`, zIndex: 10 }}
+          />
+          {/* Center grab zone — drag to pan the whole window */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 h-3"
+            style={{
+              left: `${startPct}%`,
+              right: `${100 - endPct}%`,
+              zIndex: 6,
+              cursor: dragRef.current ? "grabbing" : "grab",
+            }}
+            onPointerDown={handleCenterPointerDown}
+            onPointerMove={handleCenterPointerMove}
+            onPointerUp={handleCenterPointerUp}
+            onPointerCancel={handleCenterPointerUp}
           />
           <input
             type="range" min={0} max={max} value={startIdx}

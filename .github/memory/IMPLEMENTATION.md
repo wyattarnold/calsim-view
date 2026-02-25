@@ -397,12 +397,66 @@ Core data classes and type-inference helpers.
 
 ### `csview.study.__main__` (CLI builder)
 
+> **Performance — IMPORTANT**: Reading both DSS files takes **3–5 minutes**.
+> Always use `run_in_terminal` with `isBackground=true` and a log file, then
+> call `await_terminal` with timeout ≥ 360 000 ms before reading results.
+> Do **not** run it blocking/foreground and do **not** assume it has finished
+> until `results_meta.json` shows a new `built_at` timestamp.
+>
+> ```bat
+> C:\Users\warnold\Miniconda3\envs\py38\python.exe -m csview.study ^
+>     --source reference/calsim-studies/study_a ^
+>     --catalog data/network/catalog.json ^
+>     --out data/study/study_a/ > build_log.txt 2>&1
+> ```
+>
+> After `await_terminal`, verify with `type build_log.txt`.
+
 Variable resolution strategy:
 
 1. If `varname.upper()` matches an `arc_id` directly → feature is that arc.
-2. If `varname.upper()` matches `<PREFIX>_<cs3_id>` (e.g. `S_SHSTA`) → feature
-   is `cs3_id`. Recognised prefixes: `S_`, `D_`, `G_`, `T_`, `WTS_`, `EG_`,
-   `C2V_`, `SWP_`, `CVP_`.
+2. If `varname.upper()` matches `<PREFIX><cs3_id>` (e.g. `GP_07N_NU`,
+   `S_SHSTA`) → feature is `cs3_id`. Prefixes are tried longest-first to
+   prevent partial stripping (e.g. `GP_` before `G_`).
+
+   Recognised prefixes and their CalSim 3 semantics:
+
+   | Prefix | Meaning |
+   |--------|---------|
+   | `XNM_TOTAL_` | Total non-market exchange |
+   | `PEAKAW_` | Peak agricultural water demand |
+   | `SUMAW_` | Sum of agricultural water deliveries |
+   | `SUMUD_` | Sum of urban demand |
+   | `SHRTG_` | Shortage |
+   | `C2V_` | C2VSim-linked demand node |
+   | `CVP_` | Central Valley Project delivery |
+   | `SWP_` | State Water Project delivery |
+   | `WTS_` | Water transfer / wheeling supply |
+   | `AW_` | Agricultural water (applied) |
+   | `DG_` | Demand — groundwater component |
+   | `DL_` | Demand — delivery level |
+   | `DN_` | Demand — native surface water |
+   | `DP_` | Demand — delivery percent |
+   | `EG_` | Estimated groundwater |
+   | `EL_` | Evapotranspiration (local) |
+   | `EV_` | Evapotranspiration |
+   | `GP_` | Groundwater pumping |
+   | `LF_` | Local flows / local surface water |
+   | `MF_` | Minimum flow requirement |
+   | `OS_` | Outflow / seepage |
+   | `RP_` | Riparian recovery / return flow |
+   | `RU_` | Return flow — urban |
+   | `SL_` | Seepage loss |
+   | `A_` | Applied water |
+   | `C_` | Carryover |
+   | `D_` | Delivery / demand |
+   | `E_` | Exogenous |
+   | `F_` | Flow (misc.) |
+   | `G_` | Groundwater (generic) |
+   | `R_` | Return flow |
+   | `S_` | Storage |
+   | `T_` | Tributary |
+   | `X_` | Exchange |
 
 ### `csview.app.state`
 
@@ -531,6 +585,15 @@ Query param: `study` (optional, defaults to active study). Returns `FeatureResul
 
 Returns 404 if no variables map to `feature_id` in the active study.
 
+**Node features only** — the response is enriched with the series of every arc
+that connects to the requested node. Each injected arc entry carries an extra
+`"direction"` field in `metadata`:
+
+- `"in"` — arc's `to_node` equals the requested node (flow arriving)
+- `"out"` — arc's `from_node` equals the requested node (flow leaving)
+
+Arcs that have no matching series in the active study are silently omitted.
+
 ### GET /api/study/variable/{prmname}
 
 Query param: `study` (optional). Returns `FeatureResultSeries` for a single DSS variable.
@@ -616,22 +679,50 @@ Accepts `series` (dict of variable name → `[[date, value]]` rows),
 `metadata` (dict of variable name → `{units, kind, ...}` from the API), and
 `dateRange` (optional `[startYear, endYear]` strings).
 
-Variables are grouped into **Storage**, **Flow**, **Shortage**, and **Other**
-panels using the WRESL `kind` field from `metadata` (preferred) with a
-CalSim variable-name prefix fallback:
+#### Series splitting
 
-| `kind` values | Panel |
+`splitSeries(series, metadata)` partitions variables into three buckets:
+
+| Bucket | Criteria | Chart type |
+|---|---|---|
+| `arcFlows` | `metadata[key].direction` is present (`"in"` or `"out"`) | `StackedFlowChart` |
+| `storage` | `kind` ∈ `STORAGE`, `STORAGE-ZONE`, `GW-STORAGE`, `GROUNDWATER` | `LineChartPanel` |
+| `balance` | everything else | `LineChartPanel` |
+
+#### Sub-components
+
+**`LineChartPanel`** — plain Recharts `LineChart`
+- Always renders values as-is (no negation)
+- Y-axis anchored to 0 (`yDomain` always includes 0)
+- Dashed zero reference line
+- Year boundary vertical lines
+- Dashed average reference line
+- CFS→TAF toggle applies when `units === "CFS"`
+
+**`StackedFlowChart`** — Recharts `ComposedChart` with stacked areas
+- Renders each variable as a stacked `Area` (fill) + `Line` (edge)
+- `"out"` direction arcs have their values **negated** so they stack below zero
+- Legend and tooltip show `(in)` / `(out)` suffix derived from `metadata[key].direction`
+- Y-axis anchored to 0; dashed zero reference line
+- CFS→TAF toggle applies
+
+#### Main export layout (top to bottom)
+
+1. **Arc Flows** — `StackedFlowChart` with CFS/TAF pill toggle (only when `arcFlows` is non-empty; node features only)
+2. **Storage** — `LineChartPanel` (only when `storage` is non-empty)
+3. **Water Balance / Flow** — `LineChartPanel` for `balance` variables (label is "Flow" for arc features, "Water Balance" for node features)
+
+#### Shared helpers
+
+| Helper | Purpose |
 |---|---|
-| `STORAGE`, `STORAGE-ZONE`, `GW-STORAGE`, `GROUNDWATER` | Storage |
-| `CHANNEL`, `FLOW`, `DIVERSION`, `INFLOW`, `DELIVERY`, … | Flow |
-| `SHORTAGE` | Shortage |
-| prefix `S_` (no kind) | Storage |
-| prefix `C_`, `D_`, `I_`, `R_`, `G_`, `T_` (no kind) | Flow |
-| prefix `SHRTG_` (no kind) | Shortage |
-| everything else | Other |
-
-Y-axis units are derived from the first variable's `units` in `metadata` with
-a per-group fallback (Storage → TAF, Flow → CFS, Shortage → CFS).
+| `buildChartData(seriesMap, dateRange, negateKeys, convertFn)` | Merges series into Recharts row objects, optionally negating and converting units |
+| `daysInMonth(dateKey)` | Returns days in a YYYY-MM-DD month for TAF conversion |
+| `cfsToTaf(value, dateKey)` | Converts CFS → TAF using month length |
+| `yDomain(rows, keys)` | Computes `[min, max]` always including 0 |
+| `shortKey(key, keyLabels)` | Trims DSS-style prefix/suffix for legend display |
+| `ToggleLegend` | Checkbox list to show/hide individual series |
+| `ChartTooltip` | Formatted tooltip showing date + all active series values |
 
 ### `NeighborhoodGraph.jsx` — local subgraph
 
@@ -747,4 +838,4 @@ Install via `pip install -r requirements.txt` (or `pyproject.toml`).
 
 ---
 
-*Last updated: 2026-02-23 (renamed calsim→csview package; merged dss/ into study/dss_reader.py; renamed csview/results→csview/study; renamed /api/results→/api/study; moved network/ and study/ into data/; study subdirs use opaque slugs study_a/study_b; logical name from results_meta.json; fixed date_range to read metadata before Parquet; added missing endpoints: overlays, study activate/variables, variable series; moved GeoSchematic source to reference/geoschematic/; renamed calsim-studies/danube_hist→study_a with study_meta.json; builder reads study_meta.json for logical name/description; dss_file→dv_file + gwout_file in study_meta.json; simulation_period clips Parquet; GWOUT DSS merged into DV results)*
+*Last updated: 2026-06-09 (CFS/TAF unit toggle on lineplots; zero-line always visible (yDomain anchored to 0); GET /api/study/feature/{id} now enriches node responses with connected arc series including direction:"in"/"out" metadata; ResultsChart.jsx fully rewritten — splitSeries partitions into arcFlows/storage/balance, StackedFlowChart renders in/out arcs as stacked areas with outflows negated, LineChartPanel handles storage and water-balance; previous: renamed calsim→csview package; merged dss/ into study/dss_reader.py; renamed csview/results→csview/study; renamed /api/results→/api/study; moved network/ and study/ into data/; study subdirs use opaque slugs study_a/study_b; logical name from results_meta.json; fixed date_range to read metadata before Parquet; added missing endpoints: overlays, study activate/variables, variable series; moved GeoSchematic source to reference/geoschematic/; renamed calsim-studies/danube_hist→study_a with study_meta.json; builder reads study_meta.json for logical name/description; dss_file→dv_file + gwout_file in study_meta.json; simulation_period clips Parquet; GWOUT DSS merged into DV results; expanded _NODE_PREFIXES from 9 to 34 prefixes covering GP_, SHRTG_, DL_, DG_, EV_, AW_, RP_, RU_, etc. — longest first to prevent partial stripping)*

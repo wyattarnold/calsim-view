@@ -14,22 +14,20 @@ from typing import Any, Dict, List, Optional
 def node_type_from_description(description: str) -> str:
     """Derive a concise node-type category from the NodeDescription field."""
     d = (description or "").lower().strip()
-    # Check groundwater combinations BEFORE generic storage so that
-    # "groundwater storage" nodes are not misclassified as Reservoir.
-    if "groundwater" in d and "storage" in d:
-        return "Groundwater Storage"
-    if "groundwater" in d:
-        return "Groundwater"
-    if "storage" in d or "reservoir" in d or "lake" in d:
-        return "Reservoir"
+    # Demand types must be checked BEFORE groundwater so that nodes described as
+    # "demand-agricultural-surface&groundwater" are not misclassified.
+    if "wastewater treatment plant" in d or "wastewater treatment" in d:
+        return "Wastewater Treatment Plant"
+    if "water treatment plant" in d:
+        return "Water Treatment Plant"
     if "demand-agricultural" in d:
         return "Demand-Agricultural"
-    if "demand-urban" in d or "water treatment" in d:
+    if "demand-urban" in d:
         return "Demand-Urban"
     if "demand-refuge" in d:
         return "Demand-Refuge"
-    if "return flow" in d or "wastewater" in d:
-        return "Return Flow"
+    if "storage" in d or "reservoir" in d or "lake" in d:
+        return "Reservoir"
     if "conveyance" in d or "channel" in d or "canal" in d:
         return "Junction"
     if "external" in d or "major feature" in d:
@@ -75,8 +73,7 @@ KIND_TO_UNITS: Dict[str, str] = {
     "DELIVERY":         "CFS",
     "AG-DELIVERY":      "CFS",
     "URBAN-DELIVERY":   "CFS",
-    "URBAN-DEMAND":     "CFS",
-    "SHORTAGE":         "CFS",
+    "URBAN-DEMAND":     "CFS",    "SW-DEMAND":        "TAF",    "SHORTAGE":         "CFS",
     "RETURN-FLOW":      "CFS",
     "SEEPAGE":          "CFS",
     "GROUNDWATER":      "TAF",

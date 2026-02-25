@@ -197,6 +197,8 @@ class DssFile:
         # CalSim DSS files store time series in 10- or 30-year blocks; read
         # all blocks and concatenate into a single series.
         segments: list = []
+        captured_units: str = ""
+        captured_type: str = ""
         for p in read_paths:
             logger.debug("Reading %s from %s", p.raw, self.path.name)
             ts = self._fid.read_ts(p.raw)
@@ -204,6 +206,11 @@ class DssFile:
             values = list(ts.values)
             if not times:
                 continue
+            # Grab units/type from the first block that has them.
+            if not captured_units and ts.units:
+                captured_units = str(ts.units).strip()
+            if not captured_type and ts.type:
+                captured_type = str(ts.type).strip()
             seg = pd.Series(
                 data=values,
                 index=pd.DatetimeIndex(times),
@@ -217,11 +224,17 @@ class DssFile:
 
         series = pd.concat(segments).sort_index()
         series = series[~series.index.duplicated(keep="first")]
+        # Snap to end-of-month (pydsstools returns start-of-month timestamps
+        # for CalSim 1MON period data; callers expect end-of-month convention).
+        series.index = series.index + pd.offsets.MonthEnd(0)
         # pydsstools uses -901.0 as missing-data sentinel; convert to NaN.
         series.replace(-901.0, float("nan"), inplace=True)
         series.dropna(inplace=True)
         series.name = variable
         series.index.name = "date"
+        # Store DSS-native units and data type so callers don't have to guess.
+        series.attrs["units"] = captured_units
+        series.attrs["data_type"] = captured_type
         return series
 
     # ------------------------------------------------------------------

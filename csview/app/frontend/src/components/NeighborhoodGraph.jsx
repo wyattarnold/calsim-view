@@ -7,21 +7,12 @@ import { fetchNeighborhood } from "../api/client.js";
 // ---------------------------------------------------------------------------
 
 const NODE_COLOR = {
-  "Reservoir":            "#3b82f6",
-  "Groundwater":          "#10b981",
-  "Groundwater Storage":  "#059669",
-  "Demand-Agricultural":  "#f59e0b",
-  "Demand-Urban":         "#f97316",
-  "Demand-Refuge":        "#84cc16",
-  "Shortage":             "#ef4444",
-  "Contract":             "#eab308",
-  "Return Flow":          "#a3e635",
-  "Water Quality":        "#22d3ee",
-  "Power":                "#a855f7",
-  "Channel":              "#60a5fa",
-  "Diversion":            "#34d399",
-  "Inflow":               "#2dd4bf",
-  "Minimum Flow":         "#38bdf8",
+  "Reservoir":              "#3b82f6",
+  "Demand-Agricultural":    "#eab308",
+  "Demand-Urban":           "#f43f5e",
+  "Demand-Refuge":          "#84cc16",
+  "Water Treatment Plant":  "#06b6d4",
+  "Wastewater Treatment Plant": "#7c3aed",
 };
 
 const DEFAULT_NODE_COLOR = "#6b7280";
@@ -80,6 +71,31 @@ function arrowPath(x1, y1, x2, y2) {
   return `M ${sx} ${sy} L ${ex} ${ey}`;
 }
 
+// Right-angle elbow paths for boundary arcs (inflow / outflow) so they don't
+// overlap the vertical normal arcs between rows.
+const BOUNDARY_X = 44;   // horizontal offset from node centre
+const BOUNDARY_Y = 50;   // vertical reach above/below the node
+
+function boundaryArrowPath(fromPos, toPos) {
+  if (!fromPos && toPos) {
+    // Inflow: descend from upper-left, then turn right into the node
+    const sx = toPos.x - BOUNDARY_X;
+    const sy = toPos.y - BOUNDARY_Y;
+    const ey = toPos.y;
+    const ex = toPos.x - NODE_R - 7;   // stop just before node edge
+    return `M ${sx} ${sy} L ${sx} ${ey} L ${ex} ${ey}`;
+  }
+  if (fromPos && !toPos) {
+    // Outflow: leave node rightward, then turn down
+    const sx = fromPos.x + NODE_R + 1;
+    const sy = fromPos.y;
+    const ex = fromPos.x + BOUNDARY_X;
+    const ey = fromPos.y + BOUNDARY_Y;
+    return `M ${sx} ${sy} L ${ex} ${sy} L ${ex} ${ey}`;
+  }
+  return null;
+}
+
 const MAX_NODES_WARNING = 80;
 
 export default function NeighborhoodGraph({ featureId, onNodeClick }) {
@@ -95,6 +111,26 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
     if (!data) return null;
     return computeLayout(data.nodes);
   }, [data]);
+
+  // Detect whether the selected feature is an arc or a node.
+  // If featureId matches an arc in the neighborhood, highlight it and
+  // put focus rings on both its endpoints.
+  const selectedArc = useMemo(() => {
+    if (!data) return null;
+    const fid = featureId.toUpperCase();
+    return data.arcs.find((a) => a.feature_id.toUpperCase() === fid) ?? null;
+  }, [data, featureId]);
+
+  const focusNodeIds = useMemo(() => {
+    if (selectedArc) {
+      return new Set(
+        [selectedArc.from_node, selectedArc.to_node]
+          .filter(Boolean)
+          .map((id) => id.toUpperCase()),
+      );
+    }
+    return new Set([featureId.toUpperCase()]);
+  }, [selectedArc, featureId]);
 
   if (!featureId) return null;
 
@@ -128,7 +164,7 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
       </div>
 
       {/* Graph area */}
-      <div className="flex-1 overflow-auto bg-gray-950">
+      <div className="flex-1 overflow-auto bg-gray-950 flex flex-col items-center">
         {isLoading && <p className="text-gray-500 text-sm p-4">Loading…</p>}
 
         {data && data.nodes.length > MAX_NODES_WARNING && (
@@ -142,7 +178,7 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
             width={layout.svgW}
             height={layout.svgH}
             className="block"
-            style={{ minWidth: "100%", minHeight: "100%" }}
+            style={{ minHeight: "100%" }}
           >
             <defs>
               <marker id="nbh-arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
@@ -150,6 +186,9 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
               </marker>
               <marker id="nbh-arr-sel" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
                 <polygon points="0 0, 7 3.5, 0 7" fill="#facc15" />
+              </marker>
+              <marker id="nbh-arr-arc" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                <polygon points="0 0, 7 3.5, 0 7" fill="#22d3ee" />
               </marker>
             </defs>
 
@@ -177,22 +216,46 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
 
             {/* Arcs */}
             {data.arcs.map((arc) => {
-              const from = layout.positions[arc.from_node?.toUpperCase()];
-              const to = layout.positions[arc.to_node?.toUpperCase()];
-              if (!from || !to) return null;
-              const isTouchingFocus = arc.from_node === featureId || arc.to_node === featureId;
-              const d = arrowPath(from.x, from.y, to.x, to.y);
+              const fromKey = arc.from_node?.toUpperCase();
+              const toKey = arc.to_node?.toUpperCase();
+              const fromPos = fromKey ? layout.positions[fromKey] : null;
+              const toPos   = toKey   ? layout.positions[toKey]   : null;
+              const isBoundary = !fromPos || !toPos;
+
+              if (!fromPos && !toPos) return null;
+              const isSelectedArc =
+                arc.feature_id.toUpperCase() === featureId.toUpperCase() && !!selectedArc;
+              const isTouchingFocus =
+                !selectedArc &&
+                (arc.from_node?.toUpperCase() === featureId.toUpperCase() ||
+                  arc.to_node?.toUpperCase() === featureId.toUpperCase());
+
+              const d = isBoundary
+                ? boundaryArrowPath(fromPos, toPos)
+                : arrowPath(fromPos.x, fromPos.y, toPos.x, toPos.y);
               if (!d) return null;
+
+              const stroke = isSelectedArc ? "#22d3ee" : isTouchingFocus ? "#facc15" : "#374151";
+              const strokeWidth = isSelectedArc ? 2.5 : isTouchingFocus ? 1.5 : 1;
+              const opacity = isSelectedArc || isTouchingFocus ? 0.95 : 0.55;
+              const marker = isSelectedArc
+                ? "url(#nbh-arr-arc)"
+                : isTouchingFocus
+                ? "url(#nbh-arr-sel)"
+                : "url(#nbh-arr)";
               return (
                 <path
                   key={arc.feature_id}
                   d={d}
                   fill="none"
-                  stroke={isTouchingFocus ? "#facc15" : "#374151"}
-                  strokeWidth={isTouchingFocus ? 1.5 : 1}
-                  opacity={isTouchingFocus ? 0.9 : 0.55}
-                  markerEnd={isTouchingFocus ? "url(#nbh-arr-sel)" : "url(#nbh-arr)"}
-                />
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={isBoundary ? "4 3" : undefined}
+                  opacity={opacity}
+                  markerEnd={marker}
+                >
+                  <title>{arc.feature_id}</title>
+                </path>
               );
             })}
 
@@ -200,7 +263,7 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
             {data.nodes.map((n) => {
               const pos = layout.positions[n.feature_id];
               if (!pos) return null;
-              const isFocus = n.feature_id === featureId;
+              const isFocus = focusNodeIds.has(n.feature_id.toUpperCase());
               const color = NODE_COLOR[n.node_type] || DEFAULT_NODE_COLOR;
               const label = n.feature_id.length > 14 ? n.feature_id.slice(0, 13) + "…" : n.feature_id;
 

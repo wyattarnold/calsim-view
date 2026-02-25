@@ -56,8 +56,26 @@ C:\Users\warnold\Miniconda3\envs\py38\python.exe
 
 ## Running the server
 
-```bash
-python -m calsim.app \
-    --network-dir network/ \
-    --study study/danube_hist
+```bat
+python -m csview.app --network-dir data/network/ --study data/study/study_a
+```
+
+## Running the study builder (SLOW — 3–5 min)
+
+**Always** use `run_in_terminal` with `isBackground=true` and a log file, then
+call `await_terminal` with a generous timeout (≥ 360 000 ms) before reading
+the log. Never run it blocking/foreground and never assume it finished until
+`results_meta.json` shows a new `built_at` timestamp.
+
+```bat
+C:\Users\warnold\Miniconda3\envs\py38\python.exe -m csview.study ^
+    --source reference/calsim-studies/study_a ^
+    --catalog data/network/catalog.json ^
+    --out data/study/study_a/ > build_log.txt 2>&1
+```
+
+After `await_terminal` completes, verify with:
+
+```bat
+type build_log.txt
 ```

@@ -170,10 +170,12 @@ def get_neighborhood(
     # Resolve: could be called with either a node id or an arc id
     start_node = state.network.lookup_node(fid)
     if start_node is None:
-        # If it's an arc, use its from_node as starting point
+        # If it's an arc, anchor on from_node — or to_node for inflow arcs that have no from_node
         arc = state.network.lookup_arc(fid)
-        if arc and arc.from_node:
-            start_node = state.network.lookup_node(arc.from_node.upper())
+        if arc:
+            anchor = arc.from_node or arc.to_node
+            if anchor:
+                start_node = state.network.lookup_node(anchor.upper())
     if start_node is None:
         raise HTTPException(status_code=404, detail=f"Feature '{feature_id}' not found")
 
@@ -213,8 +215,45 @@ def get_neighborhood(
         frontier = next_frontier
 
     gn = state.network
+
+    # Build a set of node IDs that actually have GeoNode entries (have positions).
+    # Phantom zone nodes ("02"/"03") may appear in visited_nodes as BFS stepping
+    # stones but have no GeoNode; they must be excluded from both nodes and arcs.
+    rendered_node_ids = {nid for nid in visited_nodes if gn.lookup_node(nid) is not None}
+
+    arcs_out = []
+    for arc_id in visited_arcs:
+        arc = gn.lookup_arc(arc_id)
+        if arc is None:
+            continue
+        fn = (arc.from_node or "").upper()
+        tn = (arc.to_node or "").upper()
+        # Include arc when every non-empty endpoint is a rendered node.
+        # Arcs with a missing from_node (e.g. Inflow) or missing to_node are
+        # boundary arcs and are shown as long as the present endpoint is rendered.
+        fn_ok = (not fn) or (fn in rendered_node_ids)
+        tn_ok = (not tn) or (tn in rendered_node_ids)
+        if fn_ok and tn_ok and (fn or tn):
+            arcs_out.append(NeighborhoodArc(
+                feature_id=arc.arc_id,
+                from_node=arc.from_node or "",
+                to_node=arc.to_node or "",
+            ))
+
+    # Only emit nodes that are actually connected by an arc in arcs_out, plus
+    # the BFS start node itself.  This prevents phantom-node stepping stones
+    # from carrying unreachable real nodes into the output.
+    connected_node_ids: set = {start_id}
+    for a in arcs_out:
+        if a.from_node:
+            connected_node_ids.add(a.from_node.upper())
+        if a.to_node:
+            connected_node_ids.add(a.to_node.upper())
+
     nodes_out = []
     for nid, dist in visited_nodes.items():
+        if nid not in connected_node_ids:
+            continue
         n = gn.lookup_node(nid)
         if n is None:
             continue
@@ -225,23 +264,6 @@ def get_neighborhood(
             description=n.description or None,
             distance=dist,
         ))
-
-    arcs_out = []
-    # Build a set of node IDs that actually have GeoNode entries (have positions)
-    rendered_node_ids = {nid for nid in visited_nodes if gn.lookup_node(nid) is not None}
-    for arc_id in visited_arcs:
-        arc = gn.lookup_arc(arc_id)
-        if arc is None:
-            continue
-        fn = (arc.from_node or "").upper()
-        tn = (arc.to_node or "").upper()
-        # Only include arcs where BOTH endpoints are rendered nodes
-        if fn in rendered_node_ids and tn in rendered_node_ids:
-            arcs_out.append(NeighborhoodArc(
-                feature_id=arc.arc_id,
-                from_node=arc.from_node or "",
-                to_node=arc.to_node or "",
-            ))
 
     return NeighborhoodResponse(nodes=nodes_out, arcs=arcs_out)
 

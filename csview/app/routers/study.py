@@ -96,21 +96,50 @@ def get_feature_result(
     study: Optional[str] = Query(default=None, description="Study name; defaults to active"),
     state: AppState = Depends(get_state),
 ) -> FeatureResultSeries:
-    """Return all monthly time series for *feature_id* from the specified study."""
+    """Return all monthly time series for *feature_id* from the specified study.
+
+    For node features, connected arc series are included with a ``direction``
+    field (``"in"`` or ``"out"``) in their metadata so the frontend can render
+    a separate Arc Flows chart without needing a second request.
+    """
     store = _resolve_study(state, study)
     series_map = store.get_feature_series(feature_id)
-
-    if not series_map:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No results found for feature '{feature_id}' in study '{store.name}'",
-        )
 
     series_out: Dict[str, List[List]] = {}
     meta_out: Dict[str, dict] = {}
     for var, s in series_map.items():
         series_out[var] = _series_to_rows(s)
         meta_out[var] = store.get_variable_meta(var)
+
+    # For node features, also include connected arc series with direction.
+    # NOTE: this must run even when series_map is empty (pure routing nodes
+    # like SAC281 have no node-own DSS variables but do have connected arcs).
+    network = state.network
+    if network is not None:
+        node = network.lookup_node(feature_id)
+        if node is not None:
+            cs3_id = node.cs3_id.upper()
+            for arc in network.arcs.values():
+                from_n = (arc.from_node or "").upper()
+                to_n   = (arc.to_node   or "").upper()
+                if from_n != cs3_id and to_n != cs3_id:
+                    continue
+                direction = "out" if from_n == cs3_id else "in"
+                arc_series_map = store.get_feature_series(arc.arc_id)
+                if not arc_series_map:
+                    continue
+                for var, arc_series in arc_series_map.items():
+                    arc_meta = store.get_variable_meta(var)
+                    arc_meta = dict(arc_meta)   # copy so we don't mutate cached meta
+                    arc_meta["direction"] = direction
+                    series_out[var] = _series_to_rows(arc_series)
+                    meta_out[var]   = arc_meta
+
+    if not series_out:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No results found for feature '{feature_id}' in study '{store.name}'",
+        )
 
     return FeatureResultSeries(
         feature_id=feature_id,
