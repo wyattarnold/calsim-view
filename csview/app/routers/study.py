@@ -54,6 +54,59 @@ def _series_to_rows(series: pd.Series) -> List[List]:
     ]
 
 
+def _collect_arc_series(
+    node_cs3_id: str,
+    network: "GeoNetwork",
+    store: StudyStore,
+    series_out: Dict[str, List[List]],
+    meta_out: Dict[str, dict],
+) -> None:
+    """Append connected-arc time series for a node into *series_out*/*meta_out*."""
+    upper_id = node_cs3_id.upper()
+    for arc in network.arcs.values():
+        from_n = (arc.from_node or "").upper()
+        to_n   = (arc.to_node   or "").upper()
+        if from_n != upper_id and to_n != upper_id:
+            continue
+        direction = "out" if from_n == upper_id else "in"
+        arc_series_map = store.get_feature_series(arc.arc_id)
+        if not arc_series_map and arc.wresl_suggestion:
+            arc_series_map = store.get_feature_series(arc.wresl_suggestion)
+        if not arc_series_map:
+            continue
+        for var, arc_series in arc_series_map.items():
+            arc_meta = dict(store.get_variable_meta(var))
+            arc_meta["direction"] = direction
+            series_out[var] = _series_to_rows(arc_series)
+            meta_out[var]   = arc_meta
+
+
+def _try_wresl_suggestion(
+    feature_id: str,
+    network: "GeoNetwork",
+    store: StudyStore,
+) -> tuple:
+    """Try the wresl_suggestion fallback for an arc with no direct data.
+
+    Returns ``(series_out, meta_out, suggestion_used)`` — all empty if no
+    suggestion produces data.
+    """
+    if network is None:
+        return {}, {}, None
+    arc = network.lookup_arc(feature_id)
+    if arc is None or not arc.wresl_suggestion:
+        return {}, {}, None
+    sugg_series = store.get_feature_series(arc.wresl_suggestion)
+    if not sugg_series:
+        return {}, {}, None
+    series_out: Dict[str, List[List]] = {}
+    meta_out: Dict[str, dict] = {}
+    for var, s in sugg_series.items():
+        series_out[var] = _series_to_rows(s)
+        meta_out[var] = store.get_variable_meta(var)
+    return series_out, meta_out, arc.wresl_suggestion
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -112,65 +165,41 @@ def get_feature_result(
         meta_out[var] = store.get_variable_meta(var)
 
     # For node features, also include connected arc series with direction.
-    # NOTE: this must run even when series_map is empty (pure routing nodes
-    # like SAC281 have no node-own DSS variables but do have connected arcs).
     network = state.network
     if network is not None:
         node = network.lookup_node(feature_id)
         if node is not None:
-            cs3_id = node.cs3_id.upper()
-            for arc in network.arcs.values():
-                from_n = (arc.from_node or "").upper()
-                to_n   = (arc.to_node   or "").upper()
-                if from_n != cs3_id and to_n != cs3_id:
-                    continue
-                direction = "out" if from_n == cs3_id else "in"
-                arc_series_map = store.get_feature_series(arc.arc_id)
-                if not arc_series_map and arc.wresl_suggestion:
-                    arc_series_map = store.get_feature_series(arc.wresl_suggestion)
-                if not arc_series_map:
-                    continue
-                for var, arc_series in arc_series_map.items():
-                    arc_meta = store.get_variable_meta(var)
-                    arc_meta = dict(arc_meta)   # copy so we don't mutate cached meta
-                    arc_meta["direction"] = direction
-                    series_out[var] = _series_to_rows(arc_series)
-                    meta_out[var]   = arc_meta
+            _collect_arc_series(node.cs3_id, network, store, series_out, meta_out)
+            # Tag E_ (evaporation) node variables as outflows so they appear
+            # in the Arc Flows chart rather than the water balance.
+            for var in list(meta_out.keys()):
+                if var.upper().startswith("E_") and "direction" not in meta_out[var]:
+                    meta_out[var] = dict(meta_out[var], direction="out")
 
-    if not series_out:
-        # For arc features with no direct DSS match, check if the arc has a
-        # wresl_suggestion (diagnostic arc_endpoint_suggestion match) and fall
-        # back to the suggestion's results so the panel shows useful data.
-        suggestion_used: Optional[str] = None
-        if network is not None:
-            arc = network.lookup_arc(feature_id)
-            if arc is not None and arc.wresl_suggestion:
-                sugg_series = store.get_feature_series(arc.wresl_suggestion)
-                if sugg_series:
-                    suggestion_used = arc.wresl_suggestion
-                    for var, s in sugg_series.items():
-                        series_out[var] = _series_to_rows(s)
-                        meta_out[var] = store.get_variable_meta(var)
-
-        if not series_out:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No results found for feature '{feature_id}' in study '{store.name}'",
-            )
-
+    if series_out:
         return FeatureResultSeries(
             feature_id=feature_id,
             study=store.name,
             series=series_out,
             metadata=meta_out,
+        )
+
+    # Fallback: try wresl_suggestion for arcs with no direct data
+    sugg_series, sugg_meta, suggestion_used = _try_wresl_suggestion(
+        feature_id, network, store,
+    )
+    if sugg_series:
+        return FeatureResultSeries(
+            feature_id=feature_id,
+            study=store.name,
+            series=sugg_series,
+            metadata=sugg_meta,
             wresl_suggestion_used=suggestion_used,
         )
 
-    return FeatureResultSeries(
-        feature_id=feature_id,
-        study=store.name,
-        series=series_out,
-        metadata=meta_out,
+    raise HTTPException(
+        status_code=404,
+        detail=f"No results found for feature '{feature_id}' in study '{store.name}'",
     )
 
 

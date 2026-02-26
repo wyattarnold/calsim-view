@@ -8,12 +8,10 @@ import NodeSearch from "./components/NodeSearch.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { fetchStudies } from "./api/client.js";
 
-const MIN_PANEL_WIDTH = 260;
+const MIN_PANEL_WIDTH = 220;
 const MAX_PANEL_WIDTH = 900;
-const DEFAULT_PANEL_WIDTH = 750;
-const MIN_GRAPH_PCT  = 0.15;
-const MAX_GRAPH_PCT  = 0.70;
-const DEFAULT_GRAPH_PCT = 0.33;
+const DEFAULT_PANEL_WIDTH = 460;
+const DEFAULT_GRAPH_WIDTH = 300;
 
 export default function App() {
   const [selectedNode, setSelectedNode] = useState(null);
@@ -22,10 +20,9 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(true);
   const [graphOpen, setGraphOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
-  const [graphHeightPct, setGraphHeightPct] = useState(DEFAULT_GRAPH_PCT);
+  const [graphWidth, setGraphWidth] = useState(DEFAULT_GRAPH_WIDTH);
 
-  const dragging = useRef(null);   // "col" | "row" | null
-  const panelRef = useRef(null);   // ref to the left stacked panel container
+  const dragging = useRef(null);   // "panel" | "graph" | null
 
   const { data: studiesData } = useQuery({
     queryKey: ["studies"],
@@ -35,19 +32,20 @@ export default function App() {
   const _study = activeStudy ?? studiesData?.active;
 
   // ---------------------------------------------------------------------------
-  // Resize logic
+  // Resize logic — two independent column drag handles
   // ---------------------------------------------------------------------------
-  const handleColDragStart = useCallback((e) => {
+
+  const handlePanelDragStart = useCallback((e) => {
     e.preventDefault();
-    dragging.current = "col";
+    dragging.current = "panel";
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
   }, []);
 
-  const handleRowDragStart = useCallback((e) => {
+  const handleGraphDragStart = useCallback((e) => {
     e.preventDefault();
-    dragging.current = "row";
-    document.body.style.cursor = "row-resize";
+    dragging.current = "graph";
+    document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
   }, []);
 
@@ -55,15 +53,14 @@ export default function App() {
     const onMove = (e) => {
       if (!dragging.current) return;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      if (dragging.current === "col") {
-        setPanelWidth(Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, clientX)));
-      } else if (dragging.current === "row" && panelRef.current) {
-        const rect = panelRef.current.getBoundingClientRect();
-        const pct = (clientY - rect.top) / rect.height;
-        // pct is the fraction for NodePanel (top); graph gets (1 - pct)
-        const graphPct = 1 - pct;
-        setGraphHeightPct(Math.max(MIN_GRAPH_PCT, Math.min(MAX_GRAPH_PCT, graphPct)));
+      if (dragging.current === "graph") {
+        // Graph panel is far-left; its right edge tracks the mouse
+        setGraphWidth(Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, clientX)));
+      } else if (dragging.current === "panel") {
+        // NodePanel right edge.  Its left edge = graphWidth + 4 (drag handle).
+        const leftEdge = graphOpen ? graphWidth + 4 : 0;
+        const newW = clientX - leftEdge;
+        setPanelWidth(Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, newW)));
       }
     };
     const onUp = () => {
@@ -82,7 +79,7 @@ export default function App() {
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onUp);
     };
-  }, []);
+  }, [graphOpen, graphWidth]);
 
   // ---------------------------------------------------------------------------
   // Feature selection
@@ -98,13 +95,19 @@ export default function App() {
     setFlyToFeature(featureId);
   }
 
+  function handleEdgeClick(featureId) {
+    setSelectedNode(featureId);
+    setPanelOpen(true);
+    setFlyToFeature(featureId);
+  }
+
   function handlePanelClose() {
     setPanelOpen(false);
     setSelectedNode(null);
   }
 
-  const showPanels = panelOpen && !!selectedNode;
-  const showGraph  = showPanels && graphOpen;
+  const showPanel = panelOpen && !!selectedNode;
+  const showGraph = showPanel && graphOpen;
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden">
@@ -117,69 +120,83 @@ export default function App() {
           active={_study}
           onChange={setActiveStudy}
         />
+        {/* Network graph toggle — visible whenever a feature is selected */}
+        {showPanel && (
+          <button
+            onClick={() => setGraphOpen((g) => !g)}
+            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-colors ${
+              graphOpen
+                ? "border-blue-500 text-blue-400 bg-blue-950"
+                : "border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-400"
+            }`}
+            title={graphOpen ? "Hide network graph" : "Show network graph"}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+              <circle cx="4" cy="4" r="1.5" /><circle cx="12" cy="4" r="1.5" /><circle cx="8" cy="12" r="1.5" />
+              <line x1="4" y1="5.5" x2="8" y2="10.5" stroke="currentColor" strokeWidth="1" />
+              <line x1="12" y1="5.5" x2="8" y2="10.5" stroke="currentColor" strokeWidth="1" />
+            </svg>
+            Graph
+          </button>
+        )}
         <div className="flex-1" />
       </header>
 
-      {/* Layout: [Left stacked panel] [drag] [Map] */}
+      {/* Layout: [Graph] [drag] [NodePanel] [drag] [Map] */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Single left panel — NodePanel (top) + NeighborhoodGraph (bottom) */}
-        {showPanels && (
+        {/* Far-left: Network Graph panel */}
+        {showGraph && (
           <>
             <aside
-              ref={panelRef}
-              style={{ width: panelWidth }}
-              className="flex flex-col border-r border-gray-700 overflow-hidden shrink-0"
+              style={{ width: graphWidth }}
+              className="flex flex-col border-r border-gray-700 overflow-hidden shrink-0 bg-gray-950"
             >
-              {/* Results panel — top portion */}
-              <div
-                style={{ height: showGraph ? `${(1 - graphHeightPct) * 100}%` : "100%" }}
-                className="flex flex-col overflow-hidden bg-gray-800"
-              >
-                <ErrorBoundary>
-                  <NodePanel
-                    featureId={selectedNode}
-                    activeStudy={_study}
-                    onClose={handlePanelClose}
-                    graphOpen={graphOpen}
-                    onToggleGraph={() => setGraphOpen((g) => !g)}
-                  />
-                </ErrorBoundary>
-              </div>
-
-              {/* Vertical drag handle + Network graph — bottom portion */}
-              {showGraph && (
-                <>
-                  <div
-                    onMouseDown={handleRowDragStart}
-                    onTouchStart={handleRowDragStart}
-                    className="h-1 bg-gray-700 hover:bg-blue-500 cursor-row-resize shrink-0 transition-colors"
-                  />
-                  <div
-                    style={{ height: `${graphHeightPct * 100}%` }}
-                    className="flex flex-col overflow-hidden bg-gray-950"
-                  >
-                    <ErrorBoundary>
-                      <NeighborhoodGraph
-                        featureId={selectedNode}
-                        onNodeClick={handleNeighborhoodNodeClick}
-                      />
-                    </ErrorBoundary>
-                  </div>
-                </>
-              )}
+              <ErrorBoundary>
+                <NeighborhoodGraph
+                  featureId={selectedNode}
+                  onNodeClick={handleNeighborhoodNodeClick}
+                  onEdgeClick={handleEdgeClick}
+                  onClose={() => setGraphOpen(false)}
+                />
+              </ErrorBoundary>
             </aside>
 
-            {/* Horizontal drag handle */}
+            {/* Graph ↔ Panel drag handle */}
             <div
-              onMouseDown={handleColDragStart}
-              onTouchStart={handleColDragStart}
+              onMouseDown={handleGraphDragStart}
+              onTouchStart={handleGraphDragStart}
               className="w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize shrink-0 transition-colors"
             />
           </>
         )}
 
-        {/* Map — fills remaining space */}
+        {/* Middle: NodePanel */}
+        {showPanel && (
+          <>
+            <aside
+              style={{ width: panelWidth }}
+              className="flex flex-col border-r border-gray-700 overflow-hidden shrink-0 bg-gray-800"
+            >
+              <ErrorBoundary>
+                <NodePanel
+                  featureId={selectedNode}
+                  activeStudy={_study}
+                  onClose={handlePanelClose}
+                />
+              </ErrorBoundary>
+            </aside>
+
+            {/* Panel ↔ Map drag handle */}
+            <div
+              onMouseDown={handlePanelDragStart}
+              onTouchStart={handlePanelDragStart}
+              className="w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize shrink-0 transition-colors"
+            />
+          </>
+        )}
+
+        {/* Right: Map — fills remaining space */}
         <div className="flex-1 relative overflow-hidden">
           <NetworkMap
             selectedFeature={selectedNode}

@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet-arrowheads";
 import { fetchNetwork } from "../api/client.js";
+import {
+  NODE_STYLE,
+  DEFAULT_NODE_STYLE,
+  ARC_STYLE,
+  DEFAULT_ARC_STYLE,
+} from "../constants/mapStyles.js";
 
 // Fix Leaflet default icon paths broken by Vite bundling
 delete L.Icon.Default.prototype._getIconUrl;
@@ -12,40 +18,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-
-// ---------------------------------------------------------------------------
-// Visual style tables — CalSim 3 node types
-// ---------------------------------------------------------------------------
-
-// Point nodes: circle marker styles  {color, radius (r), stroke weight (w), fillOpacity (fo)}
-const NODE_STYLE = {
-  "Reservoir":              { color: "#3b82f6", r: 9,  w: 1.5, fo: 0.92 },
-  "Demand-Agricultural":    { color: "#eab308", r: 6,  w: 1.2, fo: 0.85 },
-  "Demand-Urban":           { color: "#f43f5e", r: 6,  w: 1.2, fo: 0.85 },
-  "Demand-Refuge":          { color: "#84cc16", r: 5,  w: 1.0, fo: 0.80 },
-  "Water Treatment Plant":  { color: "#06b6d4", r: 5,  w: 1.2, fo: 0.85 },
-  "Wastewater Treatment Plant": { color: "#7c3aed", r: 5,  w: 1.2, fo: 0.85 },
-};
-
-const DEFAULT_NODE_STYLE = { color: "#6b7280", r: 3, w: 0.5, fo: 0.55 };
-
-// LineString arc styles: {color, w, o?}  (o defaults to 0.75)
-const ARC_STYLE = {
-  "Channel":              { color: "#3b82f6", w: 2.8, o: 1.0 }, // vivid blue, thick, full opacity
-  "Diversion":            { color: "#34d399", w: 1.5 },   // emerald
-  "Inflow":               { color: "#2dd4bf", w: 1.5 },   // teal
-  "Return Flow":          { color: "#a3e635", w: 1.2 },   // lime
-  "Surface Runoff":       { color: "#86efac", w: 1.0 },   // light green
-  "Seepage":              { color: "#94a3b8", w: 1.0 },   // light slate-blue
-  "Tile Drain":           { color: "#b5a99a", w: 1.0 },   // warm stone
-  "Evaporation":          { color: "#fbbf24", w: 0.8 },   // amber
-  "Spill":                { color: "#7dd3fc", w: 1.2 },   // pale sky
-  "Closure Term":         { color: "#9ca3af", w: 0.8 },   // medium gray
-  "Delta Accretion":      { color: "#a78bfa", w: 1.2 },   // violet
-  "Delta Depletion":      { color: "#f472b6", w: 1.2 },   // pink
-};
-
-const DEFAULT_ARC_STYLE = { color: "#4b5563", w: 1.0 };
 
 const ARROW_MIN_ZOOM = 11;
 

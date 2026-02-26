@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -49,15 +50,13 @@ logger = logging.getLogger(__name__)
 #   • Add new prefixes in length-descending order within each group.
 #
 # Prefix glossary (CalSim 3 DV naming conventions):
-#   AW_      agricultural water (applied)
-#   C2V_     C2VSim-linked demand node
-#   CVP_     Central Valley Project delivery
-#   DG_      demand — groundwater component
-#   DL_      demand — delivery level
-#   DN_      demand — native surface water
-#   DP_      demand — delivery percent
-#   EG_      estimated groundwater
-#   EL_      evapotranspiration (local?)
+#   AW_      applied water
+#   CL_      contract limit
+#   DG_      delivery gross (e.g. before losses, return flow, etc.)
+#   DL_      delivery losses
+#   DN_      delivery net (e.g. after losses, return flow, etc.)
+#   DP_      deep percolation
+#   EL_      evaporative loss
 #   EV_      evapotranspiration
 #   GP_      groundwater pumping
 #   LF_      local flows / local surface water
@@ -72,48 +71,50 @@ logger = logging.getLogger(__name__)
 #   SUMUD_   sum of urban demand
 #   SWP_     State Water Project delivery
 #   SWDEM_   surface water demand (e.g. SWDEM_02_PADV → node 02_PA with DV suffix stripped)
+#   WR_      water right / contract supply
 #   WTS_     water transfer / wheeling supply
-#   XNM_TOTAL_ total non-market exchange
+#   XNM_TOTAL_ delivery shortage
 _NODE_PREFIXES = (
     # Longest compound prefixes first
-    "XNM_TOTAL_",
-    "SWDEM_",
-    "PEAKAW_",
-    "SUMAW_",
-    "SUMUD_",
-    "SHRTG_",
+    # "XNM_TOTAL_",
+    # "SWDEM_",
+    # "PEAKAW_",
+    # "SUMAW_",
+    # "SUMUD_",
+    # "SHRTG_",
     # 4-character prefixes
-    "C2V_",
-    "CVP_",
-    "SWP_",
-    "WTS_",
+    # "CVP_",
+    # "SWP_",
+    # "WTS_",
     # 3-character prefixes — longer before shorter with same root
-    "AW_",
-    "DG_",
-    "DL_",
-    "DN_",
-    "DP_",
-    "EG_",
-    "EL_",
-    "EV_",
-    "GP_",
-    "LF_",
-    "MF_",
-    "OS_",
-    "RP_",
-    "RU_",
-    "SL_",
+    "AW_", # Applied Water
+    "CL_", # Contract Limit
+    "DG_", # Delivery Gross
+    "DL_", # Delivery Loss
+    "DN_", # Delivery Net
+    "DP_", # Deep Percolation
+    "EL_", # Evaporative Loss
+    "EV_", # Evaporative loss
+    "GP_", # Groundwater Pumping
+    "LF_", # Lateral Flow Loss
+    "MF_", # Minimum Flow Requirement
+    "OS_", # Operational Spill
+    "RP_", # Riparian Misc
+    "RU_", # Reuse
+    "SL_", # Seepage Loss
+    "WR_", # Water Right / Contract Supply
+    "WR1_", # Water Right
+    "WR2_", # Water Right
+    "WR3_", # Water Right
     # 2-character prefixes (single letter + underscore)
-    "A_",
-    "C_",
-    "D_",
-    "E_",
-    "F_",
-    "G_",
-    "R_",
-    "S_",
-    "T_",
-    "X_",
+    # "A_", # surface area
+    "C_", # channel
+    "D_", # diversion / loss / delivery
+    "E_", # evaporation
+    "F_", # flow spill
+    "R_", # return flow
+    "S_", # storage
+    "X_", # Delivery shortage
 )
 
 
@@ -132,7 +133,17 @@ _NODE_TRAILING_TAGS = ("DV",)
 
 
 def _strip_prefix(varname: str, cs3_ids: Set[str]) -> Optional[str]:
-    """Return the cs3_id if varname maps to a GeoSchematic node, else None."""
+    """Return the cs3_id if varname maps to a GeoSchematic node, else None.
+
+    Matching strategy (applied in order after stripping each known prefix):
+      1. Direct match of the remainder against cs3_ids.
+      2. Strip known trailing tags (e.g. "DV").
+      3. Strip a trailing ``_N`` digit suffix (storage-zone variables).
+      4. Progressively remove leading ``_``-separated segments.  Many CalSim
+         DV variables embed a source or channel ID before the destination
+         node (e.g. ``WR_ESL010_09_NA`` -> ``09_NA``).  We peel one leading
+         segment at a time and check the remainder.
+    """
     upper = varname.upper()
     for pfx in _NODE_PREFIXES:
         if upper.startswith(pfx):
@@ -145,6 +156,19 @@ def _strip_prefix(varname: str, cs3_ids: Set[str]) -> Optional[str]:
                     trimmed = candidate[: -len(tag)]
                     if trimmed in cs3_ids:
                         return trimmed
+            # Try stripping trailing _N digit suffix for storage zone
+            # variables (e.g. S_SHSTA_1 -> SHSTA_1 -> SHSTA)
+            m = re.match(r'^(.+?)_(\d+)$', candidate)
+            if m and m.group(1) in cs3_ids:
+                return m.group(1)
+            # Progressively remove leading _-separated segments to find an
+            # embedded node ID (e.g. WR_ESL010_09_NA -> ESL010_09_NA
+            # -> try 09_NA -> match).
+            parts = candidate.split("_")
+            for i in range(1, len(parts)):
+                suffix = "_".join(parts[i:])
+                if suffix in cs3_ids:
+                    return suffix
     return None
 
 
@@ -191,9 +215,14 @@ def _read_and_match_dss(
     dss_path: Path,
     arc_ids: Set[str],
     cs3_ids: Set[str],
+    cache_dir: Optional[Path] = None,
 ) -> Tuple["pd.DataFrame", Dict[str, Tuple[str, str]], Dict[str, dict]]:
     """Open *dss_path*, match its variables to GeoSchematic features, and read
     all matched time series into a DataFrame.
+
+    When *cache_dir* is provided the DSS data is loaded through the pickle
+    cache (see :mod:`csview.study.dss_cache`), avoiding a full pydsstools
+    pass if a valid ``.dss.pkl`` file already exists.
 
     Returns
     -------
@@ -204,19 +233,31 @@ def _read_and_match_dss(
     wresl_meta : dict
         ``{varname: {c_part, b_part}}`` read from the DSS catalog.
     """
-    from csview.study.dss_reader import DssFile
-
-    dss = DssFile(dss_path)
-    dss.open()
-    try:
-        all_vars = dss.variables()
-    except Exception as exc:
-        logger.error("Failed to list variables in %s: %s", dss_path.name, exc)
-        dss.close()
-        return pd.DataFrame(), {}, {}
+    # ------------------------------------------------------------------
+    # Load DSS data — either from pickle cache or via pydsstools
+    # ------------------------------------------------------------------
+    if cache_dir is not None:
+        from csview.study.dss_cache import load_or_cache_dss
+        series_map, catalog_index = load_or_cache_dss(dss_path, cache_dir)
+        all_vars = list(series_map.keys())
+    else:
+        from csview.study.dss_reader import DssFile
+        dss = DssFile(dss_path)
+        dss.open()
+        try:
+            all_vars = dss.variables()
+        except Exception as exc:
+            logger.error("Failed to list variables in %s: %s", dss_path.name, exc)
+            dss.close()
+            return pd.DataFrame(), {}, {}
+        series_map = None
+        catalog_index = None
 
     logger.info("  %s: %d variables total", dss_path.name, len(all_vars))
 
+    # ------------------------------------------------------------------
+    # Match variables to GeoSchematic features
+    # ------------------------------------------------------------------
     matched: List[Tuple[str, str, str]] = []
     for var in all_vars:
         fid, fkind = _resolve_feature(var, arc_ids, cs3_ids)
@@ -226,39 +267,98 @@ def _read_and_match_dss(
 
     matched_var_names = [var for var, _, _ in matched]
 
+    # ------------------------------------------------------------------
+    # Build wresl_meta from DSS catalog entries
+    # ------------------------------------------------------------------
     wresl_meta: Dict[str, dict] = {}
     try:
-        cat_obj = dss.catalog()
-        for var in matched_var_names:
-            paths = cat_obj.get(var, [])
-            preferred = next(
-                (p for p in paths if p.e.upper() == "1MON"), paths[0] if paths else None
-            )
-            wresl_meta[var] = {
-                "c_part": preferred.c if preferred else "",
-                "b_part": preferred.b if preferred else "",
-            }
+        if catalog_index is not None:
+            # Cache provides catalog_index as Dict[str, List[dict]]
+            from csview.study.dss_reader import DssPathname
+            for var in matched_var_names:
+                raw_paths = catalog_index.get(var, [])
+                paths = [DssPathname(**p) if isinstance(p, dict) else p for p in raw_paths]
+                preferred = next(
+                    (p for p in paths if p.e.upper() == "1MON"), paths[0] if paths else None
+                )
+                wresl_meta[var] = {
+                    "c_part": preferred.c if preferred else "",
+                    "b_part": preferred.b if preferred else "",
+                }
+        else:
+            cat_obj = dss.catalog()  # type: ignore[union-attr]
+            for var in matched_var_names:
+                paths = cat_obj.get(var, [])
+                preferred = next(
+                    (p for p in paths if p.e.upper() == "1MON"), paths[0] if paths else None
+                )
+                wresl_meta[var] = {
+                    "c_part": preferred.c if preferred else "",
+                    "b_part": preferred.b if preferred else "",
+                }
     except Exception:
         pass
 
-    # Read each matched variable; capture DSS-native units from series.attrs
-    # (read_timeseries populates attrs['units'] from the ts object).
+    # ------------------------------------------------------------------
+    # Read matched time series
+    # ------------------------------------------------------------------
     frames: Dict[str, pd.Series] = {}
     for var in matched_var_names:
         try:
-            s = dss.read_timeseries(var)
+            if series_map is not None:
+                s = series_map[var]
+            else:
+                s = dss.read_timeseries(var)  # type: ignore[union-attr]
             frames[var] = s
             dss_units = s.attrs.get("units", "")
             if dss_units and var in wresl_meta:
                 wresl_meta[var]["dss_units"] = dss_units
         except Exception as exc:
             logger.debug("Skipping %s: %s", var, exc)
-    dss.close()
+
+    if series_map is None:
+        dss.close()  # type: ignore[union-attr]
+
     df = pd.concat(frames, axis=1) if frames else pd.DataFrame()
     logger.info("  Read complete: %d variables \u00d7 %d time steps", len(df.columns), len(df) if not df.empty else 0)
 
     matched_map = {var: (fid, fkind) for var, fid, fkind in matched}
     return df, matched_map, wresl_meta
+
+
+# ---------------------------------------------------------------------------
+# Merge helper — used for GWOUT and SV secondary DSS files
+# ---------------------------------------------------------------------------
+
+def _merge_secondary_dss(
+    df_base: "pd.DataFrame",
+    dss_path: Path,
+    arc_ids: Set[str],
+    cs3_ids: Set[str],
+    matched_map: Dict[str, Tuple[str, str]],
+    wresl_meta: Dict[str, dict],
+    label: str,
+    cache_dir: Optional[Path] = None,
+) -> "pd.DataFrame":
+    """Read *dss_path*, merge new-only columns into *df_base*, and update
+    *matched_map* / *wresl_meta* in-place.  *label* is for logging."""
+    logger.info("Reading %s file...", label)
+    df_sec, sec_matched, sec_wresl = _read_and_match_dss(
+        dss_path, arc_ids, cs3_ids, cache_dir=cache_dir,
+    )
+    new_cols = [c for c in df_sec.columns if c not in df_base.columns]
+    if new_cols:
+        df_base = pd.concat([df_base, df_sec[new_cols]], axis=1)
+        matched_map.update(sec_matched)
+        wresl_meta.update(sec_wresl)
+        logger.info("Merged %d %s variables into DataFrame", len(new_cols), label)
+    else:
+        already = len([c for c in df_sec.columns if c in df_base.columns])
+        if already:
+            logger.info("No new variables from %s (%d already present)", label, already)
+        else:
+            logger.info("No variables from %s matched GeoSchematic features", label)
+    return df_base
 
 
 # ---------------------------------------------------------------------------
@@ -271,6 +371,7 @@ def build_results(
     out_dir: Path,
     *,
     patch_catalog: bool = True,
+    cache_dir: Optional[Path] = None,
 ) -> None:
     """Build Parquet + metadata from a raw CalSim study directory.
 
@@ -284,6 +385,10 @@ def build_results(
     out_dir:
         Destination for results.parquet + results_meta.json.
         Should live in study/<name>/ (tracked in git).
+    cache_dir:
+        When provided, DSS data is cached as pickle files in this directory.
+        Subsequent builds reuse the cache if the DSS file has not been modified,
+        skipping the slow pydsstools read pass entirely.
     """
     study_dir = Path(source_dir)   # kept as study_dir internally for minimal diff
     out_dir = Path(out_dir)
@@ -372,42 +477,20 @@ def build_results(
     # Read DV file
     # -----------------------------------------------------------------------
     logger.info("Reading DV file...")
-    df_dv, matched_map, wresl_meta = _read_and_match_dss(dv_path, arc_ids_plus, cs3_ids)
+    df_raw, matched_map, wresl_meta = _read_and_match_dss(
+        dv_path, arc_ids_plus, cs3_ids, cache_dir=cache_dir,
+    )
 
     # -----------------------------------------------------------------------
-    # Read GWOUT file (optional) and merge into df_dv
+    # Read secondary DSS files (GWOUT, SV) — merge new-only columns
     # -----------------------------------------------------------------------
-    df_raw = df_dv
-    if gwout_path is not None:
-        logger.info("Reading GWOUT file...")
-        df_gw, gw_matched, gw_wresl = _read_and_match_dss(gwout_path, arc_ids_plus, cs3_ids)
-        new_cols = [c for c in df_gw.columns if c not in df_dv.columns]
-        if new_cols:
-            df_raw = pd.concat([df_dv, df_gw[new_cols]], axis=1)
-            matched_map.update(gw_matched)
-            wresl_meta.update(gw_wresl)
-            logger.info("Merged %d GWOUT variables into DataFrame", len(new_cols))
-        else:
-            already_in_dv = [c for c in df_gw.columns if c in df_dv.columns]
-            if already_in_dv:
-                logger.info("No new variables from GWOUT (%d already in DV)", len(already_in_dv))
-            else:
-                logger.info("No variables from GWOUT matched GeoSchematic features — nothing merged")
-
-    # -----------------------------------------------------------------------
-    # Read SV file (optional) and merge new-only columns
-    # -----------------------------------------------------------------------
-    if sv_path is not None:
-        logger.info("Reading SV file...")
-        df_sv, sv_matched, sv_wresl = _read_and_match_dss(sv_path, arc_ids_plus, cs3_ids)
-        new_cols = [c for c in df_sv.columns if c not in df_raw.columns]
-        if new_cols:
-            df_raw = pd.concat([df_raw, df_sv[new_cols]], axis=1)
-            matched_map.update(sv_matched)
-            wresl_meta.update(sv_wresl)
-            logger.info("Merged %d SV variables into DataFrame", len(new_cols))
-        else:
-            logger.info("No new variables from SV (%d already in DV/GWOUT)", len(df_sv.columns))
+    for path, label in ((gwout_path, "GWOUT"), (sv_path, "SV")):
+        if path is not None:
+            df_raw = _merge_secondary_dss(
+                df_raw, path, arc_ids_plus, cs3_ids,
+                matched_map, wresl_meta, label,
+                cache_dir=cache_dir,
+            )
 
     # -----------------------------------------------------------------------
     # Extract arc DSS override variables (e.g. NDOI_MIN / NDOI_ADD for C_SAC000)
@@ -472,8 +555,8 @@ def build_results(
         before = len(df_raw)
         df_raw = df_raw.loc[sim_start:sim_end]
         logger.info(
-            "Clipped to simulation_period %s – %s: %d → %d rows",
-            sim_start or "…", sim_end or "…", before, len(df_raw),
+            "Clipped to simulation_period %s - %s: %d -> %d rows",
+            sim_start or "...", sim_end or "...", before, len(df_raw),
         )
 
     # -----------------------------------------------------------------------
@@ -493,24 +576,27 @@ def build_results(
         }
 
     # -----------------------------------------------------------------------
-    # Normalise arc units: convert any TAF arc columns → CFS so all flow
-    # variables share the same unit (CFS) in the Parquet.
-    # TAF→CFS: multiply by (1000 * 43560) / (days_in_month * 86400)
+    # Normalise units: convert TAF columns -> CFS so flow/demand variables
+    # share the same unit in the Parquet.  Storage and storage-zone variables
+    # stay in TAF (they represent volumes, not rates).
+    # TAF->CFS: multiply by (1000 * 43560) / (days_in_month * 86400)
     # -----------------------------------------------------------------------
+    _KEEP_TAF_KINDS = {"STORAGE", "STORAGE-ZONE", "GW-STORAGE", "GROUNDWATER"}
     if not df_raw.empty:
-        taf_arc_cols = [
+        taf_convert_cols = [
             v for v, m in meta_vars.items()
-            if m["feature_kind"] == "arc" and m["units"].upper() == "TAF"
+            if m["units"].upper() == "TAF"
+            and m["kind"].upper() not in _KEEP_TAF_KINDS
             and v in df_raw.columns
         ]
-        if taf_arc_cols:
+        if taf_convert_cols:
             days = df_raw.index.days_in_month.values  # shape (n_rows,)
             cfs_factor = (1000 * 43560) / (days * 86400)  # shape (n_rows,)
             import numpy as np
-            df_raw[taf_arc_cols] = df_raw[taf_arc_cols].multiply(cfs_factor, axis=0)
-            for v in taf_arc_cols:
+            df_raw[taf_convert_cols] = df_raw[taf_convert_cols].multiply(cfs_factor, axis=0)
+            for v in taf_convert_cols:
                 meta_vars[v]["units"] = "CFS"
-            logger.info("Converted %d TAF arc columns → CFS", len(taf_arc_cols))
+            logger.info("Converted %d TAF columns -> CFS (excluding storage)", len(taf_convert_cols))
 
     # -----------------------------------------------------------------------
     # Write Parquet
@@ -627,6 +713,14 @@ def main() -> None:
         action="store_true",
         help="Skip updating catalog.json with variable_to_node entries",
     )
+    parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=None,
+        metavar="CACHE_DIR",
+        help="Directory for DSS pickle cache files. When set, DSS data is "
+             "cached as .dss.pkl files, making subsequent builds much faster.",
+    )
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
 
@@ -641,6 +735,7 @@ def main() -> None:
         catalog_path=args.catalog,
         out_dir=args.out,
         patch_catalog=not args.no_patch_catalog,
+        cache_dir=args.cache_dir,
     )
     print("\nDone.")
 

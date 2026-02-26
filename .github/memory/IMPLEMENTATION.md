@@ -42,6 +42,7 @@ calsim-view/
 │   ├── study/                        ← Parquet-backed study results + DSS reader
 │   │   ├── store.py                  ← StudyStore (lazy Parquet load, timeseries queries)
 │   │   ├── dss_reader.py             ← HEC-DSS binary reader (pydsstools wrapper)
+│   │   ├── dss_cache.py              ← Pickle cache layer (skip pydsstools on rebuild)
 │   │   └── __main__.py               ← CLI: DSS → results.parquet + results_meta.json
 │   │
 │   └── app/                          ← FastAPI application
@@ -61,14 +62,20 @@ calsim-view/
 │               ├── index.css
 │               ├── api/
 │               │   └── client.js     ← fetch wrappers for all API endpoints
+│               ├── constants/
+│               │   └── mapStyles.js       ← shared node/arc color + style maps
 │               └── components/
 │                   ├── NetworkMap.jsx      ← Leaflet map, GeoJSON rendering, legend
 │                   ├── NodePanel.jsx       ← feature detail + timeseries chart
 │                   ├── ResultsChart.jsx    ← stacked/line charts (Recharts)
+│                   ├── YearRangeSlider.jsx ← dual-thumb date-range slider + drought pills
 │                   ├── NeighborhoodGraph.jsx ← force-directed subgraph
 │                   ├── NodeSearch.jsx      ← feature search autocomplete
 │                   ├── StudySelector.jsx   ← active study dropdown
-│                   └── ErrorBoundary.jsx
+│                   ├── ErrorBoundary.jsx
+│                   └── charts/
+│                       ├── chartUtils.js   ← shared chart utilities, colors, data builders
+│                       └── ChartParts.jsx  ← ToggleLegend + ChartTooltip sub-components
 │
 ├── data/                             ← tracked build artifacts
 │   ├── network/                      ← pre-built network artifacts
@@ -128,8 +135,8 @@ Key design decisions:
   as a static file; never regenerated at runtime.
 - **Lazy Parquet loading**: `StudyStore` loads `results.parquet` only on the
   first `/api/study/feature/…` request; subsequent queries are O(1) column
-  lookups.  On load, timestamps are shifted back one month to correct for the
-  DSS end-of-period convention (October 31 → September 30).
+  lookups.  Parquet timestamps are already end-of-month for the correct
+  period — no runtime shift is applied.
 - **Build order matters**: when rebuilding both, **network first** — the study
   builder reads `catalog.json` to decide which DSS variables to extract
   (including `wresl_suggestion` target arc IDs).
@@ -187,10 +194,14 @@ naming variants. Finds 18 files across sub-basins.
 python -m csview.study \
     --source  reference/calsim-studies/study_a \
     --catalog data/network/catalog.json \
-    --out     data/study/study_a/
+    --out     data/study/study_a/ \
+    --cache-dir data/study/study_a/.dss_cache
 ```
 
-> **SLOW (3–5 min)**. Run in background with a log file.
+> **SLOW (3–5 min)**. Run in background with a log file. The `--cache-dir` flag
+> enables pickle caching of DSS data — after the first run, subsequent builds
+> read from `.dss.pkl` files instead of calling `pydsstools`, cutting rebuild
+> time significantly.
 
 Reads DV, GWOUT, and SV DSS files. Matches each variable against:
 1. `arc_ids` from catalog (includes `wresl_suggestion` target arc IDs)
@@ -263,8 +274,9 @@ Compiles React/Vite source into `csview/app/static/`.
 ### `results.parquet`
 
 Wide DataFrame: rows = monthly `DatetimeIndex` (1 200 rows, 1921-10 → 2021-09),
-columns = CalSim variable names (4 834 columns). Arc flow values in CFS
-(TAF columns auto-converted during build).
+columns = CalSim variable names (~5 859 columns). All TAF variables are
+converted to CFS during build except storage and storage-zone (which
+remain in TAF).  The `_KEEP_TAF_KINDS` set controls exemptions.
 
 ### `results_meta.json`
 
@@ -305,8 +317,8 @@ columns = CalSim variable names (4 834 columns). Arc flow values in CFS
 
 | Symbol | Purpose |
 |---|---|
-| `GeoNode` | Dataclass: `cs3_id`, lat/lon, `node_type`, `hydro_region`, `dss_variables`, `missing_arcs: List[str]` |
-| `GeoArc` | Dataclass: `arc_id`, `from_node`, `to_node`, `arc_type`, `coordinates`, `capacity_cfs: Optional[float]`, `solver_active: bool`, `wresl_suggestion: Optional[str]` |
+| `GeoNode` | Dataclass: `cs3_id`, lat/lon, `node_type`, `hydro_region`, `dss_variables`, `missing_arcs: List[str]`. Has `to_dict()` / `from_dict()` classmethods. |
+| `GeoArc` | Dataclass: `arc_id`, `from_node`, `to_node`, `arc_type`, `coordinates`, `capacity_cfs: Optional[float]`, `solver_active: bool`, `wresl_suggestion: Optional[str]`. Has `to_dict()` / `from_dict()` classmethods. |
 | `GeoNetwork` | Container: `nodes`, `arcs`, `geojson`, `variable_to_node` dicts + `lookup_node()`, `lookup_arc()`, `get_feature()` helpers |
 | `node_type_from_description()` | Derives node_type from NodeDescription text |
 | `ARC_TYPE_MAP` | Dict normalising raw GeoSchematic Type → canonical arc type |
@@ -333,7 +345,15 @@ Connectivity file discovery uses `rglob("*.wresl")` filtered by
 
 | Symbol | Purpose |
 |---|---|
-| `run_diagnostics(gn, connectivity, wresl_catalog)` | Runs all 7 checks → `DiagnosticsReport` |
+| `run_diagnostics(gn, connectivity, wresl_catalog)` | Orchestrates all 7 checks → `DiagnosticsReport` |
+| `_build_wresl_topology()` | Derives from/to node maps from WRESL connectivity equations |
+| `_check_arc_no_connectivity()` | Check 1: geo arcs absent from WRESL |
+| `_check_delivery_no_define()` | Check 1b: delivery arcs w/ commented-out defines |
+| `_check_arc_no_geo()` | Check 2: WRESL arcs absent from geo |
+| `_check_endpoint_mismatches()` | Checks 3-4: from/to node mismatches |
+| `_check_node_no_continuity()` | Check 5: nodes w/o continuity equation |
+| `_check_node_name_typos()` | Check 6: near-match (Levenshtein) node IDs |
+| `_check_arc_endpoint_suggestions()` | Check 7: WRESL arc suggestions |
 | `DiagnosticsReport` | `issues`, `stats`, `wresl_from`, `wresl_to`, `all_wresl_arcs`, `arc_suggestions` |
 
 ### `csview.study.store`
@@ -345,6 +365,22 @@ Connectivity file discovery uses `rglob("*.wresl")` filtered by
 | `.date_range` | `(start, end)` from metadata; Parquet fallback |
 | `.get_series(varname)` | Returns `pd.Series` for one variable |
 | `.get_feature_series(feature_id)` | All series for a feature (arc: direct match; node: via `node_dss_variables`) |
+| `.has_variable(varname)` | O(1) check via cached uppercase→column dict |
+
+Internally, `_upper_to_col` dict is built on first load for O(1) case-insensitive column lookups.
+
+### `csview.study.dss_cache`
+
+Pickle-based cache layer to skip repeated `pydsstools` reads on rebuilds.
+
+| Function | Purpose |
+|---|---|
+| `cache_dss_file(dss_path, cache_dir)` | Reads all paths via pydsstools, writes `<name>.dss.pkl` |
+| `load_or_cache_dss(dss_path, cache_dir)` | Returns `(series_map, catalog_index)` from cache (or creates it) |
+| `_is_cache_valid(pkl_path, dss_path)` | Checks pickle mtime > DSS mtime |
+
+Pickle payload: `{"source", "cached_at", "catalog": {var: [pathnames]}, "series": {var: pd.Series}}`.
+Used by `--cache-dir` CLI option on the study builder.
 
 ### `csview.study.__main__` (CLI builder)
 
@@ -352,6 +388,18 @@ Variable matching: `_resolve_feature(varname, arc_ids, cs3_ids)` checks arc_ids
 first (direct match), then strips 34 node prefixes longest-first. The `arc_ids`
 set includes `wresl_suggestion` target arcs from catalog so their DSS data is
 extracted even though they have no GeoSchematic geometry.
+
+After prefix stripping, `_strip_prefix` applies three fallback strategies:
+1. Strip known trailing tags (e.g. `DV`).
+2. Strip a trailing `_\d+` suffix for **storage zone** variables
+   (e.g. `S_SHSTA_1` -> `SHSTA_1` -> `SHSTA`).
+3. Progressively remove leading `_`-separated segments to find an embedded
+   node ID (e.g. `WR_ESL010_09_NA` -> `ESL010_09_NA` -> peel `ESL010_`
+   -> `09_NA` matches).  This catches ~900 delivery/contract/loss variables
+   whose name embeds a source channel before the destination demand node.
+
+CLI options include `--cache-dir` to use the pickle cache layer (`dss_cache.py`).
+Helper `_merge_secondary_dss()` consolidates the DV/GWOUT/SV merge pattern.
 
 ### `csview.app.state`
 
@@ -363,11 +411,16 @@ extracted even though they have no GeoSchematic geometry.
 | Model | Used for |
 |---|---|
 | `FeatureSummary` | `/api/network/features` list items |
-| `NodeDetail` | Feature detail when node |
+| `NodeDetail` | Feature detail when node (includes `solver_active`) |
 | `ArcDetail` | Feature detail when arc (includes `wresl_suggestion`) |
 | `NeighborhoodResponse` | Subgraph response |
 | `StudyInfo` / `StudyListResponse` | Study listing |
 | `FeatureResultSeries` | Time series response (includes `wresl_suggestion_used`) |
+
+`FeatureSummary`, `NodeDetail`, and `ArcDetail` have factory classmethods
+(`from_node()`, `from_arc()`, `from_geo()`) that construct instances directly
+from `GeoNode`/`GeoArc` objects, eliminating manual serialization helpers in
+the routers.
 
 ---
 
@@ -453,6 +506,9 @@ Query: `study` (optional, defaults to active). Returns `FeatureResultSeries`:
 ```
 
 Node responses include connected arc series with `direction` in metadata.
+`E_` (evaporation) node variables are also tagged `direction="out"` so they
+appear in Arc Flows.  `F_` (spill) variables are suppressed in the frontend
+via `SUPPRESSED_KINDS`.
 
 ### GET /api/study/variable/{prmname}
 Query: `study` (optional). Returns `FeatureResultSeries` for one variable.
@@ -468,8 +524,14 @@ Query: `study` (optional). Returns `FeatureResultSeries` for one variable.
 leaflet-arrowheads 1.4, Recharts 2, TanStack Query 5.
 
 ### `App.jsx`
-Three-column resizable layout: `[NeighborhoodGraph | NodePanel | Map]`.
-State: `selectedNode`, `flyToFeature`, `activeStudy`.
+Three-column resizable layout: `[NeighborhoodGraph | drag | NodePanel | drag | Map]`.
+The graph panel and node panel each have independent open/close and width
+state.  The graph panel appears only when a feature is selected and
+`graphOpen` is true; a header toggle button (graph icon + "Graph") lets the
+user show/hide it.  Two independent `col-resize` drag handles separate the
+three areas.
+State: `selectedNode`, `flyToFeature`, `activeStudy`, `panelOpen`,
+`graphOpen`, `panelWidth`, `graphWidth`.
 
 ### `NetworkMap.jsx`
 - GeoJSON loaded once (React Query, cached indefinitely)
@@ -498,23 +560,33 @@ Delta Depletion (pink `#f472b6`), default (gray `#4b5563`).
 
 ### `NodePanel.jsx`
 Feature detail panel with sections:
-- **Header**: feature_id, name/description, type badge
-- **Properties**: from/to nodes, hydro region, solver badge
-- **Arc Details** (arc features): capacity, connected arcs, wresl_suggestion
-  amber box
+- **Header**: feature_id, name/description, type badge, close button
+- **Information** (consolidated): merges old Properties + Geographic + Arc
+  Details into a single collapsible section.  Common fields first (kind,
+  solver badge, region), then arc-specific (from/to node, capacity),
+  then node-specific (river, gage, lat/lon).  Solver badge shows for both
+  arcs and nodes (`solver_active` — nodes are active when they have DSS
+  variables).  `wresl_suggestion` shown as subtle gray note.
 - **Solver-Only Arcs** (node features): collapsible list of `missing_arcs`
-  with amber tags
-- **Model Results**: `ResultsChart` with date-range slider; amber banner when
-  `wresl_suggestion_used` is set; amber "No DSS output" message when both arc
-  and suggestion lack data
+  with gray tags (`text-gray-400 border-gray-700`)
+- **Model Results**: `ResultsChart` with date-range slider; gray "No DSS
+  output" message when both arc and suggestion lack data
+
+`NodePanel` owns **persistent chart state** (`displayUnit`, `aggMode`) that
+survives feature-selection changes.  These are passed to `ResultsChart` as
+controlled props (`displayUnit` / `onDisplayUnitChange`, `aggMode` /
+`onAggModeChange`).  The year-range slider likewise persists: on feature
+change, existing indices are *clamped* to the new years array instead of
+reset, so the user's zoom level is preserved.
 
 ### `ResultsChart.jsx`
-`splitSeries()` partitions variables into three buckets:
+`splitSeries()` partitions variables into four buckets:
 
 | Bucket | Criteria | Chart |
 |---|---|---|
 | `arcFlows` | has `direction` in metadata | `StackedFlowChart` |
 | `storage` | kind ∈ STORAGE/GW-STORAGE/GROUNDWATER | `LineChartPanel` |
+| `storageZones` | kind = STORAGE-ZONE | `LineChartPanel` (as zone areas) |
 | `balance` | everything else | `LineChartPanel` |
 
 **StackedFlowChart**: outflows negated, stacked areas + lines, CFS/TAF toggle.
@@ -522,14 +594,64 @@ Channels with reverse (negative) flow are handled via a split-stack approach:
 each key's value is clamped to its expected sign for monotone stacking, while
 the reverse-sign portion is placed in the *opposite* stack as a synthetic
 `_stk_rev_` / `_top_rev_` key (lighter fill, dashed outline).  This keeps
-lines from crossing while making reverse flows visible.
+lines from crossing while making reverse flows visible.  Uses `flowSeriesColor()`
+for separate positive (cool-tone) / negative (warm-tone) color palettes.
 **LineChartPanel**: y-axis anchored to 0, dashed average line, CFS/TAF toggle.
+Accepts `isStorage` prop: when true and in annual mode, uses
+`aggregateWaterYearEnd` (September-only snapshot) instead of the default
+water-year aggregation.  Accepts `useBarForAnnual` prop: when true and in
+annual mode, renders a `BarChart`/`Bar` instead of `LineChart`/`Line`.
+Bar charts are enabled for the **Storage** panel and the **arc "Flow"**
+panel (few series).  All non-storage TAF variables are converted to CFS
+at build time, so the **"Other"** chart displays a consistent CFS unit.
+Accepts optional `zoneSeries` prop: when
+provided and in raw time-series mode, renders storage-zone boundaries as
+light stacked `Area` fills behind the main storage line.  Zone keys
+(e.g. `S_SHSTA_1`–`S_SHSTA_6`) are sorted numerically and stacked
+bottom-up using `ZONE_COLORS` palette.  Zone areas are hidden in
+monthly-average and annual aggregation modes.
 
-Shared helpers: `buildChartData`, `cfsToTaf`, `yDomain`, `shortKey`,
-`ToggleLegend`, `ChartTooltip`.
+**Aggregation modes** (all charts): an `AggToggle` row offers three modes:
+- **Time Series** (`raw`): default raw monthly data
+- **Monthly Avg** (`monthly`): 12 rows (Oct–Sep water-year order), averaged
+  across the selected date window
+- **Water Year** (`annual`): one row per water year — **TAF volumes are
+  summed**, **CFS rates are averaged** (via `avgKeys` parameter to
+  `aggregateWaterYear`), and **storage** uses the September 30 snapshot
+  (`aggregateWaterYearEnd`)
+
+Shared helpers live in extracted modules:
+- **`charts/chartUtils.js`**: `COLORS`, `REF_COLORS`, `seriesColor()`,
+  `POS_COLORS` (8 cool-tone), `NEG_COLORS` (8 warm-tone),
+  `flowSeriesColor(key, isNegative, orderIdx)`,
+  `dateToWaterYear(dateKey)`, `shortKey()`, `daysInMonth()`, `cfsToTaf()`,
+  `buildChartData()` (filters by water year, not calendar year),
+  `splitSeries()` (returns `arcFlows`, `storage`, `storageZones`, `balance`),
+  `WB_TERMS`, `WB_ORDER`, `WB_COLORS`, `WB_POSITIVE`,
+  `ZONE_COLORS` (6-color palette for storage zone bands),
+  `computeYearTicks()`, `aggregateMonthlyAvg(data, keys)`,
+  `aggregateWaterYear(data, keys, avgKeys=null)` (avgKeys = set of CFS
+  rate keys to average instead of sum),
+  `aggregateWaterYearEnd(data, keys)`
+- **`charts/ChartParts.jsx`**: `ToggleLegend`, `ChartTooltip`
+  (tooltip preserves negative sign in values; accepts optional `excludeKeys`
+  set to suppress zone keys from tooltip display)
+
+### `YearRangeSlider.jsx`
+Dual-thumb range slider (~160 lines) with drought preset pills and
+pan/shift-click support.  Operates on **water years** (WY) derived in
+`NodePanel.jsx`.  Labels display "WY YYYY" format.
+
+### `constants/mapStyles.js`
+Single source of truth for node/arc visual styles: `NODE_STYLE`,
+`DEFAULT_NODE_STYLE`, `nodeColor()`, `ARC_STYLE`, `DEFAULT_ARC_STYLE`.
+Imported by `NetworkMap.jsx` and `NeighborhoodGraph.jsx`.
 
 ### Other components
-- **`NeighborhoodGraph.jsx`**: D3-style force layout SVG of local subgraph
+- **`NeighborhoodGraph.jsx`**: D3-style force layout SVG of local subgraph.
+  Depth selector offers 1–4 hops.  Edge arcs are clickable (invisible wider
+  hit-area + cursor pointer).  Accepts `onEdgeClick` and `onClose` props.
+  Close button (`×`) in the panel header
 - **`NodeSearch.jsx`**: autocomplete filtering on feature_id + description
 - **`StudySelector.jsx`**: active study dropdown
 - **`api/client.js`**: fetch wrappers; `get(path)` throws on non-2xx
@@ -590,4 +712,4 @@ for multi-study mode with `--default-study`.
 
 ---
 
-*Last updated: 2026-02-25*
+*Last updated: 2026-02-26*

@@ -2,6 +2,7 @@
 *.code-workspace
 .DS_Store
 *.log
+.dss_cache
 
 # Reference material (large PDFs, XML docs, raw CalSim source files incl. GeoSchematic) — local only, not tracked in git
 # network/ and study/ compiled artifacts ARE tracked

@@ -73,7 +73,9 @@ KIND_TO_UNITS: Dict[str, str] = {
     "DELIVERY":         "CFS",
     "AG-DELIVERY":      "CFS",
     "URBAN-DELIVERY":   "CFS",
-    "URBAN-DEMAND":     "CFS",    "SW-DEMAND":        "TAF",    "SHORTAGE":         "CFS",
+    "URBAN-DEMAND":   "CFS",
+    "SW-DEMAND":        "TAF",
+    "SHORTAGE":         "CFS",
     "RETURN-FLOW":      "CFS",
     "SEEPAGE":          "CFS",
     "GROUNDWATER":      "TAF",
@@ -126,6 +128,47 @@ class GeoNode:
     # geometry in the GeoSchematic (arc_no_geo diagnostic hits).
     missing_arcs: List[str] = field(default_factory=list)
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to a dict suitable for catalog.json."""
+        return {
+            "cs3_id":       self.cs3_id,
+            "description":  self.description,
+            "node_type":    self.node_type,
+            "lon":          self.lon,
+            "lat":          self.lat,
+            "hydro_region": self.hydro_region,
+            "river_name":   self.river_name,
+            "nearest_gage": self.nearest_gage,
+            "stream_code":  self.stream_code,
+            "river_mile":   self.river_mile,
+            "c2vsim_gw":    self.c2vsim_gw,
+            "c2vsim_sw":    self.c2vsim_sw,
+            "calsim2_id":   self.calsim2_id,
+            "dss_variables": self.dss_variables,
+            "missing_arcs":  self.missing_arcs,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "GeoNode":
+        """Deserialize from a catalog.json node entry."""
+        return cls(
+            cs3_id=d["cs3_id"],
+            description=d["description"],
+            node_type=d["node_type"],
+            lon=d["lon"],
+            lat=d["lat"],
+            hydro_region=d.get("hydro_region", ""),
+            river_name=d.get("river_name", ""),
+            nearest_gage=d.get("nearest_gage", ""),
+            stream_code=d.get("stream_code", ""),
+            river_mile=d.get("river_mile"),
+            c2vsim_gw=d.get("c2vsim_gw", ""),
+            c2vsim_sw=d.get("c2vsim_sw", ""),
+            calsim2_id=d.get("calsim2_id", ""),
+            dss_variables=d.get("dss_variables", []),
+            missing_arcs=d.get("missing_arcs", []),
+        )
+
 
 @dataclass
 class GeoArc:
@@ -167,6 +210,45 @@ class GeoArc:
         if self.units:
             return self.units
         return ARC_TYPE_TO_UNITS.get(self.arc_type, "CFS")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to a dict suitable for catalog.json."""
+        return {
+            "arc_id":          self.arc_id,
+            "name":            self.name,
+            "arc_type":        self.arc_type,
+            "sub_type":        self.sub_type,
+            "from_node":       self.from_node,
+            "to_node":         self.to_node,
+            "hydro_region":    self.hydro_region,
+            "description":     self.description,
+            "coordinates":     self.coordinates,
+            "units":           self.units,
+            "kind":            self.kind,
+            "capacity_cfs":    self.capacity_cfs,
+            "solver_active":   self.solver_active,
+            "wresl_suggestion": self.wresl_suggestion,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "GeoArc":
+        """Deserialize from a catalog.json arc entry."""
+        return cls(
+            arc_id=d["arc_id"],
+            name=d.get("name", ""),
+            arc_type=d.get("arc_type", ""),
+            sub_type=d.get("sub_type", ""),
+            from_node=d.get("from_node"),
+            to_node=d.get("to_node"),
+            hydro_region=d.get("hydro_region", ""),
+            description=d.get("description", ""),
+            coordinates=d.get("coordinates", []),
+            units=d.get("units"),
+            kind=d.get("kind"),
+            capacity_cfs=d.get("capacity_cfs"),
+            solver_active=d.get("solver_active", True),
+            wresl_suggestion=d.get("wresl_suggestion"),
+        )
 
 
 @dataclass

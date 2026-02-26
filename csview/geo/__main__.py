@@ -147,45 +147,8 @@ def main() -> None:
 
     # catalog.json
     catalog = {
-        "nodes": {
-            cs3_id: {
-                "cs3_id":       node.cs3_id,
-                "description":  node.description,
-                "node_type":    node.node_type,
-                "lon":          node.lon,
-                "lat":          node.lat,
-                "hydro_region": node.hydro_region,
-                "river_name":   node.river_name,
-                "nearest_gage": node.nearest_gage,
-                "stream_code":  node.stream_code,
-                "river_mile":   node.river_mile,
-                "c2vsim_gw":    node.c2vsim_gw,
-                "c2vsim_sw":    node.c2vsim_sw,
-                "calsim2_id":   node.calsim2_id,
-                "dss_variables": node.dss_variables,
-                "missing_arcs":  node.missing_arcs,
-            }
-            for cs3_id, node in gn.nodes.items()
-        },
-        "arcs": {
-            arc_id: {
-                "arc_id":          arc.arc_id,
-                "name":            arc.name,
-                "arc_type":        arc.arc_type,
-                "sub_type":        arc.sub_type,
-                "from_node":       arc.from_node,
-                "to_node":         arc.to_node,
-                "hydro_region":    arc.hydro_region,
-                "description":     arc.description,
-                "coordinates":     arc.coordinates,
-                "units":           arc.units,
-                "kind":            arc.kind,
-                "capacity_cfs":    arc.capacity_cfs,
-                "solver_active":   arc.solver_active,
-                "wresl_suggestion": arc.wresl_suggestion,
-            }
-            for arc_id, arc in gn.arcs.items()
-        },
+        "nodes": {cs3_id: node.to_dict() for cs3_id, node in gn.nodes.items()},
+        "arcs": {arc_id: arc.to_dict() for arc_id, arc in gn.arcs.items()},
         "variable_to_node": gn.variable_to_node,
     }
     cat_path = out / "catalog.json"

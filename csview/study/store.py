@@ -39,6 +39,7 @@ class StudyStore:
     study_dir: Path
     _df: Optional[pd.DataFrame] = field(default=None, repr=False)
     _meta: Optional[Dict[str, Any]] = field(default=None, repr=False)
+    _upper_to_col: Optional[Dict[str, str]] = field(default=None, repr=False)
 
     # ------------------------------------------------------------------
     # Construction helpers
@@ -86,11 +87,11 @@ class StudyStore:
         if self._df is None:
             logger.info("Loading results from %s", self.parquet_path)
             self._df = pd.read_parquet(self.parquet_path)
-            # DSS uses end-of-period timestamps: a value for September
-            # is stamped October 31.  Shift back one month then snap to
-            # end-of-month so dates reflect the actual period.
-            self._df.index = self._df.index - pd.DateOffset(months=1)
-            self._df.index = self._df.index + pd.offsets.MonthEnd(0)
+            # Timestamps in the Parquet are already end-of-month for the
+            # correct period (snapped by the DSS reader at build time).
+            # No additional shift is needed.
+            # Build case-insensitive lookup: UPPER → actual column name
+            self._upper_to_col = {c.upper(): c for c in self._df.columns}
             logger.info(
                 "  Loaded: %d variables x %d time steps",
                 len(self._df.columns),
@@ -126,23 +127,20 @@ class StudyStore:
             return list(self._ensure_loaded().columns)
 
     def has_variable(self, prmname: str) -> bool:
-        return prmname.upper() in (v.upper() for v in self.variables)
+        self._ensure_loaded()
+        return prmname.upper() in self._upper_to_col  # type: ignore[arg-type]
 
     def get_series(self, prmname: str) -> Optional[pd.Series]:
         """Return the monthly time series for *prmname*, or None if not found.
 
         The series has a DatetimeIndex and NaN values already dropped.
+        Uses a cached uppercase→column map for O(1) case-insensitive lookup.
         """
         df = self._ensure_loaded()
-        # Try exact match
-        if prmname in df.columns:
-            return df[prmname].dropna()
-        # Case-insensitive fallback
-        upper = prmname.upper()
-        for col in df.columns:
-            if col.upper() == upper:
-                return df[col].dropna()
-        return None
+        col = self._upper_to_col.get(prmname.upper())  # type: ignore[union-attr]
+        if col is None:
+            return None
+        return df[col].dropna()
 
     def get_feature_series(self, feature_id: str) -> Dict[str, pd.Series]:
         """Return all series for a GeoSchematic *feature_id*.

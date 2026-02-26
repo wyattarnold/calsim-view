@@ -1,21 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchNeighborhood } from "../api/client.js";
-
-// ---------------------------------------------------------------------------
-// Color table — must match NetworkMap.jsx NODE_STYLE
-// ---------------------------------------------------------------------------
-
-const NODE_COLOR = {
-  "Reservoir":              "#3b82f6",
-  "Demand-Agricultural":    "#eab308",
-  "Demand-Urban":           "#f43f5e",
-  "Demand-Refuge":          "#84cc16",
-  "Water Treatment Plant":  "#06b6d4",
-  "Wastewater Treatment Plant": "#7c3aed",
-};
-
-const DEFAULT_NODE_COLOR = "#6b7280";
+import { nodeColor } from "../constants/mapStyles.js";
 
 // ---------------------------------------------------------------------------
 // Layout — upstream (negative dist) at top, downstream at bottom
@@ -98,7 +84,7 @@ function boundaryArrowPath(fromPos, toPos) {
 
 const MAX_NODES_WARNING = 80;
 
-export default function NeighborhoodGraph({ featureId, onNodeClick }) {
+export default function NeighborhoodGraph({ featureId, onNodeClick, onEdgeClick, onClose }) {
   const [depth, setDepth] = useState(2);
 
   const { data, isLoading } = useQuery({
@@ -142,7 +128,7 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
           Network Graph
         </span>
         <div className="flex gap-1 ml-2">
-          {[1, 2, 3].map((d) => (
+          {[1, 2, 3, 4].map((d) => (
             <button
               key={d}
               onClick={() => setDepth(d)}
@@ -160,6 +146,12 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
           <span className="ml-auto text-[10px] text-gray-500 tabular-nums">
             {data.nodes.length}n · {data.arcs.length}e
           </span>
+        )}
+        {onClose && (
+          <button onClick={onClose}
+            className="ml-2 text-gray-500 hover:text-gray-200 text-lg leading-none"
+            aria-label="Close graph panel"
+          >×</button>
         )}
       </div>
 
@@ -244,18 +236,23 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
                 ? "url(#nbh-arr-sel)"
                 : "url(#nbh-arr)";
               return (
-                <path
-                  key={arc.feature_id}
-                  d={d}
-                  fill="none"
-                  stroke={stroke}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={isBoundary ? "4 3" : undefined}
-                  opacity={opacity}
-                  markerEnd={marker}
+                <g key={arc.feature_id}
+                  onClick={() => onEdgeClick?.(arc.feature_id)}
+                  className={onEdgeClick ? "cursor-pointer" : undefined}
                 >
+                  {/* Invisible wider hit area for easier clicking */}
+                  <path d={d} fill="none" stroke="transparent" strokeWidth={Math.max(strokeWidth + 8, 12)} />
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke={stroke}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={isBoundary ? "4 3" : undefined}
+                    opacity={opacity}
+                    markerEnd={marker}
+                  />
                   <title>{arc.feature_id}</title>
-                </path>
+                </g>
               );
             })}
 
@@ -264,7 +261,7 @@ export default function NeighborhoodGraph({ featureId, onNodeClick }) {
               const pos = layout.positions[n.feature_id];
               if (!pos) return null;
               const isFocus = focusNodeIds.has(n.feature_id.toUpperCase());
-              const color = NODE_COLOR[n.node_type] || DEFAULT_NODE_COLOR;
+              const color = nodeColor(n.node_type);
               const label = n.feature_id.length > 14 ? n.feature_id.slice(0, 13) + "…" : n.feature_id;
 
               return (

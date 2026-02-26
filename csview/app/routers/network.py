@@ -17,81 +17,9 @@ from csview.app.schemas import (
     NodeDetail,
 )
 from csview.app.state import AppState, get_state
-from csview.geo.models import GeoArc, GeoNode
+from csview.geo.models import GeoArc, GeoNetwork, GeoNode
 
 router = APIRouter()
-
-
-# ---------------------------------------------------------------------------
-# Serialisation helpers
-# ---------------------------------------------------------------------------
-
-def _node_summary(n: GeoNode) -> FeatureSummary:
-    return FeatureSummary(
-        feature_id=n.cs3_id,
-        feature_kind="node",
-        hydro_region=n.hydro_region or None,
-        description=n.description or None,
-        name=n.river_name or None,
-        node_type=n.node_type or None,
-        arc_type=None,
-        units=None,
-        lon=n.lon,
-        lat=n.lat,
-    )
-
-
-def _arc_summary(a: GeoArc) -> FeatureSummary:
-    return FeatureSummary(
-        feature_id=a.arc_id,
-        feature_kind="arc",
-        hydro_region=a.hydro_region or None,
-        description=a.description or None,
-        name=a.name or None,
-        node_type=None,
-        arc_type=a.arc_type or None,
-        units=a.units or None,
-        lon=None,
-        lat=None,
-    )
-
-
-def _node_detail(n: GeoNode) -> NodeDetail:
-    return NodeDetail(
-        feature_id=n.cs3_id,
-        cs3_id=n.cs3_id,
-        description=n.description or None,
-        node_type=n.node_type or None,
-        hydro_region=n.hydro_region or None,
-        river_name=n.river_name or None,
-        nearest_gage=n.nearest_gage or None,
-        stream_code=n.stream_code or None,
-        river_mile=n.river_mile or None,
-        calsim2_id=n.calsim2_id or None,
-        lon=n.lon,
-        lat=n.lat,
-        dss_variables=list(n.dss_variables),
-        missing_arcs=list(n.missing_arcs),
-    )
-
-
-def _arc_detail(a: GeoArc) -> ArcDetail:
-    return ArcDetail(
-        feature_id=a.arc_id,
-        arc_id=a.arc_id,
-        name=a.name or None,
-        arc_type=a.arc_type or None,
-        sub_type=a.sub_type or None,
-        from_node=a.from_node or None,
-        to_node=a.to_node or None,
-        hydro_region=a.hydro_region or None,
-        description=a.description or None,
-        units=a.units or None,
-        kind=a.kind or None,
-        capacity_cfs=a.capacity_cfs,
-        solver_active=a.solver_active,
-        wresl_suggestion=a.wresl_suggestion,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -124,14 +52,14 @@ def list_features(
                 continue
             if node_type and n.node_type != node_type:
                 continue
-            results.append(_node_summary(n))
+            results.append(FeatureSummary.from_node(n))
     if feature_kind != "node":
         for a in state.network.arcs.values():
             if hydro_region and a.hydro_region != hydro_region:
                 continue
             if arc_type and a.arc_type != arc_type:
                 continue
-            results.append(_arc_summary(a))
+            results.append(FeatureSummary.from_arc(a))
     return results
 
 
@@ -149,10 +77,10 @@ def get_feature(
     fid = feature_id.upper()
     node = state.network.lookup_node(fid)
     if node:
-        return _node_detail(node)
+        return NodeDetail.from_geo(node)
     arc = state.network.lookup_arc(fid)
     if arc:
-        return _arc_detail(arc)
+        return ArcDetail.from_geo(arc)
     raise HTTPException(status_code=404, detail=f"Feature '{feature_id}' not found")
 
 
@@ -183,12 +111,24 @@ def get_neighborhood(
     if start_node is None:
         raise HTTPException(status_code=404, detail=f"Feature '{feature_id}' not found")
 
-    start_id = start_node.cs3_id.upper()
+    nodes_out, arcs_out = _bfs_subgraph(state.network, start_node.cs3_id.upper(), depth)
+    return NeighborhoodResponse(nodes=nodes_out, arcs=arcs_out)
 
+
+def _bfs_subgraph(
+    gn: GeoNetwork,
+    start_id: str,
+    depth: int,
+) -> tuple:
+    """Pure-logic BFS returning ``(nodes, arcs)`` for the neighborhood.
+
+    Walks outflow and inflow arcs up to *depth* hops from *start_id*,
+    filtering out phantom zone nodes that have no :class:`GeoNode` entry.
+    """
     # Build adjacency from arc topology
     out_arcs: dict = {}   # node_id → [arcs where from_node == node_id]
     in_arcs: dict = {}    # node_id → [arcs where to_node == node_id]
-    for arc in state.network.arcs.values():
+    for arc in gn.arcs.values():
         fn = (arc.from_node or "").upper()
         tn = (arc.to_node or "").upper()
         if fn:
@@ -217,8 +157,6 @@ def get_neighborhood(
                     visited_nodes[fn] = -step
                     next_frontier.add(fn)
         frontier = next_frontier
-
-    gn = state.network
 
     # Build a set of node IDs that actually have GeoNode entries (have positions).
     # Phantom zone nodes ("02"/"03") may appear in visited_nodes as BFS stepping
@@ -269,7 +207,7 @@ def get_neighborhood(
             distance=dist,
         ))
 
-    return NeighborhoodResponse(nodes=nodes_out, arcs=arcs_out)
+    return nodes_out, arcs_out
 
 
 @router.get("/regions", response_model=List[str], summary="List hydro regions")

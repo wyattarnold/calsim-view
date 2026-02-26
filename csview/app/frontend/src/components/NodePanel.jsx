@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchFeature, fetchFeatureResults } from "../api/client.js";
 import ResultsChart from "./ResultsChart.jsx";
+import YearRangeSlider from "./YearRangeSlider.jsx";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -25,7 +26,7 @@ function Section({ title, children, defaultOpen = true }) {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1 w-full text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 mb-2 px-4"
       >
-        <span className="text-gray-600">{open ? "▾" : "▸"}</span>
+        <span className="text-gray-600">{open ? "\u25BE" : "\u25B8"}</span>
         {title}
       </button>
       {open && <div className="px-4">{children}</div>}
@@ -34,174 +35,14 @@ function Section({ title, children, defaultOpen = true }) {
 }
 
 // ---------------------------------------------------------------------------
-// Year range slider
-// ---------------------------------------------------------------------------
-
-const DROUGHT_PRESETS = [
-  { label: "1928–37", start: "1928", end: "1937" },
-  { label: "1976–77", start: "1976", end: "1977" },
-  { label: "1987–92", start: "1987", end: "1992" },
-];
-
-function YearRangeSlider({ years, startIdx, endIdx, onStartChange, onEndChange }) {
-  const [nearStart, setNearStart] = useState(false);
-  const dragRef = useRef(null); // { startX, startStartIdx, startEndIdx, trackWidth }
-
-  if (years.length === 0) return null;
-  const max = years.length - 1;
-  const startPct = max > 0 ? (startIdx / max) * 100 : 0;
-  const endPct   = max > 0 ? (endIdx   / max) * 100 : 100;
-
-  function handleTrackPointerMove(e) {
-    if (dragRef.current) return; // don't flip nearStart while panning
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const startFrac = max > 0 ? startIdx / max : 0;
-    const endFrac   = max > 0 ? endIdx   / max : 1;
-    setNearStart(Math.abs(x - startFrac) <= Math.abs(x - endFrac));
-  }
-
-  function handleCenterPointerDown(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const trackEl = e.currentTarget.parentElement;
-    const rect = trackEl.getBoundingClientRect();
-    dragRef.current = {
-      startX: e.clientX,
-      startStartIdx: startIdx,
-      startEndIdx: endIdx,
-      trackWidth: rect.width,
-    };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function handleCenterPointerMove(e) {
-    if (!dragRef.current) return;
-    const { startX, startStartIdx, startEndIdx, trackWidth } = dragRef.current;
-    const window = startEndIdx - startStartIdx;
-    const deltaFrac = (e.clientX - startX) / trackWidth;
-    const deltaIdx = Math.round(deltaFrac * max);
-    let newStart = startStartIdx + deltaIdx;
-    let newEnd   = startEndIdx   + deltaIdx;
-    // clamp so window doesn't go out of bounds
-    if (newStart < 0)   { newEnd -= newStart;   newStart = 0; }
-    if (newEnd   > max) { newStart -= (newEnd - max); newEnd = max; }
-    newStart = Math.max(0, newStart);
-    newEnd   = Math.min(max, newEnd);
-    if (newEnd - newStart === window) {
-      onStartChange(newStart);
-      onEndChange(newEnd);
-    }
-  }
-
-  function handleCenterPointerUp(e) {
-    dragRef.current = null;
-  }
-
-  function applyPreset(startYear, endYear) {
-    const si = years.findIndex((y) => y >= startYear);
-    let ei = -1;
-    for (let i = years.length - 1; i >= 0; i--) {
-      if (years[i] <= endYear) { ei = i; break; }
-    }
-    if (si >= 0 && ei > si) { onStartChange(si); onEndChange(ei); }
-  }
-
-  return (
-    <div className="shrink-0 border-t border-gray-700 px-4 py-2 space-y-2">
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] text-gray-600 shrink-0">Dry periods:</span>
-        {DROUGHT_PRESETS.map((p) => {
-          const si = years.findIndex((y) => y >= p.start);
-          let ei = -1;
-          for (let i = years.length - 1; i >= 0; i--) {
-            if (years[i] <= p.end) { ei = i; break; }
-          }
-          const active = si >= 0 && ei >= 0 && startIdx === si && endIdx === ei;
-          return (
-            <button
-              key={p.label}
-              onClick={() => applyPreset(p.start, p.end)}
-              className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
-                active
-                  ? "border-blue-500 text-blue-400 bg-blue-950"
-                  : "border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-400"
-              }`}
-            >
-              {p.label}
-            </button>
-          );
-        })}
-        <button
-          onClick={() => { onStartChange(0); onEndChange(max); }}
-          className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ml-auto ${
-            startIdx === 0 && endIdx === max
-              ? "border-gray-500 text-gray-400"
-              : "border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-400"
-          }`}
-        >
-          All
-        </button>
-      </div>
-
-      <div>
-        <div className="flex justify-between text-[10px] font-mono text-gray-400 mb-1">
-          <span>{years[startIdx]}</span>
-          <span>{years[endIdx]}</span>
-        </div>
-        <div className="relative h-5" onPointerMove={handleTrackPointerMove}>
-          <div className="absolute top-1/2 -translate-y-1/2 w-full h-1.5 rounded-full bg-gray-700 pointer-events-none">
-            <div
-              className="absolute h-full rounded-full bg-blue-500"
-              style={{ left: `${startPct}%`, right: `${100 - endPct}%` }}
-            />
-          </div>
-          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-400 border border-gray-900 pointer-events-none"
-            style={{ left: `calc(${startPct}% - 6px)`, zIndex: 10 }}
-          />
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-400 border border-gray-900 pointer-events-none"
-            style={{ left: `calc(${endPct}% - 6px)`, zIndex: 10 }}
-          />
-          {/* Center grab zone — drag to pan the whole window */}
-          <div
-            className="absolute top-1/2 -translate-y-1/2 h-3"
-            style={{
-              left: `${startPct}%`,
-              right: `${100 - endPct}%`,
-              zIndex: 6,
-              cursor: dragRef.current ? "grabbing" : "grab",
-            }}
-            onPointerDown={handleCenterPointerDown}
-            onPointerMove={handleCenterPointerMove}
-            onPointerUp={handleCenterPointerUp}
-            onPointerCancel={handleCenterPointerUp}
-          />
-          <input
-            type="range" min={0} max={max} value={startIdx}
-            onChange={(e) => onStartChange(Math.min(Number(e.target.value), endIdx - 1))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            style={{ zIndex: nearStart ? 5 : 3 }}
-          />
-          <input
-            type="range" min={0} max={max} value={endIdx}
-            onChange={(e) => onEndChange(Math.max(Number(e.target.value), startIdx + 1))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            style={{ zIndex: nearStart ? 3 : 5 }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, onToggleGraph }) {
+export default function NodePanel({ featureId, activeStudy, onClose }) {
   const [startIdx, setStartIdx] = useState(0);
   const [endIdx, setEndIdx] = useState(0);
+  const [displayUnit, setDisplayUnit] = useState("CFS");
+  const [aggMode, setAggMode] = useState("raw");
   const sliderInitialized = useRef(false);
 
   const { data: feature, isLoading: nodeLoading } = useQuery({
@@ -217,28 +58,35 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
     retry: false,
   });
 
-  // Derive sorted unique years from any result series
+  // Derive sorted unique water years from any result series
   const years = useMemo(() => {
     if (!results?.series) return [];
     const firstKey = Object.keys(results.series)[0];
     if (!firstKey) return [];
-    const yearSet = new Set(
+    const wySet = new Set(
       results.series[firstKey]
-        .map((row) => String(row[0]).slice(0, 4))
+        .map((row) => {
+          const d = String(row[0]);
+          const y = Number(d.slice(0, 4));
+          const m = Number(d.slice(5, 7));
+          return String(m >= 10 ? y + 1 : y);
+        })
         .filter((y) => /^\d{4}$/.test(y))
     );
-    return Array.from(yearSet).sort();
+    return Array.from(wySet).sort();
   }, [results]);
 
+  // On first-ever data load, set full range.  On subsequent feature changes,
+  // clamp existing indices to the (usually identical) new years array.
   useEffect(() => {
-    sliderInitialized.current = false;
-  }, [featureId]);
-
-  useEffect(() => {
-    if (years.length > 0 && !sliderInitialized.current) {
+    if (years.length === 0) return;
+    if (!sliderInitialized.current) {
       setStartIdx(0);
       setEndIdx(years.length - 1);
       sliderInitialized.current = true;
+    } else {
+      setStartIdx((prev) => Math.min(prev, years.length - 1));
+      setEndIdx((prev) => Math.min(prev, years.length - 1));
     }
   }, [years.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -267,24 +115,13 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2 ml-2 shrink-0">
-          {onToggleGraph && (
-            <button
-              onClick={onToggleGraph}
-              title={graphOpen ? "Hide network graph" : "Show network graph"}
-              className="text-gray-500 hover:text-gray-200 text-xs px-1.5 py-0.5 border border-gray-700 rounded transition-colors hover:border-gray-500"
-            >
-              {graphOpen ? "⟨" : "⟩"}
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-200 text-xl leading-none"
-            aria-label="Close panel"
-          >
-            ×
-          </button>
-        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-200 text-xl leading-none ml-2 shrink-0"
+          aria-label="Close panel"
+        >
+          ×
+        </button>
       </div>
 
       {/* Scrollable body */}
@@ -293,97 +130,92 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
           <p className="px-4 text-gray-500 text-sm">Loading…</p>
         ) : feature ? (
           <>
-            <Section title="Properties">
+            {/* ---- Consolidated Information section ---- */}
+            <Section title="Information">
               <div className="space-y-1">
+                {/* Common properties */}
                 <MetaRow label="Description" value={feature.description} />
                 <MetaRow label="Feature Kind" value={feature.feature_kind} />
                 <MetaRow label="Type" value={feature.node_type || feature.arc_type} />
                 <MetaRow label="Units" value={feature.units} />
                 <MetaRow label="Hydro Region" value={feature.hydro_region} />
-              </div>
-            </Section>
 
-            {/* Node geographic / hydrologic metadata */}
-            {feature.feature_kind === "node" && (feature.river_name || feature.nearest_gage || feature.stream_code || feature.river_mile != null) && (
-              <Section title="Geographic" defaultOpen={false}>
-                <div className="space-y-1">
-                  <MetaRow label="River / Water Body" value={feature.river_name} />
-                  <MetaRow label="Nearest Gage" value={feature.nearest_gage} />
-                  <MetaRow label="Stream Code" value={feature.stream_code} />
-                  <MetaRow
-                    label="River Mile"
-                    value={feature.river_mile != null ? feature.river_mile.toFixed(1) : null}
-                  />
-                  <MetaRow label="CalSim 2 ID" value={feature.calsim2_id} />
-                  <MetaRow label="Longitude" value={feature.lon?.toFixed(4)} />
-                  <MetaRow label="Latitude" value={feature.lat?.toFixed(4)} />
+                {/* Solver badge — shown for both arcs and nodes */}
+                <div className="flex gap-2 text-sm">
+                  <span className="text-gray-400 shrink-0 w-36">Solver</span>
+                  {feature.solver_active === false ? (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-600">
+                      schematic only
+                    </span>
+                  ) : (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-green-950 text-green-400 border border-green-800">
+                      solver active
+                    </span>
+                  )}
                 </div>
-              </Section>
-            )}
+
+                {/* Arc-specific details */}
+                {feature.feature_kind === "arc" && (
+                  <>
+                    <MetaRow label="Name" value={feature.name} />
+                    <MetaRow label="Sub-Type" value={feature.sub_type} />
+                    <MetaRow label="From Node" value={feature.from_node} />
+                    <MetaRow label="To Node" value={feature.to_node} />
+                    {feature.capacity_cfs != null && (
+                      <MetaRow
+                        label="Capacity"
+                        value={`${feature.capacity_cfs.toLocaleString()} CFS`}
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* Node geographic / hydrologic metadata (inline, no separate section) */}
+                {feature.feature_kind === "node" && (
+                  <>
+                    <MetaRow label="River / Water Body" value={feature.river_name} />
+                    <MetaRow label="Nearest Gage" value={feature.nearest_gage} />
+                    <MetaRow label="Stream Code" value={feature.stream_code} />
+                    <MetaRow
+                      label="River Mile"
+                      value={feature.river_mile != null ? feature.river_mile.toFixed(1) : null}
+                    />
+                    <MetaRow label="CalSim 2 ID" value={feature.calsim2_id} />
+                    <MetaRow label="Longitude" value={feature.lon?.toFixed(4)} />
+                    <MetaRow label="Latitude" value={feature.lat?.toFixed(4)} />
+                  </>
+                )}
+              </div>
+
+              {/* WRESL suggestion — toned-down note style */}
+              {feature.feature_kind === "arc" && feature.wresl_suggestion && (
+                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                  <span className="text-gray-500">ℹ</span>
+                  <span>
+                    Suggested WRESL match:{" "}
+                    <span className="font-mono text-gray-300 px-1 py-0.5 rounded bg-gray-800 border border-gray-700">
+                      {feature.wresl_suggestion}
+                    </span>
+                  </span>
+                </div>
+              )}
+            </Section>
 
             {/* Missing WRESL arcs — arcs in solver equations but absent from schematic */}
             {feature.feature_kind === "node" && feature.missing_arcs?.length > 0 && (
               <Section title="Solver-Only Arcs" defaultOpen={false}>
                 <p className="text-xs text-gray-500 mb-2">
-                  These arc variables reference this node in WRESL flow-balance equations but
-                  have no geometry in the GeoSchematic.
+                  Arc variables referencing this node in WRESL but absent from the GeoSchematic.
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {feature.missing_arcs.map((a) => (
                     <span
                       key={a}
-                      className="font-mono text-xs px-1.5 py-0.5 rounded bg-gray-800 text-amber-400 border border-gray-700"
+                      className="font-mono text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700"
                     >
                       {a}
                     </span>
                   ))}
-                </div>
-              </Section>
-            )}
-
-            {/* Arc topology */}
-            {feature.feature_kind === "arc" && (feature.from_node || feature.to_node) && (
-              <Section title="Arc Details" defaultOpen={false}>
-                <div className="space-y-1">
-                  <MetaRow label="Name" value={feature.name} />
-                  <MetaRow label="Arc Type" value={feature.arc_type} />
-                  <MetaRow label="Sub-Type" value={feature.sub_type} />
-                  <MetaRow label="From Node" value={feature.from_node} />
-                  <MetaRow label="To Node" value={feature.to_node} />
-                  {feature.capacity_cfs != null && (
-                    <MetaRow
-                      label="Capacity"
-                      value={`${feature.capacity_cfs.toLocaleString()} CFS`}
-                    />
-                  )}
-                  <div className="flex gap-2 text-sm">
-                    <span className="text-gray-400 shrink-0 w-36">Solver</span>
-                    {feature.solver_active === false ? (
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-600">
-                        schematic only
-                      </span>
-                    ) : (
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-green-950 text-green-400 border border-green-800">
-                        solver active
-                      </span>
-                    )}
-                  </div>
-                  {feature.wresl_suggestion && (
-                    <div className="mt-2 p-2 rounded bg-amber-950 border border-amber-800">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Suggested WRESL arc</span>
-                        <span
-                          className="font-mono text-xs px-1.5 py-0.5 rounded bg-gray-800 text-amber-300 border border-amber-700"
-                          title="Same from-node, different downstream label — probable WRESL counterpart of this geo arc"
-                        >
-                          {feature.wresl_suggestion}
-                        </span>
-                      </div>
-                      <p className="text-xs text-amber-600 mt-1">
-                        Geo arc has no WRESL match; this may be the same physical connection.
-                      </p>
-                    </div>
-                  )}
                 </div>
               </Section>
             )}
@@ -393,22 +225,14 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
         {/* Model Results */}
         {results && Object.keys(results.series).length > 0 ? (
           <Section title="Model Results">
-            {results.wresl_suggestion_used && (
-              <div className="mb-3 px-3 py-2 rounded bg-amber-950 border border-amber-800 flex items-start gap-2">
-                <span className="text-amber-400 mt-0.5 shrink-0">⚑</span>
-                <div>
-                  <span className="text-xs text-amber-400 font-semibold">Results from suggested match</span>
-                  <span className="font-mono text-xs ml-2 px-1.5 py-0.5 rounded bg-gray-800 text-amber-300 border border-amber-700">
-                    {results.wresl_suggestion_used}
-                  </span>
-                  <p className="text-xs text-amber-700 mt-0.5">This geo arc has no DSS data; showing results for the probable WRESL counterpart.</p>
-                </div>
-              </div>
-            )}
             <ResultsChart
               series={results.series}
               metadata={results.metadata}
               dateRange={dateRange}
+              displayUnit={displayUnit}
+              onDisplayUnitChange={setDisplayUnit}
+              aggMode={aggMode}
+              onAggModeChange={setAggMode}
             />
           </Section>
         ) : resultsLoading ? (
@@ -417,14 +241,11 @@ export default function NodePanel({ featureId, activeStudy, onClose, graphOpen, 
           </Section>
         ) : resultsError && feature?.wresl_suggestion ? (
           <Section title="Model Results">
-            <div className="px-3 py-2 rounded bg-amber-950 border border-amber-800">
-              <p className="text-xs text-amber-400 font-semibold">No DSS output</p>
-              <p className="text-xs text-amber-700 mt-1">
-                This geo arc and its probable WRESL counterpart{" "}
-                <span className="font-mono text-amber-300 px-1 py-0.5 rounded bg-gray-800 border border-amber-700">
+            <div className="px-3 py-1.5 rounded border border-gray-600 text-xs text-gray-400">
+              <p>No DSS output for this arc or its suggested match{" "}
+                <span className="font-mono text-gray-300 px-1 py-0.5 rounded bg-gray-800 border border-gray-700">
                   {feature.wresl_suggestion}
-                </span>{" "}
-                have no model results in this study.
+                </span>.
               </p>
             </div>
           </Section>

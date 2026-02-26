@@ -110,42 +110,11 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
 
     # Nodes
     for cs3_id_upper, d in cat.get("nodes", {}).items():
-        gn.nodes[cs3_id_upper] = GeoNode(
-            cs3_id=d["cs3_id"],
-            description=d["description"],
-            node_type=d["node_type"],
-            lon=d["lon"],
-            lat=d["lat"],
-            hydro_region=d.get("hydro_region", ""),
-            river_name=d.get("river_name", ""),
-            nearest_gage=d.get("nearest_gage", ""),
-            stream_code=d.get("stream_code", ""),
-            river_mile=d.get("river_mile"),
-            c2vsim_gw=d.get("c2vsim_gw", ""),
-            c2vsim_sw=d.get("c2vsim_sw", ""),
-            calsim2_id=d.get("calsim2_id", ""),
-            dss_variables=d.get("dss_variables", []),
-            missing_arcs=d.get("missing_arcs", []),
-        )
+        gn.nodes[cs3_id_upper] = GeoNode.from_dict(d)
 
     # Arcs
     for arc_id_upper, d in cat.get("arcs", {}).items():
-        gn.arcs[arc_id_upper] = GeoArc(
-            arc_id=d["arc_id"],
-            name=d.get("name", ""),
-            arc_type=d.get("arc_type", ""),
-            sub_type=d.get("sub_type", ""),
-            from_node=d.get("from_node"),
-            to_node=d.get("to_node"),
-            hydro_region=d.get("hydro_region", ""),
-            description=d.get("description", ""),
-            coordinates=d.get("coordinates", []),
-            units=d.get("units"),
-            kind=d.get("kind"),
-            capacity_cfs=d.get("capacity_cfs"),
-            solver_active=d.get("solver_active", True),
-            wresl_suggestion=d.get("wresl_suggestion"),
-        )
+        gn.arcs[arc_id_upper] = GeoArc.from_dict(d)
 
     gn.variable_to_node = cat.get("variable_to_node", {})
 
@@ -318,7 +287,12 @@ def _build_variable_index_from_wresl(gn: GeoNetwork, wresl_dir: Path) -> None:
 
 
 def _strip_prefix(name: str) -> str:
-    """Strip the first prefix token: 'S_SHSTA' → 'SHSTA'."""
+    """Strip the first prefix token: 'S_SHSTA' → 'SHSTA'.
+
+    Intentionally simpler than the study builder's ``_strip_prefix`` which
+    handles multi-token prefixes (e.g. ``FLOW_``, ``STORAGE_``).  Here we
+    only need a single split for the GeoSchematic variable-to-node index.
+    """
     parts = name.split("_", 1)
     return parts[1] if len(parts) == 2 else name
 

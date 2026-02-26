@@ -25,6 +25,25 @@ class FeatureSummary(BaseModel):
     lon: Optional[float]       # node only
     lat: Optional[float]       # node only
 
+    @classmethod
+    def from_node(cls, n: "GeoNode") -> "FeatureSummary":
+        return cls(
+            feature_id=n.cs3_id, feature_kind="node",
+            hydro_region=n.hydro_region or None, description=n.description or None,
+            name=n.river_name or None, node_type=n.node_type or None,
+            arc_type=None, units=None, lon=n.lon, lat=n.lat,
+        )
+
+    @classmethod
+    def from_arc(cls, a: "GeoArc") -> "FeatureSummary":
+        return cls(
+            feature_id=a.arc_id, feature_kind="arc",
+            hydro_region=a.hydro_region or None, description=a.description or None,
+            name=a.name or None, node_type=None,
+            arc_type=a.arc_type or None, units=a.units or None,
+            lon=None, lat=None,
+        )
+
 
 class NodeDetail(BaseModel):
     feature_id: str
@@ -40,8 +59,22 @@ class NodeDetail(BaseModel):
     calsim2_id: Optional[str]
     lon: float
     lat: float
+    solver_active: bool = True
     dss_variables: List[str] = []
     missing_arcs: List[str] = []
+
+    @classmethod
+    def from_geo(cls, n: "GeoNode") -> "NodeDetail":
+        return cls(
+            feature_id=n.cs3_id, cs3_id=n.cs3_id,
+            description=n.description or None, node_type=n.node_type or None,
+            hydro_region=n.hydro_region or None, river_name=n.river_name or None,
+            nearest_gage=n.nearest_gage or None, stream_code=n.stream_code or None,
+            river_mile=n.river_mile or None, calsim2_id=n.calsim2_id or None,
+            lon=n.lon, lat=n.lat,
+            solver_active=bool(n.dss_variables),
+            dss_variables=list(n.dss_variables), missing_arcs=list(n.missing_arcs),
+        )
 
 
 class ArcDetail(BaseModel):
@@ -60,6 +93,18 @@ class ArcDetail(BaseModel):
     capacity_cfs: Optional[float] = None
     solver_active: bool = True
     wresl_suggestion: Optional[str] = None
+
+    @classmethod
+    def from_geo(cls, a: "GeoArc") -> "ArcDetail":
+        return cls(
+            feature_id=a.arc_id, arc_id=a.arc_id,
+            name=a.name or None, arc_type=a.arc_type or None,
+            sub_type=a.sub_type or None, from_node=a.from_node or None,
+            to_node=a.to_node or None, hydro_region=a.hydro_region or None,
+            description=a.description or None, units=a.units or None,
+            kind=a.kind or None, capacity_cfs=a.capacity_cfs,
+            solver_active=a.solver_active, wresl_suggestion=a.wresl_suggestion,
+        )
 
 
 # ---------------------------------------------------------------------------

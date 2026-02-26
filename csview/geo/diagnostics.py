@@ -170,55 +170,39 @@ class DiagnosticsReport:
 # Main entry point
 # ---------------------------------------------------------------------------
 
-def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> DiagnosticsReport:
-    """Cross-reference *gn* (GeoNetwork) with *connectivity* map.
+def _build_wresl_topology(
+    connectivity: Dict,
+) -> Tuple[Dict[str, str], Dict[str, str], Set[str]]:
+    """Derive from_node / to_node maps from WRESL connectivity equations.
 
-    ``connectivity`` is the dict returned by
-    ``wresl_parser.parse_connectivity()``.
-
-    ``wresl_catalog`` is the optional :class:`~csview.geo.wresl_parser.WreslCatalog`
-    returned by ``parse_system_tables()``.  When provided, delivery arcs (D_, R_,
-    RP_, RU_ prefix) whose ``define`` statement is commented out (absent from the
-    active catalog) are also flagged as :data:`ARC_NO_CONNECTIVITY`.
-
-    Returns a :class:`DiagnosticsReport` with all detected issues.
+    Returns ``(wresl_from, wresl_to, all_wresl_arcs)``.
     """
-    report = DiagnosticsReport()
-
-    geo_arc_ids:  Set[str] = set(gn.arcs.keys())   # uppercase
-    geo_node_ids: Set[str] = set(gn.nodes.keys())  # uppercase
-    wresl_node_ids: Set[str] = set(connectivity.keys())  # uppercase
-
-    # ------------------------------------------------------------------
-    # Build WRESL-derived from_node / to_node for every arc variable.
-    #   arc negative in continuityNODE  →  from_node = NODE
-    #   arc positive in continuityNODE  →  to_node   = NODE
-    # ------------------------------------------------------------------
-    wresl_from: Dict[str, str] = {}   # arc_id → node_id
+    wresl_from: Dict[str, str] = {}
     wresl_to:   Dict[str, str] = {}
     all_wresl_arcs: Set[str] = set()
-
     for node_id, nc in connectivity.items():
         for arc in nc.outflow_arcs:
             all_wresl_arcs.add(arc)
-            wresl_from[arc] = node_id   # last assignment wins if conflict
+            wresl_from[arc] = node_id
         for arc in nc.inflow_arcs:
             all_wresl_arcs.add(arc)
             wresl_to[arc] = node_id
+    return wresl_from, wresl_to, all_wresl_arcs
 
-    # Expose on report so callers can apply patches without re-parsing
-    report.wresl_from = wresl_from
-    report.wresl_to   = wresl_to
-    report.all_wresl_arcs = all_wresl_arcs
 
-    # ------------------------------------------------------------------
-    # 1. Channel/inflow arcs in GeoJSON with no matching WRESL equation
-    #    (suspicious: the schematic shows a link the solver never balances)
-    # ------------------------------------------------------------------
+_DELIVERY_PREFIXES = ("D_", "R_", "RP_", "RU_")
+
+
+def _check_arc_no_connectivity(
+    report: DiagnosticsReport,
+    gn: Any,
+    geo_arc_ids: Set[str],
+    all_wresl_arcs: Set[str],
+) -> None:
+    """Check 1: GeoJSON arcs with no WRESL flow-balance equation."""
     for arc_id in sorted(geo_arc_ids):
         arc = gn.arcs[arc_id]
         arc_type = arc.arc_type or ""
-        # Only flag arc types that should appear in flow-balance equations
         if arc_type not in ("Channel", "Inflow", "Evaporation", "Spill"):
             continue
         if arc_id not in all_wresl_arcs:
@@ -231,34 +215,38 @@ def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> D
                 ),
             ))
 
-    # ------------------------------------------------------------------
-    # 1b. Delivery / return-flow arcs in GeoJSON whose WRESL `define`
-    #     statement is commented out (absent from the active catalog).
-    #     These arcs are drawn on the schematic but the solver never uses
-    #     them — typical for whole demand-unit sections that are disabled
-    #     by commenting out both the define and associated goal blocks.
-    # ------------------------------------------------------------------
-    _DELIVERY_PREFIXES = ("D_", "R_", "RP_", "RU_")
-    if wresl_catalog is not None:
-        defined_vars: Set[str] = {k.upper() for k in wresl_catalog.variables.keys()}
-        for arc_id in sorted(geo_arc_ids):
-            arc = gn.arcs[arc_id]
-            if not arc_id.upper().startswith(_DELIVERY_PREFIXES):
-                continue
-            if arc_id.upper() not in defined_vars:
-                report.add(TopoIssue(
-                    kind=ARC_NO_CONNECTIVITY,
-                    feature_id=arc_id,
-                    message=(
-                        f"Arc {arc_id} ({arc.arc_type}) is in the GeoSchematic but "
-                        f"its WRESL define statement is absent or commented out."
-                    ),
-                ))
 
-    # ------------------------------------------------------------------
-    # 2. Arc variables referenced in WRESL equations but absent from GeoJSON
-    #    (only flag prefixes that are expected to have geometry)
-    # ------------------------------------------------------------------
+def _check_delivery_no_define(
+    report: DiagnosticsReport,
+    gn: Any,
+    geo_arc_ids: Set[str],
+    wresl_catalog: Any,
+) -> None:
+    """Check 1b: delivery arcs whose WRESL define is commented out."""
+    if wresl_catalog is None:
+        return
+    defined_vars: Set[str] = {k.upper() for k in wresl_catalog.variables.keys()}
+    for arc_id in sorted(geo_arc_ids):
+        arc = gn.arcs[arc_id]
+        if not arc_id.upper().startswith(_DELIVERY_PREFIXES):
+            continue
+        if arc_id.upper() not in defined_vars:
+            report.add(TopoIssue(
+                kind=ARC_NO_CONNECTIVITY,
+                feature_id=arc_id,
+                message=(
+                    f"Arc {arc_id} ({arc.arc_type}) is in the GeoSchematic but "
+                    f"its WRESL define statement is absent or commented out."
+                ),
+            ))
+
+
+def _check_arc_no_geo(
+    report: DiagnosticsReport,
+    all_wresl_arcs: Set[str],
+    geo_arc_ids: Set[str],
+) -> None:
+    """Check 2: WRESL arcs expected to have geometry but absent from GeoJSON."""
     for arc_id in sorted(all_wresl_arcs - geo_arc_ids):
         if arc_id.startswith(_GEO_EXPECTED_PREFIXES):
             report.add(TopoIssue(
@@ -270,9 +258,16 @@ def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> D
                 ),
             ))
 
-    # ------------------------------------------------------------------
-    # 3 & 4. from_node / to_node mismatches for arcs in both GeoJSON and WRESL
-    # ------------------------------------------------------------------
+
+def _check_endpoint_mismatches(
+    report: DiagnosticsReport,
+    gn: Any,
+    geo_arc_ids: Set[str],
+    all_wresl_arcs: Set[str],
+    wresl_from: Dict[str, str],
+    wresl_to: Dict[str, str],
+) -> None:
+    """Checks 3 & 4: from_node / to_node mismatches between GeoJSON and WRESL."""
     for arc_id in sorted(geo_arc_ids & all_wresl_arcs):
         arc = gn.arcs[arc_id]
         geo_from = (arc.from_node or "").upper() or None
@@ -304,20 +299,25 @@ def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> D
                 wresl_value=w_to,
             ))
 
-    # ------------------------------------------------------------------
-    # 5. GeoJSON nodes that have no continuity equation at all
-    #    (possibly isolated schematic nodes without a model counterpart)
-    # ------------------------------------------------------------------
-    _no_cont_ids: List[str] = []
+
+def _check_node_no_continuity(
+    report: DiagnosticsReport,
+    gn: Any,
+    geo_node_ids: Set[str],
+    wresl_node_ids: Set[str],
+) -> List[str]:
+    """Check 5: GeoJSON nodes without a continuity equation.
+
+    Returns the list of flagged node IDs (used by the fuzzy-match check).
+    """
+    no_cont_ids: List[str] = []
     for node_id in sorted(geo_node_ids - wresl_node_ids):
         n = gn.nodes[node_id]
         node_type = n.node_type or "Unknown"
-        # Demand units, external boundary nodes, etc. legitimately have no
-        # continuity equation — only flag Junction / Reservoir / Inflow nodes.
         if node_type not in ("Junction", "Reservoir", "Inflow", "Groundwater",
                              "Evaporation"):
             continue
-        _no_cont_ids.append(node_id)
+        no_cont_ids.append(node_id)
         report.add(TopoIssue(
             kind=NODE_NO_CONTINUITY,
             feature_id=node_id,
@@ -326,13 +326,18 @@ def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> D
                 f"corresponding continuity equation in the WRESL system files."
             ),
         ))
+    return no_cont_ids
 
-    # ------------------------------------------------------------------
-    # 6. Of those no-continuity nodes, find ones that are close in name
-    #    to a real WRESL node — likely a typo in the GeoSchematic ID.
-    # ------------------------------------------------------------------
+
+def _check_node_name_typos(
+    report: DiagnosticsReport,
+    gn: Any,
+    no_cont_ids: List[str],
+    wresl_node_ids: Set[str],
+) -> None:
+    """Check 6: no-continuity nodes whose name is close to a real WRESL node."""
     fuzzy_matches = _find_fuzzy_matches(
-        _no_cont_ids, sorted(wresl_node_ids), max_dist=2
+        no_cont_ids, sorted(wresl_node_ids), max_dist=2
     )
     for geo_id, wresl_id, dist, edit_desc in sorted(fuzzy_matches):
         n = gn.nodes[geo_id]
@@ -354,30 +359,28 @@ def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> D
         sum(1 for *_, d, __ in fuzzy_matches if d == 2),
     )
 
-    # ------------------------------------------------------------------
-    # 7. Arc endpoint suggestions:
-    #    Cross-reference arc_no_connectivity (geo-only) arcs with WRESL
-    #    arcs that have no geometry (all_wresl_arcs - geo_arc_ids) sharing
-    #    the same type prefix (e.g. 'D') and from-node (e.g. 'OMR028').
-    #    These are likely the same physical connection labelled with
-    #    different downstream node IDs in the GeoSchematic vs WRESL.
-    #    Only considers arcs whose from-node is a known GeoSchematic node
-    #    to avoid spurious matches on demand-unit or facility identifiers.
-    #
-    #    Note: 'arc_no_geo' only covers C_/I_/E_/S_ prefix arcs (those
-    #    expected to have geometry). Delivery arcs (D_, R_, …) that appear
-    #    in WRESL but lack geometry are intentionally excluded from that
-    #    check but ARE useful candidates here, so we use the full set
-    #    all_wresl_arcs - geo_arc_ids as the WRESL candidate pool.
-    # ------------------------------------------------------------------
-    def _arc_type_and_from(arc_id: str):
-        parts = arc_id.split('_')
-        if len(parts) >= 3:
-            return parts[0].upper(), parts[1].upper()
-        return None, None
 
+def _arc_type_and_from(arc_id: str) -> Tuple[Optional[str], Optional[str]]:
+    """Parse ``TYPE_FROM_TO`` arc naming convention."""
+    parts = arc_id.split('_')
+    if len(parts) >= 3:
+        return parts[0].upper(), parts[1].upper()
+    return None, None
+
+
+def _check_arc_endpoint_suggestions(
+    report: DiagnosticsReport,
+    geo_arc_ids: Set[str],
+    geo_node_ids: Set[str],
+    all_wresl_arcs: Set[str],
+) -> None:
+    """Check 7: suggest WRESL arcs that likely match unconnected geo arcs.
+
+    Cross-references ``arc_no_connectivity`` (geo-only) arcs with WRESL arcs
+    that have no geometry, sharing the same type prefix and from-node.
+    """
     no_conn_ids = {i.feature_id for i in report.by_kind(ARC_NO_CONNECTIVITY)}
-    wresl_no_geo_ids = all_wresl_arcs - geo_arc_ids  # broader than arc_no_geo
+    wresl_no_geo_ids = all_wresl_arcs - geo_arc_ids
 
     # Index WRESL-only arcs by (type, from_node), restricted to known GeoNodes
     wresl_by_key: Dict[Tuple[str, str], List[str]] = {}
@@ -390,8 +393,7 @@ def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> D
         t, fn = _arc_type_and_from(arc_id)
         if not (t and fn and fn in geo_node_ids):
             continue
-        key = (t, fn)
-        candidates = wresl_by_key.get(key, [])
+        candidates = wresl_by_key.get((t, fn), [])
         for wresl_arc in candidates:
             report.add(TopoIssue(
                 kind=ARC_ENDPOINT_SUGGESTION,
@@ -410,6 +412,44 @@ def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> D
     n_suggestions = len(report.arc_suggestions)
     if n_suggestions:
         print(f"  arc_endpoint_suggestion: {n_suggestions} geo arcs with probable WRESL match.")
+
+
+# ---------------------------------------------------------------------------
+# Main entry point
+# ---------------------------------------------------------------------------
+
+def run_diagnostics(gn: Any, connectivity: Dict, wresl_catalog: Any = None) -> DiagnosticsReport:
+    """Cross-reference *gn* (GeoNetwork) with *connectivity* map.
+
+    ``connectivity`` is the dict returned by
+    ``wresl_parser.parse_connectivity()``.
+
+    ``wresl_catalog`` is the optional :class:`~csview.geo.wresl_parser.WreslCatalog`
+    returned by ``parse_system_tables()``.  When provided, delivery arcs (D_, R_,
+    RP_, RU_ prefix) whose ``define`` statement is commented out (absent from the
+    active catalog) are also flagged as :data:`ARC_NO_CONNECTIVITY`.
+
+    Returns a :class:`DiagnosticsReport` with all detected issues.
+    """
+    report = DiagnosticsReport()
+
+    geo_arc_ids:  Set[str] = set(gn.arcs.keys())
+    geo_node_ids: Set[str] = set(gn.nodes.keys())
+    wresl_node_ids: Set[str] = set(connectivity.keys())
+
+    wresl_from, wresl_to, all_wresl_arcs = _build_wresl_topology(connectivity)
+    report.wresl_from = wresl_from
+    report.wresl_to   = wresl_to
+    report.all_wresl_arcs = all_wresl_arcs
+
+    _check_arc_no_connectivity(report, gn, geo_arc_ids, all_wresl_arcs)
+    _check_delivery_no_define(report, gn, geo_arc_ids, wresl_catalog)
+    _check_arc_no_geo(report, all_wresl_arcs, geo_arc_ids)
+    _check_endpoint_mismatches(report, gn, geo_arc_ids, all_wresl_arcs,
+                               wresl_from, wresl_to)
+    no_cont_ids = _check_node_no_continuity(report, gn, geo_node_ids, wresl_node_ids)
+    _check_node_name_typos(report, gn, no_cont_ids, wresl_node_ids)
+    _check_arc_endpoint_suggestions(report, geo_arc_ids, geo_node_ids, all_wresl_arcs)
 
     report.stats = {
         "geo_arcs":       len(geo_arc_ids),

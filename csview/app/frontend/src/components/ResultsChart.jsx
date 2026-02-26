@@ -1,7 +1,9 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ComposedChart,
   LineChart,
+  BarChart,
+  Bar,
   Line,
   Area,
   XAxis,
@@ -12,203 +14,150 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const COLORS = [
-  "#3b82f6","#10b981","#f59e0b","#ef4444",
-  "#8b5cf6","#06b6d4","#f97316","#84cc16",
+import {
+  seriesColor,
+  flowSeriesColor,
+  REF_COLORS,
+  ZONE_COLORS,
+  cfsToTaf,
+  buildChartData,
+  splitSeries,
+  aggregateMonthlyAvg,
+  aggregateWaterYear,
+  aggregateWaterYearEnd,
+  WB_TERMS,
+  WB_ORDER,
+  WB_COLORS,
+  WB_POSITIVE,
+} from "./charts/chartUtils.js";
+import { ToggleLegend, ChartTooltip } from "./charts/ChartParts.jsx";
+
+// ---------------------------------------------------------------------------
+// Aggregation mode selector — shared by all sub-charts
+// ---------------------------------------------------------------------------
+
+const AGG_MODES = [
+  { key: "raw",     label: "Time Series" },
+  { key: "monthly", label: "Monthly Avg" },
+  { key: "annual",  label: "Water Year" },
 ];
 
-const REF_COLORS = { LBC: "#10b981", UBC: "#ef4444", EQC: "#f59e0b" };
-
-function seriesColor(key, index) {
-  return COLORS[index % COLORS.length];
-}
-
-/** Display label for a series key, using an optional override map. */
-function shortKey(key, keyLabels = {}) {
-  return keyLabels[key] ?? key;
-}
-
-// ---------------------------------------------------------------------------
-// Unit conversion helpers
-// ---------------------------------------------------------------------------
-
-function daysInMonth(dateKey) {
-  const year  = Number(dateKey.slice(0, 4));
-  const month = Number(dateKey.slice(5, 7));
-  return new Date(year, month, 0).getDate();
-}
-
-function cfsToTaf(value, dateKey) {
-  return value * daysInMonth(dateKey) * 86400 / 43560 / 1000;
-}
-
-// ---------------------------------------------------------------------------
-// Data builders
-// ---------------------------------------------------------------------------
-
-function buildChartData(seriesMap, dateRange, negateKeys = null, convertFn = null, convertKeys = null) {
-  // convertKeys: Set of keys to apply convertFn to; null = apply to all keys.
-  const [startYear, endYear] = dateRange ?? [null, null];
-  const dateMap = new Map();
-
-  for (const [key, rows] of Object.entries(seriesMap)) {
-    const sign = negateKeys?.has(key) ? -1 : 1;
-    const shouldConvert = convertFn && (convertKeys === null || convertKeys.has(key));
-    for (const row of rows) {
-      if (!Array.isArray(row) || row.length < 2) continue;
-      const [dateRaw, value] = row;
-      const dateKey = String(dateRaw).slice(0, 10);
-      const year = dateKey.slice(0, 4);
-      if (startYear && year < startYear) continue;
-      if (endYear && year > endYear) continue;
-      if (!dateMap.has(dateKey)) dateMap.set(dateKey, { date: dateKey });
-      let num = typeof value === "number" ? value : Number(value);
-      if (shouldConvert) num = convertFn(num, dateKey);
-      dateMap.get(dateKey)[key] = sign * num;
-    }
-  }
-
-  return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-}
-
-// ---------------------------------------------------------------------------
-// Series splitting
-// ---------------------------------------------------------------------------
-
-const KIND_STORAGE = new Set([
-  "STORAGE", "STORAGE-ZONE", "GW-STORAGE", "GROUNDWATER",
-]);
-
-/**
- * Split the flat series/metadata into logical groups:
- *   arcFlows  â€” series the backend tagged with direction "in" / "out"
- *   storage   â€” series with a storage kind
- *   balance   â€” everything else (node water-budget terms, single arc, etc.)
- */
-// C-part kinds to suppress entirely from all charts.
-const SUPPRESSED_KINDS = new Set(["ANNUAL-APPLIED-WATER"]);
-
-function splitSeries(series, metadata) {
-  const arcFlows = {};
-  const storage  = {};
-  const balance  = {};
-
-  for (const [key, data] of Object.entries(series)) {
-    // Suppress surface-area variables (A_* prefix).
-    if (/^A_/i.test(key)) continue;
-    const meta  = metadata?.[key] ?? {};
-    const kind  = (meta.kind || "").toUpperCase().replace(/ /g, "-");
-    if (SUPPRESSED_KINDS.has(kind)) continue;
-    if (meta.direction) {
-      arcFlows[key] = data;
-    } else if (KIND_STORAGE.has(kind)) {
-      storage[key] = data;
-    } else {
-      balance[key] = data;
-    }
-  }
-  return { arcFlows, storage, balance };
-}
-
-// ---------------------------------------------------------------------------
-// Toggleable legend
-// ---------------------------------------------------------------------------
-
-function ToggleLegend({ keys, hidden, onToggle, keyLabels = {} }) {
-  if (keys.length === 0) return null;
+function AggToggle({ mode, onChange }) {
   return (
-    <div className="flex flex-wrap gap-1 mt-1 mb-2">
-      {keys.map((key, i) => {
-        const isHidden = hidden.has(key);
-        return (
-          <button
-            key={key}
-            onClick={() => onToggle(key)}
-            className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border transition-opacity ${
-              isHidden
-                ? "opacity-30 border-gray-700 text-gray-600"
-                : "opacity-100 border-gray-600 text-gray-300"
-            }`}
-          >
-            <span style={{ display: "inline-block", width: 12, height: 2, background: seriesColor(key, i), borderRadius: 1 }} />
-            {shortKey(key, keyLabels)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Custom tooltip
-// ---------------------------------------------------------------------------
-
-function ChartTooltip({ active, payload, label, yUnit = "", keyLabels = {} }) {
-  if (!active || !payload?.length) return null;
-  // Remap _stk_{key} entries → original key + unclamped value from the full row.
-  // Filter out _top_{key}, _stk_rev_{key}, _top_rev_{key} entries (visual-only).
-  const items = payload
-    .filter((p) => {
-      const dk = String(p.dataKey);
-      return !dk.startsWith("_top_") && !dk.startsWith("_stk_rev_") && !dk.startsWith("_top_rev_");
-    })
-    .map((p) => {
-      const dk = String(p.dataKey);
-      if (dk.startsWith("_stk_")) {
-        const origKey = dk.slice(5);
-        const origVal = p.payload?.[origKey];
-        return { ...p, dataKey: origKey, value: origVal };
-      }
-      return p;
-    });
-  if (items.length === 0) return null;
-  return (
-    <div style={{
-      background: "rgba(17, 24, 39, 0.85)", border: "1px solid #374151",
-      borderRadius: 4, fontSize: 11, padding: "6px 10px", backdropFilter: "blur(4px)",
-    }}>
-      <p style={{ color: "#9ca3af", marginBottom: 4 }}>{label}</p>
-      {items.map((item) => (
-        <p key={item.dataKey} style={{ color: item.color, margin: "1px 0" }}>
-          {shortKey(String(item.dataKey), keyLabels)}: {typeof item.value === "number" ? Math.abs(item.value).toFixed(2) : item.value}{yUnit}
-        </p>
+    <div className="flex items-center gap-1">
+      <span className="text-[10px] text-gray-500 mr-1">View:</span>
+      {AGG_MODES.map((m) => (
+        <button key={m.key} onClick={() => onChange(m.key)}
+          className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+            mode === m.key
+              ? "border-blue-500 text-blue-400 bg-blue-950"
+              : "border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-400"
+          }`}>{m.label}</button>
       ))}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Single chart  (plain lines)
+// Apply aggregation to a Recharts data array
 // ---------------------------------------------------------------------------
 
-function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, refBounds = [], keyLabels = {}, convertFn = null }) {
+function applyAggregation(data, keys, mode, avgKeys = null) {
+  if (mode === "monthly") return aggregateMonthlyAvg(data, keys);
+  if (mode === "annual")  return aggregateWaterYear(data, keys, avgKeys);
+  return data; // "raw"
+}
+
+// ---------------------------------------------------------------------------
+// Single chart  (plain lines / bars for annual)
+// ---------------------------------------------------------------------------
+
+function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, refBounds = [], keyLabels = {}, convertFn = null, aggMode = "raw", isStorage = false, useBarForAnnual = false, zoneSeries = null }) {
   const [hidden, setHidden] = useState(new Set());
   const [collapsed, setCollapsed] = useState(false);
   const keys = Object.keys(series);
   const cfsKeys = useMemo(() => new Set(keys.filter((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS")), [keys, metadata]); // eslint-disable-line react-hooks/exhaustive-deps
-  const data = buildChartData(series, dateRange, null, convertFn, cfsKeys.size > 0 ? cfsKeys : null);
+  // When convertFn is null, CFS keys remain as rates → average them at annual scale.
+  // When convertFn is set, CFS→TAF has already happened → sum all.
+  const annualAvgKeys = convertFn ? null : (cfsKeys.size > 0 ? cfsKeys : null);
+  const rawData = buildChartData(series, dateRange, null, convertFn, cfsKeys.size > 0 ? cfsKeys : null);
+  const data = useMemo(() => {
+    if (aggMode === "monthly") return aggregateMonthlyAvg(rawData, keys);
+    if (aggMode === "annual")  return isStorage ? aggregateWaterYearEnd(rawData, keys) : aggregateWaterYear(rawData, keys, annualAvgKeys);
+    return rawData;
+  }, [rawData, keys, aggMode, isStorage, annualAvgKeys]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // --- Storage zone data (only in raw time-series mode) ---
+  const zoneKeys = useMemo(() => {
+    if (!zoneSeries || Object.keys(zoneSeries).length === 0 || aggMode !== "raw") return [];
+    return Object.keys(zoneSeries).sort((a, b) => {
+      const na = parseInt((a.match(/_(\d+)$/) || [])[1] || "0", 10);
+      const nb = parseInt((b.match(/_(\d+)$/) || [])[1] || "0", 10);
+      return na - nb;
+    });
+  }, [zoneSeries, aggMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const zoneKeySet = useMemo(() => new Set(zoneKeys), [zoneKeys]);
+
+  const chartData = useMemo(() => {
+    if (zoneKeys.length === 0) return data;
+    const zoneRaw = buildChartData(zoneSeries, dateRange);
+    const zoneMap = new Map(zoneRaw.map((r) => [r.date, r]));
+    return data.map((row) => {
+      const zr = zoneMap.get(row.date);
+      if (!zr) return row;
+      const merged = { ...row };
+      for (const zk of zoneKeys) {
+        if (zr[zk] != null) merged[zk] = zr[zk];
+      }
+      return merged;
+    });
+  }, [data, zoneKeys, zoneSeries, dateRange]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hasZones = zoneKeys.length > 0;
   const visibleKeys = keys.filter((k) => !hidden.has(k));
 
-  const allVals = data.flatMap((row) =>
+  const allVals = chartData.flatMap((row) =>
     visibleKeys.map((k) => row[k]).filter((v) => v != null && !isNaN(v))
   );
+  // When zones are present, y-domain should include zone cumulative max
+  const zoneMax = useMemo(() => {
+    if (!hasZones) return 0;
+    let mx = 0;
+    for (const row of chartData) {
+      let cum = 0;
+      for (const zk of zoneKeys) {
+        cum += row[zk] ?? 0;
+      }
+      if (cum > mx) mx = cum;
+    }
+    return mx;
+  }, [chartData, hasZones, zoneKeys]);
+
   const meanVal = allVals.length ? allVals.reduce((a, b) => a + b, 0) / allVals.length : 0;
   const yDomain = useMemo(() => {
     if (allVals.length === 0) return ["auto", "auto"];
     const mn = Math.min(...allVals);
-    const mx = Math.max(...allVals);
+    const mx = Math.max(...allVals, zoneMax);
     const pad = (mx - mn) * 0.05 || Math.abs(mx) * 0.05 || 1;
     return [Math.min(mn - pad, 0), Math.max(mx + pad, 0)];
-  }, [hidden, data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hidden, data, zoneMax]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const yearTicks = useMemo(() => {
+    if (aggMode !== "raw") return undefined;
     const seen = new Set();
-    return data.filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; }).map((r) => r.date);
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+    return chartData.filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; }).map((r) => r.date);
+  }, [chartData, aggMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (keys.length === 0 || data.length === 0) return null;
+  if (keys.length === 0 || chartData.length === 0) return null;
 
   function toggle(key) { setHidden((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
+
+  const isBar = useBarForAnnual && aggMode === "annual";
+  const isAgg = aggMode !== "raw";
+  const xTickFmt = isAgg ? undefined : (v) => v.slice(0, 4);
+  // Use ComposedChart when zones are present so we can mix Area + Line
+  const ChartComp = hasZones ? ComposedChart : (isBar ? BarChart : LineChart);
 
   return (
     <div className="mb-5">
@@ -219,29 +168,43 @@ function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, r
       {!collapsed && <ToggleLegend keys={keys} hidden={hidden} onToggle={toggle} keyLabels={keyLabels} />}
       {!collapsed && (
         <ResponsiveContainer width="100%" height={180}>
-          <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+          <ChartComp data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={xTickFmt}
+              interval={isAgg && aggMode !== "annual" ? 0 : undefined} />
             <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
               tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
-            <Tooltip content={<ChartTooltip yUnit={yUnit} keyLabels={keyLabels} />} />
+            <Tooltip content={<ChartTooltip yUnit={yUnit} keyLabels={keyLabels} excludeKeys={hasZones ? zoneKeySet : null} />} />
             <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
-            {data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
+            {aggMode === "raw" && chartData.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
               <ReferenceLine key={`oct-${r.date}`} x={r.date} stroke="#374151" strokeWidth={0.5} opacity={0.7} />
             )}
-            {meanVal > 0 && (
+            {aggMode === "raw" && meanVal > 0 && (
               <ReferenceLine y={meanVal} stroke="#374151" strokeDasharray="4 2"
                 label={{ value: "avg", position: "right", fontSize: 8, fill: "#4b5563" }} />
             )}
-            {keys.map((key, i) => (
-              <Line key={key} type="monotone" dataKey={key} stroke={seriesColor(key, i)}
-                hide={hidden.has(key)} dot={false} strokeWidth={1.5} connectNulls activeDot={{ r: 3 }} isAnimationActive={false} />
+            {/* Storage zone shaded areas — stacked from bottom */}
+            {hasZones && zoneKeys.map((zk, i) => (
+              <Area key={`zone_${zk}`} type="monotone" dataKey={zk}
+                stackId="zones" fill={ZONE_COLORS[i % ZONE_COLORS.length]}
+                fillOpacity={0.25} stroke="none" isAnimationActive={false}
+                dot={false} activeDot={false} legendType="none" />
             ))}
+            {isBar
+              ? keys.map((key, i) => (
+                  <Bar key={key} dataKey={key} fill={seriesColor(key, i)} fillOpacity={0.8}
+                    hide={hidden.has(key)} isAnimationActive={false} />
+                ))
+              : keys.map((key, i) => (
+                  <Line key={key} type="monotone" dataKey={key} stroke={seriesColor(key, i)}
+                    hide={hidden.has(key)} dot={isAgg ? { r: 2 } : false} strokeWidth={1.5} connectNulls activeDot={{ r: 3 }} isAnimationActive={false} />
+                ))
+            }
             {refBounds.map((b) => (
               <ReferenceLine key={b.type} y={b.bound} stroke={REF_COLORS[b.type] ?? "#6b7280"}
                 strokeDasharray="6 3" strokeWidth={1.5} />
             ))}
-          </LineChart>
+          </ChartComp>
         </ResponsiveContainer>
       )}
     </div>
@@ -249,14 +212,13 @@ function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, r
 }
 
 // ---------------------------------------------------------------------------
-// Stacked area chart  (in/out flows)
+// Stacked area chart  (in/out flows) — uses pos/neg color palettes
 // ---------------------------------------------------------------------------
 
-function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null }) {
+function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null, aggMode = "raw" }) {
   const [hidden, setHidden] = useState(new Set());
   const [collapsed, setCollapsed] = useState(false);
 
-  // Sort: (in) keys first, (out) keys after — drives render order and stacking order
   const keys = Object.keys(series).sort((a, b) => {
     const da = metadata?.[a]?.direction === "out" ? 1 : 0;
     const db = metadata?.[b]?.direction === "out" ? 1 : 0;
@@ -278,26 +240,28 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
     ? (convertFn ? " TAF" : " CFS")
     : (() => { for (const k of keys) { const u = metadata?.[k]?.units; if (u) return ` ${u}`; } return ""; })();
 
-  const data = buildChartData(series, dateRange, negateKeys, convertFn, cfsKeys.size > 0 ? cfsKeys : null);
+  const rawData = buildChartData(series, dateRange, negateKeys, convertFn, cfsKeys.size > 0 ? cfsKeys : null);
+  // CFS keys with no conversion remain as rates → average at annual scale
+  const annualAvgKeys = convertFn ? null : (cfsKeys.size > 0 ? cfsKeys : null);
+  const data = useMemo(() => applyAggregation(rawData, keys, aggMode, annualAvgKeys), [rawData, keys, aggMode, annualAvgKeys]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Clamped stacking values + cumulative tops.
-  //
-  // Channels can carry negative flows (reverse direction).  After
-  // buildChartData negates "out" keys, a reverse-flow "out" arc turns
-  // positive.  We clamp each key to its expected sign for monotone
-  // stacking (prevents outline line crossings), and place the
-  // reverse-sign portion in the *opposite* stack as a synthetic
-  // `_stk_rev_` / `_top_rev_` key so it remains visible.
-  //
-  // Only visible keys contribute — hidden Areas are excluded from
-  // Recharts' own stack, so our manual tops must match.
+  // Build colour map using pos/neg palettes
+  const keyColorMap = useMemo(() => {
+    const m = {};
+    let posIdx = 0, negIdx = 0;
+    for (const k of keys) {
+      const isNeg = negateKeys.has(k);
+      m[k] = flowSeriesColor(k, isNeg, isNeg ? negIdx++ : posIdx++);
+    }
+    return m;
+  }, [keys, negateKeys]);
+
   const stackedData = useMemo(() => {
     if (data.length === 0) return data;
     const inKeys  = keys.filter((k) => !negateKeys.has(k) && !hidden.has(k));
     const outKeys = keys.filter((k) =>  negateKeys.has(k) && !hidden.has(k));
     return data.map((row) => {
       const extra = {};
-      // In-stack: expected inflow (≥ 0) + reverse outflow (≥ 0)
       let accIn = 0;
       for (const k of inKeys) {
         const v = Math.max(row[k] ?? 0, 0);
@@ -306,12 +270,11 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
         extra[`_top_${k}`] = accIn;
       }
       for (const k of outKeys) {
-        const v = Math.max(row[k] ?? 0, 0);  // reverse outflow → positive
+        const v = Math.max(row[k] ?? 0, 0);
         extra[`_stk_rev_${k}`] = v;
         accIn += v;
         extra[`_top_rev_${k}`] = accIn;
       }
-      // Out-stack: expected outflow (≤ 0) + reverse inflow (≤ 0)
       let accOut = 0;
       for (const k of outKeys) {
         const v = Math.min(row[k] ?? 0, 0);
@@ -320,7 +283,7 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
         extra[`_top_${k}`] = accOut;
       }
       for (const k of inKeys) {
-        const v = Math.min(row[k] ?? 0, 0);  // reverse inflow → negative
+        const v = Math.min(row[k] ?? 0, 0);
         extra[`_stk_rev_${k}`] = v;
         accOut += v;
         extra[`_top_rev_${k}`] = accOut;
@@ -329,8 +292,6 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
     });
   }, [data, keys, negateKeys, hidden]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Derive y-domain from actual cumulative tops (not individual values)
-  // so the axis scales to the full stacked extent.
   const yDomain = useMemo(() => {
     if (stackedData.length === 0) return ["auto", "auto"];
     let mn = 0, mx = 0;
@@ -349,8 +310,6 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
     return [mn - pad, mx + pad];
   }, [stackedData]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Only render reverse-flow Areas/Lines for keys that actually have
-  // non-zero reverse values (avoids flat placeholder lines at y=0).
   const hasReverseFlow = useMemo(() => {
     const s = new Set();
     for (const row of stackedData) {
@@ -364,13 +323,17 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
   }, [stackedData, keys]);
 
   const yearTicks = useMemo(() => {
+    if (aggMode !== "raw") return undefined;
     const seen = new Set();
     return data.filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; }).map((r) => r.date);
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, aggMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (keys.length === 0 || data.length === 0) return null;
 
   function toggle(key) { setHidden((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
+
+  const isMonthly = aggMode === "monthly";
+  const xTickFmt = isMonthly ? undefined : aggMode === "annual" ? undefined : (v) => v.slice(0, 4);
 
   return (
     <div className="mb-5">
@@ -378,44 +341,57 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
         className="flex items-center gap-1 w-full text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 mb-1">
         <span className="text-gray-600">{collapsed ? "\u25B8" : "\u25BE"}</span>{title}
       </button>
-      {!collapsed && <ToggleLegend keys={keys} hidden={hidden} onToggle={toggle} keyLabels={keyLabels} />}
+      {!collapsed && (
+        <div className="flex flex-wrap gap-1 mt-1 mb-2">
+          {keys.map((key) => {
+            const isHidden = hidden.has(key);
+            return (
+              <button key={key} onClick={() => toggle(key)}
+                className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border transition-opacity ${
+                  isHidden ? "opacity-30 border-gray-700 text-gray-600" : "opacity-100 border-gray-600 text-gray-300"
+                }`}
+              >
+                <span style={{ display: "inline-block", width: 12, height: 2, background: keyColorMap[key], borderRadius: 1 }} />
+                {keyLabels[key] ?? key}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {!collapsed && (
         <ResponsiveContainer width="100%" height={180}>
           <ComposedChart data={stackedData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={xTickFmt}
+              interval={isMonthly ? 0 : undefined} />
             <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
               tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
             <Tooltip content={<ChartTooltip yUnit={yUnit} keyLabels={keyLabels} />} />
             <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
-            {data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
+            {aggMode === "raw" && data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
               <ReferenceLine key={`oct-${r.date}`} x={r.date} stroke="#374151" strokeWidth={0.5} opacity={0.7} />
             )}
-            {/* Pass 1: stacked fills using clamped _stk_ values, no stroke */}
-            {keys.map((key, i) => (
+            {keys.map((key) => (
               <Area key={key} type="monotone" dataKey={`_stk_${key}`} stroke="none"
-                fill={seriesColor(key, i)} fillOpacity={0.3}
+                fill={keyColorMap[key]} fillOpacity={0.3}
                 stackId={negateKeys.has(key) ? "out" : "in"}
                 hide={hidden.has(key)} dot={false} connectNulls isAnimationActive={false} />
             ))}
-            {/* Pass 1b: reverse-flow fills in the opposite stack (same color, lighter) */}
-            {keys.filter((k) => hasReverseFlow.has(k)).map((key, i) => (
+            {keys.filter((k) => hasReverseFlow.has(k)).map((key) => (
               <Area key={`_rev_${key}`} type="monotone" dataKey={`_stk_rev_${key}`} stroke="none"
-                fill={seriesColor(key, keys.indexOf(key))} fillOpacity={0.15}
+                fill={keyColorMap[key]} fillOpacity={0.15}
                 stackId={negateKeys.has(key) ? "in" : "out"}
                 hide={hidden.has(key)} dot={false} connectNulls isAnimationActive={false}
                 legendType="none" />
             ))}
-            {/* Pass 2: outline Line at the cumulative top of each band */}
-            {keys.map((key, i) => (
+            {keys.map((key) => (
               <Line key={`_line_${key}`} type="monotone" dataKey={`_top_${key}`}
-                stroke={seriesColor(key, i)} strokeWidth={1.5} dot={false}
+                stroke={keyColorMap[key]} strokeWidth={1.5} dot={false}
                 hide={hidden.has(key)} connectNulls activeDot={false} isAnimationActive={false} />
             ))}
-            {/* Pass 2b: dashed outline for reverse-flow cumulative tops */}
             {keys.filter((k) => hasReverseFlow.has(k)).map((key) => (
               <Line key={`_revline_${key}`} type="monotone" dataKey={`_top_rev_${key}`}
-                stroke={seriesColor(key, keys.indexOf(key))} strokeWidth={1} strokeDasharray="4 2" dot={false}
+                stroke={keyColorMap[key]} strokeWidth={1} strokeDasharray="4 2" dot={false}
                 hide={hidden.has(key)} connectNulls activeDot={false} isAnimationActive={false} />
             ))}
           </ComposedChart>
@@ -426,41 +402,15 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
 }
 
 // ---------------------------------------------------------------------------
-// Water Balance stacked-area chart (GP/DG/RU above zero, DL/DP/EV/OS/RP/LF below)
+// Water Balance stacked-area chart
 // ---------------------------------------------------------------------------
 
-const WB_TERMS = {
-  "GW-PUMPING":        { label: "GP", positive: true  },
-  "SW-DELIVERY-GROSS": { label: "DG", positive: true  },
-  "SW_DELIVERY-GROSS": { label: "DG", positive: true  },
-  "DELIVERY-LOSS":     { label: "DL", positive: false },
-  "DEEP-PERCOLATION":  { label: "DP", positive: false },
-  "PERCOLATION-LOSS":  { label: "DP", positive: false },
-  "EVAPORATIVE-LOSS":  { label: "EV", positive: false },
-  "EVAPORATION":       { label: "EV", positive: false },
-  "OPERATING-SPILL":   { label: "OS", positive: false },
-  "OPERATIONAL-SPILL": { label: "OS", positive: false },
-  "SPILL-LOSS":        { label: "OS", positive: false },
-  "RIPARIAN-MISC-ET":  { label: "RP", positive: false },
-  "REUSE":             { label: "RU", positive: true  },
-  "LATERAL-FLOW-LOSS": { label: "LF", positive: false },
-};
-
-const WB_ORDER   = ["GP", "DG", "RU", "DL", "DP", "EV", "OS", "RP", "LF"];
-const WB_COLORS  = {
-  GP: "#10b981", DG: "#3b82f6", RU: "#14b8a6",
-  DL: "#ef4444", DP: "#f59e0b", EV: "#f97316",
-  OS: "#8b5cf6", RP: "#ec4899", LF: "#eab308",
-};
-const WB_POSITIVE = new Set(["GP", "DG", "RU"]);
-
-function WaterBalanceChart({ series, metadata, dateRange, convertFn = null }) {
+function WaterBalanceChart({ series, metadata, dateRange, convertFn = null, aggMode = "raw" }) {
   const [hidden, setHidden]       = useState(new Set());
   const [collapsed, setCollapsed] = useState(false);
 
-  // Aggregate raw series into per-term totals: { label: [[dateKey, sumVal], ...] }
   const { wbSeries, wbUnits, presentLabels } = useMemo(() => {
-    const agg = {};       // label → { dateKey: sum }
+    const agg = {};
     const unitForLabel = {};
     for (const [key, rows] of Object.entries(series)) {
       const rawCpart = (metadata?.[key]?.c_part || metadata?.[key]?.kind || "").toUpperCase().replace(/ /g, "-");
@@ -497,7 +447,9 @@ function WaterBalanceChart({ series, metadata, dateRange, convertFn = null }) {
     ? (convertFn ? " TAF" : " CFS")
     : (() => { for (const l of presentLabels) { const u = wbUnits[l]; if (u) return ` ${u}`; } return ""; })();
 
-  const data = buildChartData(wbSeries, dateRange, negateLabels, convertFn, cfsLabels.size > 0 ? cfsLabels : null);
+  const rawData = buildChartData(wbSeries, dateRange, negateLabels, convertFn, cfsLabels.size > 0 ? cfsLabels : null);
+  const annualAvgLabels = convertFn ? null : (cfsLabels.size > 0 ? cfsLabels : null);
+  const data = useMemo(() => applyAggregation(rawData, presentLabels, aggMode, annualAvgLabels), [rawData, presentLabels, aggMode, annualAvgLabels]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const visibleLabels = presentLabels.filter((l) => !hidden.has(l));
   const allVals = data.flatMap((row) =>
@@ -512,15 +464,19 @@ function WaterBalanceChart({ series, metadata, dateRange, convertFn = null }) {
   }, [hidden, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const yearTicks = useMemo(() => {
+    if (aggMode !== "raw") return undefined;
     const seen = new Set();
     return data
       .filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; })
       .map((r) => r.date);
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, aggMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (presentLabels.length === 0 || data.length === 0) return null;
 
   function toggle(l) { setHidden((p) => { const n = new Set(p); n.has(l) ? n.delete(l) : n.add(l); return n; }); }
+
+  const isMonthly = aggMode === "monthly";
+  const xTickFmt = isMonthly ? undefined : aggMode === "annual" ? undefined : (v) => v.slice(0, 4);
 
   return (
     <div className="mb-5">
@@ -546,12 +502,13 @@ function WaterBalanceChart({ series, metadata, dateRange, convertFn = null }) {
         <ResponsiveContainer width="100%" height={180}>
           <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={(v) => v.slice(0, 4)} />
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={xTickFmt}
+              interval={isMonthly ? 0 : undefined} />
             <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
               tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
             <Tooltip content={<ChartTooltip yUnit={yUnit} />} />
             <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
-            {data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
+            {aggMode === "raw" && data.filter((r) => r.date.slice(5, 7) === "09").map((r) =>
               <ReferenceLine key={`oct-${r.date}`} x={r.date} stroke="#374151" strokeWidth={0.5} opacity={0.7} />
             )}
             {presentLabels.map((label) => (
@@ -572,11 +529,10 @@ function WaterBalanceChart({ series, metadata, dateRange, convertFn = null }) {
 // Main export
 // ---------------------------------------------------------------------------
 
-export default function ResultsChart({ series, metadata, dateRange }) {
-  const [displayUnit, setDisplayUnit] = useState("CFS");
+export default function ResultsChart({ series, metadata, dateRange, displayUnit, onDisplayUnitChange, aggMode, onAggModeChange }) {
   const convertFn = displayUnit === "TAF" ? cfsToTaf : null;
 
-  const { arcFlows, storage, balance } = splitSeries(series, metadata);
+  const { arcFlows, storage, storageZones, balance } = splitSeries(series, metadata);
 
   const hasArcFlows = Object.keys(arcFlows).length > 0;
   const hasCfsArcFlows = Object.keys(arcFlows).some((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS");
@@ -584,7 +540,6 @@ export default function ResultsChart({ series, metadata, dateRange }) {
   const showToggle = hasCfsArcFlows || hasCfsBalance;
   const storageUnit = (() => { for (const k of Object.keys(storage)) { const u = metadata?.[k]?.units; if (u) return ` ${u}`; } return " TAF"; })();
 
-  // Split balance into WB terms (→ stacked area) and everything else (→ line chart).
   const wbCpartSet = useMemo(() => new Set(Object.keys(WB_TERMS)), []);
   const otherBalance = useMemo(() => {
     const out = {};
@@ -604,22 +559,24 @@ export default function ResultsChart({ series, metadata, dateRange }) {
 
   return (
     <div>
-      {/* CFS/TAF toggle */}
-      {showToggle && (
-        <div className="flex items-center gap-1 mb-3">
-          <span className="text-[10px] text-gray-500 mr-1">Units:</span>
-          {["CFS", "TAF"].map((u) => (
-            <button key={u} onClick={() => setDisplayUnit(u)}
-              className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
-                displayUnit === u
-                  ? "border-blue-500 text-blue-400 bg-blue-950"
-                  : "border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-400"
-              }`}>{u}</button>
-          ))}
-        </div>
-      )}
+      {/* Top controls row: units + aggregation mode */}
+      <div className="flex items-center gap-3 flex-wrap mb-3">
+        {showToggle && (
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-gray-500 mr-1">Units:</span>
+            {["CFS", "TAF"].map((u) => (
+              <button key={u} onClick={() => onDisplayUnitChange(u)}
+                className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                  displayUnit === u
+                    ? "border-blue-500 text-blue-400 bg-blue-950"
+                    : "border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-400"
+                }`}>{u}</button>
+            ))}
+          </div>
+        )}
+        <AggToggle mode={aggMode} onChange={onAggModeChange} />
+      </div>
 
-      {/* Arc Flows — stacked in/out */}
       {hasArcFlows && (
         <StackedFlowChart
           title="Arc Flows"
@@ -627,21 +584,20 @@ export default function ResultsChart({ series, metadata, dateRange }) {
           metadata={metadata}
           dateRange={dateRange}
           convertFn={hasCfsArcFlows ? convertFn : null}
+          aggMode={aggMode}
         />
       )}
 
-      {/* Storage â€” plain lines, always TAF */}
-      <LineChartPanel title="Storage" series={storage} metadata={metadata} yUnit={storageUnit} dateRange={dateRange} />
+      <LineChartPanel title="Storage" series={storage} metadata={metadata} yUnit={storageUnit} dateRange={dateRange} aggMode={aggMode} isStorage useBarForAnnual zoneSeries={storageZones} />
 
-      {/* Water Balance — stacked area by GP/DG/RU/DL/DP/EV/OS/RP/LF terms */}
       <WaterBalanceChart
         series={balance}
         metadata={metadata}
         dateRange={dateRange}
         convertFn={hasCfsBalance ? convertFn : null}
+        aggMode={aggMode}
       />
 
-      {/* Other balance / single arc — plain lines */}
       <LineChartPanel
         title={hasArcFlows ? "Other" : "Flow"}
         series={otherBalance}
@@ -649,6 +605,8 @@ export default function ResultsChart({ series, metadata, dateRange }) {
         yUnit={otherUnit}
         dateRange={dateRange}
         convertFn={hasCfsOther ? convertFn : null}
+        aggMode={aggMode}
+        useBarForAnnual={!hasArcFlows}
       />
     </div>
   );
