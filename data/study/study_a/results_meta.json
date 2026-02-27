@@ -1,6 +1,6 @@
 {
   "study": "danube_hist",
-  "built_at": "2026-02-26T03:19:39.639762Z",
+  "built_at": "2026-02-26T21:06:09.545116Z",
   "dv_file": "reference\\calsim-studies\\study_a\\DSS\\output\\DCR2023_DV_9.3.1_Danube_Hist_v1.7.dss",
   "gwout_file": "reference\\calsim-studies\\study_a\\DSS\\output\\CVGroundwaterOut.dss",
   "sv_file": "reference\\calsim-studies\\study_a\\DSS\\input\\DCR2023_SV_Danube_Hist_v1.7.dss",
@@ -1965,6 +1965,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_ALPNE": {
+      "feature_id": "C_ALPNE",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_ALPNE",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_AMADR": {
       "feature_id": "C_AMADR",
       "feature_kind": "arc",
@@ -2042,6 +2050,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_AMR022",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_ANG010": {
+      "feature_id": "C_ANG010",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_ANG010",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -2461,6 +2477,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_BRT003": {
+      "feature_id": "C_BRT003",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_BRT003",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_BRV002": {
       "feature_id": "C_BRV002",
       "feature_kind": "arc",
@@ -2762,6 +2786,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_BVC007",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_BVT000": {
+      "feature_id": "C_BVT000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_BVT000",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -3082,6 +3114,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_CBD049",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_CBD050": {
+      "feature_id": "C_CBD050",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_CBD050",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -3645,6 +3685,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_CPF001": {
+      "feature_id": "C_CPF001",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_CPF001",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_CRB002": {
       "feature_id": "C_CRB002",
       "feature_kind": "arc",
@@ -3765,6 +3813,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_CSM051": {
+      "feature_id": "C_CSM051",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_CSM051",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_CST004": {
       "feature_id": "C_CST004",
       "feature_kind": "arc",
@@ -3826,6 +3882,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_CWD009",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_CWD013": {
+      "feature_id": "C_CWD013",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_CWD013",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -4077,6 +4141,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_DFF005": {
+      "feature_id": "C_DFF005",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_DFF005",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_DHC001": {
       "feature_id": "C_DHC001",
       "feature_kind": "arc",
@@ -4090,6 +4162,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_DHC021",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_DMC000": {
+      "feature_id": "C_DMC000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_DMC000",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -4357,6 +4437,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_DRM003": {
+      "feature_id": "C_DRM003",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_DRM003",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_DRM008": {
       "feature_id": "C_DRM008",
       "feature_kind": "arc",
@@ -4597,6 +4685,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_EDC014": {
+      "feature_id": "C_EDC014",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_EDC014",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_EDP003": {
       "feature_id": "C_EDP003",
       "feature_kind": "arc",
@@ -4669,6 +4765,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_ELT010": {
+      "feature_id": "C_ELT010",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_ELT010",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_EMD001": {
       "feature_id": "C_EMD001",
       "feature_kind": "arc",
@@ -4714,6 +4818,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_ESL008",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_ESL010": {
+      "feature_id": "C_ESL010",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_ESL010",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -4781,6 +4893,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_FPT000": {
+      "feature_id": "C_FPT000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_FPT000",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_FRDYC": {
       "feature_id": "C_FRDYC",
       "feature_kind": "arc",
@@ -4790,8 +4910,8 @@
       "kind": "CHANNEL"
     },
     "C_FRMAN": {
-      "feature_id": "FRMAN",
-      "feature_kind": "node",
+      "feature_id": "C_FRMAN",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_FRMAN",
       "units": "CFS",
@@ -5261,6 +5381,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_GRL001": {
+      "feature_id": "C_GRL001",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_GRL001",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_GRL010": {
       "feature_id": "C_GRL010",
       "feature_kind": "arc",
@@ -5306,6 +5434,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_GZL009",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_HGL006": {
+      "feature_id": "C_HGL006",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_HGL006",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -5390,8 +5526,8 @@
       "kind": "CHANNEL"
     },
     "C_ISF001_OMR027": {
-      "feature_id": "OMR027",
-      "feature_kind": "node",
+      "feature_id": "C_ISF001_OMR027",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_ISF001_OMR027",
       "units": "CFS",
@@ -5501,6 +5637,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_KRT000": {
+      "feature_id": "C_KRT000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_KRT000",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_KSWCK": {
       "feature_id": "C_KSWCK",
       "feature_kind": "arc",
@@ -5533,6 +5677,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_LBC031": {
+      "feature_id": "C_LBC031",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_LBC031",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_LBC032": {
       "feature_id": "C_LBC032",
       "feature_kind": "arc",
@@ -5562,6 +5714,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_LBC043",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_LBC047": {
+      "feature_id": "C_LBC047",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_LBC047",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -6085,6 +6245,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_MDC032_F": {
+      "feature_id": "C_MDC032_F",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_MDC032_F",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_MDOTA": {
       "feature_id": "C_MDOTA",
       "feature_kind": "arc",
@@ -6098,6 +6266,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_MDS003",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_MDSTO_FLOOD": {
+      "feature_id": "C_MDSTO_FLOOD",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_MDSTO_FLOOD",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -6325,6 +6501,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_MFS037": {
+      "feature_id": "C_MFS037",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_MFS037",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_MFS047": {
       "feature_id": "C_MFS047",
       "feature_kind": "arc",
@@ -6426,6 +6610,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_MIL003",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_MIO010": {
+      "feature_id": "C_MIO010",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_MIO010",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -6597,6 +6789,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_MPS020": {
+      "feature_id": "C_MPS020",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_MPS020",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_MPS038": {
       "feature_id": "C_MPS038",
       "feature_kind": "arc",
@@ -6701,6 +6901,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_NCT001": {
+      "feature_id": "C_NCT001",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_NCT001",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_NFA011": {
       "feature_id": "C_NFA011",
       "feature_kind": "arc",
@@ -6774,8 +6982,8 @@
       "kind": "CHANNEL"
     },
     "C_NFF020": {
-      "feature_id": "NFF020",
-      "feature_kind": "node",
+      "feature_id": "C_NFF020",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_NFF020",
       "units": "CFS",
@@ -6957,6 +7165,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_NFM013": {
+      "feature_id": "C_NFM013",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_NFM013",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_NFM024": {
       "feature_id": "C_NFM024",
       "feature_kind": "arc",
@@ -6966,8 +7182,8 @@
       "kind": "CHANNEL"
     },
     "C_NFM026": {
-      "feature_id": "NFM026",
-      "feature_kind": "node",
+      "feature_id": "C_NFM026",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_NFM026",
       "units": "CFS",
@@ -6994,6 +7210,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_NFS005",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_NFS006": {
+      "feature_id": "C_NFS006",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_NFS006",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -7026,6 +7250,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_NFS027",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_NFS032": {
+      "feature_id": "C_NFS032",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_NFS032",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -7186,6 +7418,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_OMR014",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_OMR014_PH": {
+      "feature_id": "C_OMR014_PH",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_OMR014_PH",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -7542,8 +7782,8 @@
       "kind": "CHANNEL"
     },
     "C_RCK001": {
-      "feature_id": "RCK001",
-      "feature_kind": "node",
+      "feature_id": "C_RCK001",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_RCK001",
       "units": "CFS",
@@ -7718,8 +7958,8 @@
       "kind": "CHANNEL"
     },
     "C_SAC000": {
-      "feature_id": "SAC000",
-      "feature_kind": "node",
+      "feature_id": "C_SAC000",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_SAC000",
       "units": "CFS",
@@ -8454,8 +8694,8 @@
       "kind": "CHANNEL"
     },
     "C_SBA000": {
-      "feature_id": "SBA000",
-      "feature_kind": "node",
+      "feature_id": "C_SBA000",
+      "feature_kind": "arc",
       "c_part": "FLOW-CHANNEL",
       "b_part": "C_SBA000",
       "units": "CFS",
@@ -8541,6 +8781,22 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SCT001": {
+      "feature_id": "C_SCT001",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SCT001",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_SCW004": {
+      "feature_id": "C_SCW004",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SCW004",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SCW008": {
       "feature_id": "C_SCW008",
       "feature_kind": "arc",
@@ -8557,11 +8813,27 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SDT000": {
+      "feature_id": "C_SDT000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SDT000",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SFA011": {
-      "feature_id": "SFA011",
-      "feature_kind": "node",
+      "feature_id": "C_SFA011",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_SFA011",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_SFA017": {
+      "feature_id": "C_SFA017",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SFA017",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -8589,6 +8861,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SFA039": {
+      "feature_id": "C_SFA039",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SFA039",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SFA040": {
       "feature_id": "C_SFA040",
       "feature_kind": "arc",
@@ -8598,8 +8878,8 @@
       "kind": "CHANNEL"
     },
     "C_SFA044": {
-      "feature_id": "SFA044",
-      "feature_kind": "node",
+      "feature_id": "C_SFA044",
+      "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_SFA044",
       "units": "CFS",
@@ -8733,6 +9013,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SFF019": {
+      "feature_id": "C_SFF019",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SFF019",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SFF020": {
       "feature_id": "C_SFF020",
       "feature_kind": "arc",
@@ -8802,6 +9090,22 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_SFR006",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_SFS018": {
+      "feature_id": "C_SFS018",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SFS018",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_SFS026": {
+      "feature_id": "C_SFS026",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SFS026",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -9133,6 +9437,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SJR102": {
+      "feature_id": "C_SJR102",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SJR102",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SJR105": {
       "feature_id": "C_SJR105",
       "feature_kind": "arc",
@@ -9461,6 +9773,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SLD002": {
+      "feature_id": "C_SLD002",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SLD002",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SLD027": {
       "feature_id": "C_SLD027",
       "feature_kind": "arc",
@@ -9541,6 +9861,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SLV001": {
+      "feature_id": "C_SLV001",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SLV001",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SLV005": {
       "feature_id": "C_SLV005",
       "feature_kind": "arc",
@@ -9605,6 +9933,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SPH000": {
+      "feature_id": "C_SPH000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SPH000",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_SPICE": {
       "feature_id": "C_SPICE",
       "feature_kind": "arc",
@@ -9653,6 +9989,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_SSV013": {
+      "feature_id": "C_SSV013",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_SSV013",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_STH000": {
       "feature_id": "C_STH000",
       "feature_kind": "arc",
@@ -9666,6 +10010,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_STH001",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_STH003": {
+      "feature_id": "C_STH003",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_STH003",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -9738,6 +10090,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_STN026",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_STS004": {
+      "feature_id": "C_STS004",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_STS004",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -10117,6 +10477,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_TRLCK_FLOOD": {
+      "feature_id": "C_TRLCK_FLOOD",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_TRLCK_FLOOD",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_TRN111": {
       "feature_id": "C_TRN111",
       "feature_kind": "arc",
@@ -10389,6 +10757,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_UTC001": {
+      "feature_id": "C_UTC001",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_UTC001",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_UTC014": {
       "feature_id": "C_UTC014",
       "feature_kind": "arc",
@@ -10445,6 +10821,14 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_WDWRD_FLOOD": {
+      "feature_id": "C_WDWRD_FLOOD",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_WDWRD_FLOOD",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_WEC000": {
       "feature_id": "C_WEC000",
       "feature_kind": "arc",
@@ -10485,6 +10869,30 @@
       "units": "CFS",
       "kind": "CHANNEL"
     },
+    "C_WLW005": {
+      "feature_id": "C_WLW005",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_WLW005",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_WRT000": {
+      "feature_id": "C_WRT000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_WRT000",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_WSE000": {
+      "feature_id": "C_WSE000",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_WSE000",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
     "C_WSE003": {
       "feature_id": "C_WSE003",
       "feature_kind": "arc",
@@ -10498,6 +10906,14 @@
       "feature_kind": "arc",
       "c_part": "CHANNEL",
       "b_part": "C_WSE004",
+      "units": "CFS",
+      "kind": "CHANNEL"
+    },
+    "C_WSE006": {
+      "feature_id": "C_WSE006",
+      "feature_kind": "arc",
+      "c_part": "CHANNEL",
+      "b_part": "C_WSE006",
       "units": "CFS",
       "kind": "CHANNEL"
     },
@@ -10660,6 +11076,14 @@
       "b_part": "C_YUB002",
       "units": "CFS",
       "kind": "CHANNEL"
+    },
+    "C_YUB002_LYRA": {
+      "feature_id": "C_YUB002_LYRA",
+      "feature_kind": "arc",
+      "c_part": "FLOW-TRANSFERABLE",
+      "b_part": "C_YUB002_LYRA",
+      "units": "CFS",
+      "kind": "FLOW-TRANSFERABLE"
     },
     "C_YUB003": {
       "feature_id": "C_YUB003",
@@ -18814,8 +19238,8 @@
       "kind": "DIVERSION"
     },
     "D_BCK033_BCK006": {
-      "feature_id": "BCK006",
-      "feature_kind": "node",
+      "feature_id": "D_BCK033_BCK006",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_BCK033_BCK006",
       "units": "CFS",
@@ -18893,6 +19317,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_BKR004_NBA009_SCWA_B": {
+      "feature_id": "D_BKR004_NBA009_SCWA_B",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BKR004_NBA009_SCWA_B",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_BRR017_23_NA": {
       "feature_id": "D_BRR017_23_NA",
       "feature_kind": "arc",
@@ -18906,6 +19338,22 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_BRR050_BEC000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_BRR061_CPF001": {
+      "feature_id": "D_BRR061_CPF001",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BRR061_CPF001",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_BRR066_DFF005": {
+      "feature_id": "D_BRR066_DFF005",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_BRR066_DFF005",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19045,6 +19493,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA005_CAALOS": {
+      "feature_id": "D_CAA005_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA005_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA005_SBA000": {
       "feature_id": "D_CAA005_SBA000",
       "feature_kind": "arc",
@@ -19052,6 +19508,22 @@
       "b_part": "D_CAA005_SBA000",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_CAA006_CAALOS": {
+      "feature_id": "D_CAA006_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA006_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_CAA009_CAALOS": {
+      "feature_id": "D_CAA009_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA009_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_CAA009_DMC007": {
       "feature_id": "D_CAA009_DMC007",
@@ -19069,6 +19541,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA012_CAALOS": {
+      "feature_id": "D_CAA012_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA012_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_CAA024_CAALOS": {
+      "feature_id": "D_CAA024_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA024_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA046_71_PA7": {
       "feature_id": "D_CAA046_71_PA7",
       "feature_kind": "arc",
@@ -19077,6 +19565,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA046_CAALOS": {
+      "feature_id": "D_CAA046_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA046_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_CAA051_CAALOS": {
+      "feature_id": "D_CAA051_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA051_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA066_71_PU2": {
       "feature_id": "D_CAA066_71_PU2",
       "feature_kind": "arc",
@@ -19084,6 +19588,30 @@
       "b_part": "D_CAA066_71_PU2",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_CAA066_CAALOS": {
+      "feature_id": "D_CAA066_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA066_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_CAA067_CAALOS": {
+      "feature_id": "D_CAA067_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA067_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_CAA069_CAALOS": {
+      "feature_id": "D_CAA069_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA069_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_CAA069_DMC070": {
       "feature_id": "D_CAA069_DMC070",
@@ -19101,6 +19629,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA071_CAALOS": {
+      "feature_id": "D_CAA071_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA071_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA087_73_PA1": {
       "feature_id": "D_CAA087_73_PA1",
       "feature_kind": "arc",
@@ -19108,6 +19644,14 @@
       "b_part": "D_CAA087_73_PA1",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_CAA087_CAALOS": {
+      "feature_id": "D_CAA087_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA087_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_CAA095_CAALOS": {
       "feature_id": "D_CAA095_CAALOS",
@@ -19133,6 +19677,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA109_CAALOS": {
+      "feature_id": "D_CAA109_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA109_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA143_90_PA1": {
       "feature_id": "D_CAA143_90_PA1",
       "feature_kind": "arc",
@@ -19157,6 +19709,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA143_CAALOS": {
+      "feature_id": "D_CAA143_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA143_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA155_90_PA1": {
       "feature_id": "D_CAA155_90_PA1",
       "feature_kind": "arc",
@@ -19164,6 +19724,14 @@
       "b_part": "D_CAA155_90_PA1",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_CAA155_CAALOS": {
+      "feature_id": "D_CAA155_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA155_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_CAA156_90_PU": {
       "feature_id": "D_CAA156_90_PU",
@@ -19173,6 +19741,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA156_CAALOS": {
+      "feature_id": "D_CAA156_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA156_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA165_90_PU": {
       "feature_id": "D_CAA165_90_PU",
       "feature_kind": "arc",
@@ -19181,6 +19757,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_CAA165_CAALOS": {
+      "feature_id": "D_CAA165_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA165_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_CAA172_90_PA1": {
       "feature_id": "D_CAA172_90_PA1",
       "feature_kind": "arc",
@@ -19188,6 +19772,14 @@
       "b_part": "D_CAA172_90_PA1",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_CAA172_CAALOS": {
+      "feature_id": "D_CAA172_CAALOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_CAA172_CAALOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_CBC000_NIDBR_NA": {
       "feature_id": "D_CBC000_NIDBR_NA",
@@ -19202,6 +19794,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_CBC000_NIDTD",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_CBC000_PINES": {
+      "feature_id": "D_CBC000_PINES",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_CBC000_PINES",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19230,8 +19830,8 @@
       "kind": "DIVERSION"
     },
     "D_CBD000_KLR005": {
-      "feature_id": "KLR005",
-      "feature_kind": "node",
+      "feature_id": "D_CBD000_KLR005",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_CBD000_KLR005",
       "units": "CFS",
@@ -19461,6 +20061,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_COL002_BRT003": {
+      "feature_id": "D_COL002_BRT003",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_COL002_BRT003",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_COW014_03_NA": {
       "feature_id": "D_COW014_03_NA",
       "feature_kind": "arc",
@@ -19526,8 +20134,8 @@
       "kind": "DIVERSION"
     },
     "D_CVT005_UTC000": {
-      "feature_id": "UTC000",
-      "feature_kind": "node",
+      "feature_id": "D_CVT005_UTC000",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_CVT005_UTC000",
       "units": "CFS",
@@ -19550,8 +20158,8 @@
       "kind": "DIVERSION"
     },
     "D_CYN010_TWL005": {
-      "feature_id": "TWL005",
-      "feature_kind": "node",
+      "feature_id": "D_CYN010_TWL005",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_CYN010_TWL005",
       "units": "CFS",
@@ -19578,6 +20186,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_DED010_63_PR2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_DED025_63_NA5": {
+      "feature_id": "D_DED025_63_NA5",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_DED025_63_NA5",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19630,12 +20246,20 @@
       "kind": "DIVERSION"
     },
     "D_DES006_WLF017": {
-      "feature_id": "WLF017",
-      "feature_kind": "node",
+      "feature_id": "D_DES006_WLF017",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_DES006_WLF017",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC003_DMCLOS": {
+      "feature_id": "D_DMC003_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC003_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DMC007_CAA009": {
       "feature_id": "D_DMC007_CAA009",
@@ -19645,6 +20269,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC007_DMCLOS": {
+      "feature_id": "D_DMC007_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC007_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC011_71_PA8": {
       "feature_id": "D_DMC011_71_PA8",
       "feature_kind": "arc",
@@ -19652,6 +20284,22 @@
       "b_part": "D_DMC011_71_PA8",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC011_DMCLOS": {
+      "feature_id": "D_DMC011_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC011_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_DMC016_DMCLOS": {
+      "feature_id": "D_DMC016_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC016_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DMC016_WTPJJO": {
       "feature_id": "D_DMC016_WTPJJO",
@@ -19669,6 +20317,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC021_DMCLOS": {
+      "feature_id": "D_DMC021_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC021_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_DMC024_DMCLOS": {
+      "feature_id": "D_DMC024_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC024_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC030_71_PA1": {
       "feature_id": "D_DMC030_71_PA1",
       "feature_kind": "arc",
@@ -19676,6 +20340,14 @@
       "b_part": "D_DMC030_71_PA1",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC030_DMCLOS": {
+      "feature_id": "D_DMC030_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC030_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DMC034_71_PA2": {
       "feature_id": "D_DMC034_71_PA2",
@@ -19693,6 +20365,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC034_DMCLOS": {
+      "feature_id": "D_DMC034_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC034_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC034_WWW001": {
       "feature_id": "D_DMC034_WWW001",
       "feature_kind": "arc",
@@ -19700,6 +20380,14 @@
       "b_part": "D_DMC034_WWW001",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC039_DMCLOS": {
+      "feature_id": "D_DMC039_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC039_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DMC044_71_PA4": {
       "feature_id": "D_DMC044_71_PA4",
@@ -19717,6 +20405,30 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC044_DMCLOS": {
+      "feature_id": "D_DMC044_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC044_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_DMC049_DMCLOS": {
+      "feature_id": "D_DMC049_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC049_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_DMC054_DMCLOS": {
+      "feature_id": "D_DMC054_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC054_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC054_NMW004": {
       "feature_id": "D_DMC054_NMW004",
       "feature_kind": "arc",
@@ -19725,6 +20437,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC058_DMCLOS": {
+      "feature_id": "D_DMC058_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC058_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC064_71_PA6": {
       "feature_id": "D_DMC064_71_PA6",
       "feature_kind": "arc",
@@ -19732,6 +20452,14 @@
       "b_part": "D_DMC064_71_PA6",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC064_DMCLOS": {
+      "feature_id": "D_DMC064_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC064_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DMC070_73_PA1": {
       "feature_id": "D_DMC070_73_PA1",
@@ -19749,6 +20477,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC070_DMCLOS": {
+      "feature_id": "D_DMC070_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC070_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC070_VLW008": {
       "feature_id": "D_DMC070_VLW008",
       "feature_kind": "arc",
@@ -19756,6 +20492,22 @@
       "b_part": "D_DMC070_VLW008",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC074_DMCLOS": {
+      "feature_id": "D_DMC074_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC074_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_DMC076_DMCLOS": {
+      "feature_id": "D_DMC076_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC076_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DMC076_XCC043": {
       "feature_id": "D_DMC076_XCC043",
@@ -19765,6 +20517,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC080_DMCLOS": {
+      "feature_id": "D_DMC080_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC080_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_DMC085_DMCLOS": {
+      "feature_id": "D_DMC085_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC085_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC091_73_PA3": {
       "feature_id": "D_DMC091_73_PA3",
       "feature_kind": "arc",
@@ -19772,6 +20540,22 @@
       "b_part": "D_DMC091_73_PA3",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC091_DMCLOS": {
+      "feature_id": "D_DMC091_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC091_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
+    "D_DMC097_DMCLOS": {
+      "feature_id": "D_DMC097_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC097_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DMC105_73_PA2": {
       "feature_id": "D_DMC105_73_PA2",
@@ -19781,6 +20565,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC105_DMCLOS": {
+      "feature_id": "D_DMC105_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC105_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC111_73_XA": {
       "feature_id": "D_DMC111_73_XA",
       "feature_kind": "arc",
@@ -19789,6 +20581,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_DMC111_DMCLOS": {
+      "feature_id": "D_DMC111_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC111_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
+    },
     "D_DMC111_FBW001": {
       "feature_id": "D_DMC111_FBW001",
       "feature_kind": "arc",
@@ -19796,6 +20596,14 @@
       "b_part": "D_DMC111_FBW001",
       "units": "CFS",
       "kind": "DIVERSION"
+    },
+    "D_DMC116_DMCLOS": {
+      "feature_id": "D_DMC116_DMCLOS",
+      "feature_kind": "arc",
+      "c_part": "LOSS",
+      "b_part": "D_DMC116_DMCLOS",
+      "units": "CFS",
+      "kind": "LOSS"
     },
     "D_DONLL_DPH008": {
       "feature_id": "D_DONLL_DPH008",
@@ -19822,24 +20630,24 @@
       "kind": "DIVERSION"
     },
     "D_DRM000_DRM001": {
-      "feature_id": "DRM001",
-      "feature_kind": "node",
+      "feature_id": "D_DRM000_DRM001",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_DRM000_DRM001",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_DRM002_SYC001": {
-      "feature_id": "SYC001",
-      "feature_kind": "node",
+      "feature_id": "D_DRM002_SYC001",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_DRM002_SYC001",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_DRM003_BRR074": {
-      "feature_id": "BRR074",
-      "feature_kind": "node",
+      "feature_id": "D_DRM003_BRR074",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_DRM003_BRR074",
       "units": "CFS",
@@ -19877,6 +20685,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_EBP042_ESC004": {
+      "feature_id": "D_EBP042_ESC004",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EBP042_ESC004",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_EBP048_63_PR3": {
       "feature_id": "D_EBP048_63_PR3",
       "feature_kind": "arc",
@@ -19894,26 +20710,74 @@
       "kind": "DIVERSION"
     },
     "D_ECHOL_ELC001": {
-      "feature_id": "ELC001",
-      "feature_kind": "node",
+      "feature_id": "D_ECHOL_ELC001",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_ECHOL_ELC001",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_EDC007_SFA059": {
-      "feature_id": "SFA059",
-      "feature_kind": "node",
+      "feature_id": "D_EDC007_SFA059",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_EDC007_SFA059",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_EDC014_JNKSN": {
-      "feature_id": "JNKSN",
-      "feature_kind": "node",
+      "feature_id": "D_EDC014_JNKSN",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_EDC014_JNKSN",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_EDC021_EDCOCA_NA1": {
+      "feature_id": "D_EDC021_EDCOCA_NA1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDC021_EDCOCA_NA1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_EDC021_EDCOCA_NA2": {
+      "feature_id": "D_EDC021_EDCOCA_NA2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDC021_EDCOCA_NA2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_EDC021_EDCOCA_NA3": {
+      "feature_id": "D_EDC021_EDCOCA_NA3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDC021_EDCOCA_NA3",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_EDC021_EDCOCA_NU1": {
+      "feature_id": "D_EDC021_EDCOCA_NU1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDC021_EDCOCA_NU1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_EDC021_EDCOCA_NU2": {
+      "feature_id": "D_EDC021_EDCOCA_NU2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDC021_EDCOCA_NU2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_EDC021_EDCOCA_NU3": {
+      "feature_id": "D_EDC021_EDCOCA_NU3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDC021_EDCOCA_NU3",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19925,9 +20789,17 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_EDC021_ELDID_NA1": {
+      "feature_id": "D_EDC021_ELDID_NA1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDC021_ELDID_NA1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_EDC021_ELDID_NA2": {
-      "feature_id": "ELDID_NA2",
-      "feature_kind": "node",
+      "feature_id": "D_EDC021_ELDID_NA2",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_EDC021_ELDID_NA2",
       "units": "CFS",
@@ -19938,6 +20810,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_EDC021_WTPRS1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_EDWWTP_ELDID_NU3": {
+      "feature_id": "D_EDWWTP_ELDID_NU3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_EDWWTP_ELDID_NU3",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -19958,8 +20838,8 @@
       "kind": "DIVERSION"
     },
     "D_ELT000_TBAUD": {
-      "feature_id": "TBAUD",
-      "feature_kind": "node",
+      "feature_id": "D_ELT000_TBAUD",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_ELT000_TBAUD",
       "units": "CFS",
@@ -19982,8 +20862,8 @@
       "kind": "DIVERSION"
     },
     "D_ESC005_EBP050": {
-      "feature_id": "EBP050",
-      "feature_kind": "node",
+      "feature_id": "D_ESC005_EBP050",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_ESC005_EBP050",
       "units": "CFS",
@@ -20021,6 +20901,22 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_FOLSM_24_NA3_CVP": {
+      "feature_id": "D_FOLSM_24_NA3_CVP",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION-CVP",
+      "b_part": "D_FOLSM_24_NA3_CVP",
+      "units": "CFS",
+      "kind": "DIVERSION-CVP"
+    },
+    "D_FOLSM_24_NU2_CVP": {
+      "feature_id": "D_FOLSM_24_NU2_CVP",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION-CVP",
+      "b_part": "D_FOLSM_24_NU2_CVP",
+      "units": "CFS",
+      "kind": "DIVERSION-CVP"
+    },
     "D_FOLSM_26S_NU4": {
       "feature_id": "D_FOLSM_26S_NU4",
       "feature_kind": "arc",
@@ -20034,6 +20930,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_FOLSM_26S_PU3",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_FOLSM_EDCOCA": {
+      "feature_id": "D_FOLSM_EDCOCA",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_FOLSM_EDCOCA",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -20269,6 +21173,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_FTR074_CULOS": {
+      "feature_id": "D_FTR074_CULOS",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_FTR074_CULOS",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_GCC027_08N_PR1": {
       "feature_id": "D_GCC027_08N_PR1",
       "feature_kind": "arc",
@@ -20318,8 +21230,8 @@
       "kind": "DIVERSION"
     },
     "D_GDD010_WTPWAL": {
-      "feature_id": "WTPWAL",
-      "feature_kind": "node",
+      "feature_id": "D_GDD010_WTPWAL",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_GDD010_WTPWAL",
       "units": "CFS",
@@ -20358,8 +21270,8 @@
       "kind": "DIVERSION"
     },
     "D_ISF001_OMR024": {
-      "feature_id": "OMR024",
-      "feature_kind": "node",
+      "feature_id": "D_ISF001_OMR024",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_ISF001_OMR024",
       "units": "CFS",
@@ -20389,9 +21301,65 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_JNKSN_EDCOCA_NA1": {
+      "feature_id": "D_JNKSN_EDCOCA_NA1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_JNKSN_EDCOCA_NA1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_JNKSN_EDCOCA_NA2": {
+      "feature_id": "D_JNKSN_EDCOCA_NA2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_JNKSN_EDCOCA_NA2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_JNKSN_EDCOCA_NA3": {
+      "feature_id": "D_JNKSN_EDCOCA_NA3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_JNKSN_EDCOCA_NA3",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_JNKSN_EDCOCA_NU1": {
+      "feature_id": "D_JNKSN_EDCOCA_NU1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_JNKSN_EDCOCA_NU1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_JNKSN_EDCOCA_NU2": {
+      "feature_id": "D_JNKSN_EDCOCA_NU2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_JNKSN_EDCOCA_NU2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_JNKSN_EDCOCA_NU3": {
+      "feature_id": "D_JNKSN_EDCOCA_NU3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_JNKSN_EDCOCA_NU3",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_JNKSN_ELDID_NA1": {
+      "feature_id": "D_JNKSN_ELDID_NA1",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_JNKSN_ELDID_NA1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_JNKSN_ELDID_NA2": {
-      "feature_id": "ELDID_NA2",
-      "feature_kind": "node",
+      "feature_id": "D_JNKSN_ELDID_NA2",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_JNKSN_ELDID_NA2",
       "units": "CFS",
@@ -20518,8 +21486,8 @@
       "kind": "DIVERSION"
     },
     "D_LJC022_60S_PA1": {
-      "feature_id": "60S_PA1",
-      "feature_kind": "node",
+      "feature_id": "D_LJC022_60S_PA1",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_LJC022_60S_PA1",
       "units": "CFS",
@@ -20574,8 +21542,8 @@
       "kind": "DIVERSION"
     },
     "D_LYONS_TCN000": {
-      "feature_id": "TCN000",
-      "feature_kind": "node",
+      "feature_id": "D_LYONS_TCN000",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_LYONS_TCN000",
       "units": "CFS",
@@ -20586,6 +21554,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_MAQ057_EBMUD",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_MAQ057_EBTML": {
+      "feature_id": "D_MAQ057_EBTML",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_MAQ057_EBTML",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -20661,6 +21637,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_MDC006_MDCLOS": {
+      "feature_id": "D_MDC006_MDCLOS",
+      "feature_kind": "arc",
+      "c_part": "CONV-SEEPAGE",
+      "b_part": "D_MDC006_MDCLOS",
+      "units": "CFS",
+      "kind": "CONV-SEEPAGE"
+    },
     "D_MDC032_64_PA1": {
       "feature_id": "D_MDC032_64_PA1",
       "feature_kind": "arc",
@@ -20734,8 +21718,8 @@
       "kind": "DIVERSION"
     },
     "D_MFA026_OXB000": {
-      "feature_id": "OXB000",
-      "feature_kind": "node",
+      "feature_id": "D_MFA026_OXB000",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_MFA026_OXB000",
       "units": "CFS",
@@ -20814,10 +21798,18 @@
       "kind": "DIVERSION"
     },
     "D_MID021_DED010": {
-      "feature_id": "DED010",
-      "feature_kind": "node",
+      "feature_id": "D_MID021_DED010",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_MID021_DED010",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_MID021_MPS020": {
+      "feature_id": "D_MID021_MPS020",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_MID021_MPS020",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -20830,8 +21822,8 @@
       "kind": "DIVERSION"
     },
     "D_MIO010_WBF006": {
-      "feature_id": "WBF006",
-      "feature_kind": "node",
+      "feature_id": "D_MIO010_WBF006",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_MIO010_WBF006",
       "units": "CFS",
@@ -20893,6 +21885,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_MNRRH_KRT000": {
+      "feature_id": "D_MNRRH_KRT000",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_MNRRH_KRT000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_MNRRH_WTPMNR": {
       "feature_id": "D_MNRRH_WTPMNR",
       "feature_kind": "arc",
@@ -20918,8 +21918,8 @@
       "kind": "DIVERSION"
     },
     "D_MOK035_60N_NU1": {
-      "feature_id": "60N_NU1",
-      "feature_kind": "node",
+      "feature_id": "D_MOK035_60N_NU1",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_MOK035_60N_NU1",
       "units": "CFS",
@@ -21054,8 +22054,8 @@
       "kind": "DIVERSION"
     },
     "D_NFA016_WTPWAL": {
-      "feature_id": "WTPWAL",
-      "feature_kind": "node",
+      "feature_id": "D_NFA016_WTPWAL",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_NFA016_WTPWAL",
       "units": "CFS",
@@ -21094,8 +22094,8 @@
       "kind": "DIVERSION"
     },
     "D_NFM006_ELT000": {
-      "feature_id": "ELT000",
-      "feature_kind": "node",
+      "feature_id": "D_NFM006_ELT000",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_NFM006_ELT000",
       "units": "CFS",
@@ -21218,6 +22218,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_OMR028_DMC000",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_OMR028_SRSC": {
+      "feature_id": "D_OMR028_SRSC",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_OMR028_SRSC",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -21474,6 +22482,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_SAC030_MOK014",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_SAC041_ISF001": {
+      "feature_id": "D_SAC041_ISF001",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_SAC041_ISF001",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -21910,8 +22926,8 @@
       "kind": "DIVERSION"
     },
     "D_SFS030_PHP000": {
-      "feature_id": "PHP000",
-      "feature_kind": "node",
+      "feature_id": "D_SFS030_PHP000",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_SFS030_PHP000",
       "units": "CFS",
@@ -22134,8 +23150,8 @@
       "kind": "DIVERSION"
     },
     "D_STH002_ABN026": {
-      "feature_id": "ABN026",
-      "feature_kind": "node",
+      "feature_id": "D_STH002_ABN026",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_STH002_ABN026",
       "units": "CFS",
@@ -22158,8 +23174,8 @@
       "kind": "DIVERSION"
     },
     "D_STH005_24_NA3": {
-      "feature_id": "24_NA3",
-      "feature_kind": "node",
+      "feature_id": "D_STH005_24_NA3",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_STH005_24_NA3",
       "units": "CFS",
@@ -22170,6 +23186,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_STH005_MRM001",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_STH007_STHLOS": {
+      "feature_id": "D_STH007_STHLOS",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_STH007_STHLOS",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -22261,11 +23285,27 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_SYC003_SYCLOS": {
+      "feature_id": "D_SYC003_SYCLOS",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_SYC003_SYCLOS",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_TBAUD_AMADR_NU": {
       "feature_id": "D_TBAUD_AMADR_NU",
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_TBAUD_AMADR_NU",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_TBAUD_ELT010": {
+      "feature_id": "D_TBAUD_ELT010",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_TBAUD_ELT010",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -22341,6 +23381,14 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_TGC003_AMADR_NU": {
+      "feature_id": "D_TGC003_AMADR_NU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_TGC003_AMADR_NU",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_TGC003_TGR021": {
       "feature_id": "D_TGC003_TGR021",
       "feature_kind": "arc",
@@ -22350,8 +23398,8 @@
       "kind": "DIVERSION"
     },
     "D_TGR000_NFM029": {
-      "feature_id": "NFM029",
-      "feature_kind": "node",
+      "feature_id": "D_TGR000_NFM029",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_TGR000_NFM029",
       "units": "CFS",
@@ -22414,32 +23462,32 @@
       "kind": "DIVERSION"
     },
     "D_TUO015_61_NA3": {
-      "feature_id": "61_NA3",
-      "feature_kind": "node",
+      "feature_id": "D_TUO015_61_NA3",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_TUO015_61_NA3",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_TUO015_62_NA4": {
-      "feature_id": "62_NA4",
-      "feature_kind": "node",
+      "feature_id": "D_TUO015_62_NA4",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_TUO015_62_NA4",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_TUO047_61_NA3": {
-      "feature_id": "61_NA3",
-      "feature_kind": "node",
+      "feature_id": "D_TUO047_61_NA3",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_TUO047_61_NA3",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_TUO047_62_NA4": {
-      "feature_id": "62_NA4",
-      "feature_kind": "node",
+      "feature_id": "D_TUO047_62_NA4",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_TUO047_62_NA4",
       "units": "CFS",
@@ -22470,18 +23518,26 @@
       "kind": "DIVERSION"
     },
     "D_UTC000_CACWD": {
-      "feature_id": "CACWD",
-      "feature_kind": "node",
+      "feature_id": "D_UTC000_CACWD",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_UTC000_CACWD",
       "units": "CFS",
       "kind": "DIVERSION"
     },
     "D_UTC000_MIL003": {
-      "feature_id": "MIL003",
-      "feature_kind": "node",
+      "feature_id": "D_UTC000_MIL003",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_UTC000_MIL003",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_UTC014_UTICA": {
+      "feature_id": "D_UTC014_UTICA",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_UTC014_UTICA",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -22522,6 +23578,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_VLW008_72_PR5",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WBF015_MIO010": {
+      "feature_id": "D_WBF015_MIO010",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WBF015_MIO010",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -22622,8 +23686,8 @@
       "kind": "DIVERSION"
     },
     "D_WPT005_OWC000": {
-      "feature_id": "OWC000",
-      "feature_kind": "node",
+      "feature_id": "D_WPT005_OWC000",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_WPT005_OWC000",
       "units": "CFS",
@@ -22870,8 +23934,8 @@
       "kind": "DIVERSION"
     },
     "D_WTPFBN_26S_NU3": {
-      "feature_id": "26S_NU3",
-      "feature_kind": "node",
+      "feature_id": "D_WTPFBN_26S_NU3",
+      "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_WTPFBN_26S_NU3",
       "units": "CFS",
@@ -22989,11 +24053,43 @@
       "units": "CFS",
       "kind": "DIVERSION"
     },
+    "D_WTPRS1_ELDID_NU2": {
+      "feature_id": "D_WTPRS1_ELDID_NU2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPRS1_ELDID_NU2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPRS1_ELDID_NU3": {
+      "feature_id": "D_WTPRS1_ELDID_NU3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPRS1_ELDID_NU3",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
     "D_WTPRSA_ELDID_NU1": {
       "feature_id": "D_WTPRSA_ELDID_NU1",
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_WTPRSA_ELDID_NU1",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPRSA_ELDID_NU2": {
+      "feature_id": "D_WTPRSA_ELDID_NU2",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPRSA_ELDID_NU2",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPRSA_ELDID_NU3": {
+      "feature_id": "D_WTPRSA_ELDID_NU3",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPRSA_ELDID_NU3",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -23098,6 +24194,14 @@
       "feature_kind": "arc",
       "c_part": "DIVERSION",
       "b_part": "D_WTPWAL_GDPUD_NU",
+      "units": "CFS",
+      "kind": "DIVERSION"
+    },
+    "D_WTPWAL_GDPUD_PU": {
+      "feature_id": "D_WTPWAL_GDPUD_PU",
+      "feature_kind": "arc",
+      "c_part": "DIVERSION",
+      "b_part": "D_WTPWAL_GDPUD_PU",
       "units": "CFS",
       "kind": "DIVERSION"
     },
@@ -25390,32 +26494,32 @@
       "kind": "EVAPORATION-LOSS"
     },
     "E_ALMNR": {
-      "feature_id": "ALMNR",
-      "feature_kind": "node",
+      "feature_id": "E_ALMNR",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_ALMNR",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_ALOHA": {
-      "feature_id": "ALOHA",
-      "feature_kind": "node",
+      "feature_id": "E_ALOHA",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_ALOHA",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_ANTLP": {
-      "feature_id": "ANTLP",
-      "feature_kind": "node",
+      "feature_id": "E_ANTLP",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_ANTLP",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_BEARD": {
-      "feature_id": "BEARD",
-      "feature_kind": "node",
+      "feature_id": "E_BEARD",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_BEARD",
       "units": "CFS",
@@ -25430,8 +26534,8 @@
       "kind": "EVAPORATION"
     },
     "E_BOWMN": {
-      "feature_id": "BOWMN",
-      "feature_kind": "node",
+      "feature_id": "E_BOWMN",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_BOWMN",
       "units": "CFS",
@@ -25446,24 +26550,24 @@
       "kind": "EVAPORATION"
     },
     "E_BTVLY": {
-      "feature_id": "BTVLY",
-      "feature_kind": "node",
+      "feature_id": "E_BTVLY",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_BTVLY",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_BUCKS": {
-      "feature_id": "BUCKS",
-      "feature_kind": "node",
+      "feature_id": "E_BUCKS",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_BUCKS",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_CAPLS": {
-      "feature_id": "CAPLS",
-      "feature_kind": "node",
+      "feature_id": "E_CAPLS",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_CAPLS",
       "units": "CFS",
@@ -25486,8 +26590,8 @@
       "kind": "EVAPORATION"
     },
     "E_CMCHE": {
-      "feature_id": "CMCHE",
-      "feature_kind": "node",
+      "feature_id": "E_CMCHE",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_CMCHE",
       "units": "CFS",
@@ -25502,24 +26606,24 @@
       "kind": "EVAPORATION"
     },
     "E_DAVIS": {
-      "feature_id": "DAVIS",
-      "feature_kind": "node",
+      "feature_id": "E_DAVIS",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_DAVIS",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_DONLL": {
-      "feature_id": "DONLL",
-      "feature_kind": "node",
+      "feature_id": "E_DONLL",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_DONLL",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_ECHOL": {
-      "feature_id": "ECHOL",
-      "feature_kind": "node",
+      "feature_id": "E_ECHOL",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_ECHOL",
       "units": "CFS",
@@ -25550,8 +26654,8 @@
       "kind": "EVAPORATION"
     },
     "E_ESTMN": {
-      "feature_id": "ESTMN",
-      "feature_kind": "node",
+      "feature_id": "E_ESTMN",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_ESTMN",
       "units": "CFS",
@@ -25566,16 +26670,16 @@
       "kind": "EVAPORATION"
     },
     "E_FRDYC": {
-      "feature_id": "FRDYC",
-      "feature_kind": "node",
+      "feature_id": "E_FRDYC",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_FRDYC",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_FRMAN": {
-      "feature_id": "FRMAN",
-      "feature_kind": "node",
+      "feature_id": "E_FRMAN",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_FRMAN",
       "units": "CFS",
@@ -25590,32 +26694,32 @@
       "kind": "EVAPORATION"
     },
     "E_FRNCH": {
-      "feature_id": "FRNCH",
-      "feature_kind": "node",
+      "feature_id": "E_FRNCH",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_FRNCH",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_GERLE": {
-      "feature_id": "GERLE",
-      "feature_kind": "node",
+      "feature_id": "E_GERLE",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_GERLE",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_HHOLE": {
-      "feature_id": "HHOLE",
-      "feature_kind": "node",
+      "feature_id": "E_HHOLE",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_HHOLE",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_HNSLY": {
-      "feature_id": "HNSLY",
-      "feature_kind": "node",
+      "feature_id": "E_HNSLY",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_HNSLY",
       "units": "CFS",
@@ -25630,8 +26734,8 @@
       "kind": "EVAPORATION"
     },
     "E_ICEHS": {
-      "feature_id": "ICEHS",
-      "feature_kind": "node",
+      "feature_id": "E_ICEHS",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_ICEHS",
       "units": "CFS",
@@ -25646,16 +26750,16 @@
       "kind": "EVAPORATION"
     },
     "E_JKSMD": {
-      "feature_id": "JKSMD",
-      "feature_kind": "node",
+      "feature_id": "E_JKSMD",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_JKSMD",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_JNKSN": {
-      "feature_id": "JNKSN",
-      "feature_kind": "node",
+      "feature_id": "E_JNKSN",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_JNKSN",
       "units": "CFS",
@@ -25670,8 +26774,8 @@
       "kind": "EVAPORATION"
     },
     "E_LBEAR": {
-      "feature_id": "LBEAR",
-      "feature_kind": "node",
+      "feature_id": "E_LBEAR",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_LBEAR",
       "units": "CFS",
@@ -25702,8 +26806,8 @@
       "kind": "EVAPORATION"
     },
     "E_LOONL": {
-      "feature_id": "LOONL",
-      "feature_kind": "node",
+      "feature_id": "E_LOONL",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_LOONL",
       "units": "CFS",
@@ -25726,32 +26830,32 @@
       "kind": "EVAPORATION"
     },
     "E_LYONS": {
-      "feature_id": "LYONS",
-      "feature_kind": "node",
+      "feature_id": "E_LYONS",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_LYONS",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_MCLRE": {
-      "feature_id": "MCLRE",
-      "feature_kind": "node",
+      "feature_id": "E_MCLRE",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_MCLRE",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_MDSTO": {
-      "feature_id": "MDSTO",
-      "feature_kind": "node",
+      "feature_id": "E_MDSTO",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_MDSTO",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_MELON": {
-      "feature_id": "MELON",
-      "feature_kind": "node",
+      "feature_id": "E_MELON",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_MELON",
       "units": "CFS",
@@ -25774,8 +26878,8 @@
       "kind": "EVAPORATION"
     },
     "E_MTMDW": {
-      "feature_id": "MTMDW",
-      "feature_kind": "node",
+      "feature_id": "E_MTMDW",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_MTMDW",
       "units": "CFS",
@@ -25790,8 +26894,8 @@
       "kind": "EVAPORATION"
     },
     "E_NHGAN": {
-      "feature_id": "NHGAN",
-      "feature_kind": "node",
+      "feature_id": "E_NHGAN",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_NHGAN",
       "units": "CFS",
@@ -25814,32 +26918,32 @@
       "kind": "EVAPORATION"
     },
     "E_PARDE": {
-      "feature_id": "PARDE",
-      "feature_kind": "node",
+      "feature_id": "E_PARDE",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_PARDE",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_PCRST": {
-      "feature_id": "PCRST",
-      "feature_kind": "node",
+      "feature_id": "E_PCRST",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_PCRST",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_PEDRO": {
-      "feature_id": "PEDRO",
-      "feature_kind": "node",
+      "feature_id": "E_PEDRO",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_PEDRO",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_RLIEF": {
-      "feature_id": "RLIEF",
-      "feature_kind": "node",
+      "feature_id": "E_RLIEF",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_RLIEF",
       "units": "CFS",
@@ -25854,8 +26958,8 @@
       "kind": "EVAPORATION"
     },
     "E_SCOTF": {
-      "feature_id": "SCOTF",
-      "feature_kind": "node",
+      "feature_id": "E_SCOTF",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_SCOTF",
       "units": "CFS",
@@ -25878,16 +26982,16 @@
       "kind": "EVAPORATION"
     },
     "E_SILVR": {
-      "feature_id": "SILVR",
-      "feature_kind": "node",
+      "feature_id": "E_SILVR",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_SILVR",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_SLTSP": {
-      "feature_id": "SLTSP",
-      "feature_kind": "node",
+      "feature_id": "E_SLTSP",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_SLTSP",
       "units": "CFS",
@@ -25902,24 +27006,24 @@
       "kind": "EVAPORATION"
     },
     "E_SPICE": {
-      "feature_id": "SPICE",
-      "feature_kind": "node",
+      "feature_id": "E_SPICE",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_SPICE",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_SPLDG": {
-      "feature_id": "SPLDG",
-      "feature_kind": "node",
+      "feature_id": "E_SPLDG",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_SPLDG",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_STMPY": {
-      "feature_id": "STMPY",
-      "feature_kind": "node",
+      "feature_id": "E_STMPY",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_STMPY",
       "units": "CFS",
@@ -25942,8 +27046,8 @@
       "kind": "EVAPORATION"
     },
     "E_TRLCK": {
-      "feature_id": "TRLCK",
-      "feature_kind": "node",
+      "feature_id": "E_TRLCK",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_TRLCK",
       "units": "CFS",
@@ -25958,32 +27062,32 @@
       "kind": "EVAPORATION"
     },
     "E_TULOC": {
-      "feature_id": "TULOC",
-      "feature_kind": "node",
+      "feature_id": "E_TULOC",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_TULOC",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_UBEAR": {
-      "feature_id": "UBEAR",
-      "feature_kind": "node",
+      "feature_id": "E_UBEAR",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_UBEAR",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_UNVLY": {
-      "feature_id": "UNVLY",
-      "feature_kind": "node",
+      "feature_id": "E_UNVLY",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_UNVLY",
       "units": "CFS",
       "kind": "EVAPORATION"
     },
     "E_WDWRD": {
-      "feature_id": "WDWRD",
-      "feature_kind": "node",
+      "feature_id": "E_WDWRD",
+      "feature_kind": "arc",
       "c_part": "EVAPORATION",
       "b_part": "E_WDWRD",
       "units": "CFS",
@@ -28044,6 +29148,14 @@
       "b_part": "I_LOSVQ",
       "units": "CFS",
       "kind": "INFLOW"
+    },
+    "I_PTH070_ADD": {
+      "feature_id": "I_PTH070_ADD",
+      "feature_kind": "arc",
+      "c_part": "ADD-FLOW",
+      "b_part": "I_PTH070_ADD",
+      "units": "CFS",
+      "kind": "ADD-FLOW"
     },
     "LF_02_NA": {
       "feature_id": "02_NA",
@@ -34070,16 +35182,16 @@
       "kind": "RETURN-FLOW"
     },
     "R_06_NA_CBD044": {
-      "feature_id": "CBD044",
-      "feature_kind": "node",
+      "feature_id": "R_06_NA_CBD044",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_06_NA_CBD044",
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
     "R_06_PA_STN009": {
-      "feature_id": "STN009",
-      "feature_kind": "node",
+      "feature_id": "R_06_PA_STN009",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_06_PA_STN009",
       "units": "CFS",
@@ -34822,8 +35934,8 @@
       "kind": "RETURN-FLOW"
     },
     "R_26S_NA_MOK019": {
-      "feature_id": "MOK019",
-      "feature_kind": "node",
+      "feature_id": "R_26S_NA_MOK019",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_26S_NA_MOK019",
       "units": "CFS",
@@ -35158,8 +36270,8 @@
       "kind": "RETURN-FLOW"
     },
     "R_61_NA6_SJR056": {
-      "feature_id": "SJR056",
-      "feature_kind": "node",
+      "feature_id": "R_61_NA6_SJR056",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_61_NA6_SJR056",
       "units": "CFS",
@@ -35430,8 +36542,8 @@
       "kind": "RETURN-FLOW"
     },
     "R_63_PR1_EBP048": {
-      "feature_id": "EBP048",
-      "feature_kind": "node",
+      "feature_id": "R_63_PR1_EBP048",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_63_PR1_EBP048",
       "units": "CFS",
@@ -35502,8 +36614,8 @@
       "kind": "RETURN-FLOW"
     },
     "R_64_PA1_SJR235": {
-      "feature_id": "SJR235",
-      "feature_kind": "node",
+      "feature_id": "R_64_PA1_SJR235",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_64_PA1_SJR235",
       "units": "CFS",
@@ -35662,8 +36774,8 @@
       "kind": "RETURN-FLOW"
     },
     "R_71_PA5_SJR091": {
-      "feature_id": "SJR091",
-      "feature_kind": "node",
+      "feature_id": "R_71_PA5_SJR091",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_71_PA5_SJR091",
       "units": "CFS",
@@ -36134,24 +37246,24 @@
       "kind": "RETURN-FLOW"
     },
     "R_GDPUD_NA_NFA011": {
-      "feature_id": "NFA011",
-      "feature_kind": "node",
+      "feature_id": "R_GDPUD_NA_NFA011",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_GDPUD_NA_NFA011",
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
     "R_GDPUD_NU_NFA011": {
-      "feature_id": "NFA011",
-      "feature_kind": "node",
+      "feature_id": "R_GDPUD_NU_NFA011",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_GDPUD_NU_NFA011",
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
     "R_GDPUD_PU_NFA011": {
-      "feature_id": "NFA011",
-      "feature_kind": "node",
+      "feature_id": "R_GDPUD_PU_NFA011",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_GDPUD_PU_NFA011",
       "units": "CFS",
@@ -36230,24 +37342,24 @@
       "kind": "RETURN-FLOW"
     },
     "R_NIDDC_NA1_DER011": {
-      "feature_id": "DER011",
-      "feature_kind": "node",
+      "feature_id": "R_NIDDC_NA1_DER011",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_NIDDC_NA1_DER011",
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
     "R_NIDDC_NA1_WLF017": {
-      "feature_id": "WLF017",
-      "feature_kind": "node",
+      "feature_id": "R_NIDDC_NA1_WLF017",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_NIDDC_NA1_WLF017",
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
     "R_NIDDC_NA2_DER002": {
-      "feature_id": "DER002",
-      "feature_kind": "node",
+      "feature_id": "R_NIDDC_NA2_DER002",
+      "feature_kind": "arc",
       "c_part": "RETURN-FLOW",
       "b_part": "R_NIDDC_NA2_DER002",
       "units": "CFS",
@@ -36629,6 +37741,774 @@
       "units": "CFS",
       "kind": "RETURN-FLOW"
     },
+    "SG100_DED003_13": {
+      "feature_id": "DED003",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG100_DED003_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG101_DED003_13": {
+      "feature_id": "DED003",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG101_DED003_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG102_SJR145_14": {
+      "feature_id": "SJR145",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG102_SJR145_14",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG103_SJR141_14": {
+      "feature_id": "SJR141",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG103_SJR141_14",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG104_SJR134_14": {
+      "feature_id": "SJR134",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG104_SJR134_14",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG105_BCK040_15": {
+      "feature_id": "BCK040",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG105_BCK040_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG106_BCK035_15": {
+      "feature_id": "BCK035",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG106_BCK035_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG107_BCK031_15": {
+      "feature_id": "BCK031",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG107_BCK031_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG108_BCK024_15": {
+      "feature_id": "BCK024",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG108_BCK024_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG109_BCK017_15": {
+      "feature_id": "BCK017",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG109_BCK017_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG110_BCK010_15": {
+      "feature_id": "BCK010",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG110_BCK010_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG111_BCK006_15": {
+      "feature_id": "BCK006",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG111_BCK006_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG112_BCK006_15": {
+      "feature_id": "BCK006",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG112_BCK006_15",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG113_SJR134_16": {
+      "feature_id": "SJR134",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG113_SJR134_16",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG114_SJR123_16": {
+      "feature_id": "SJR123",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG114_SJR123_16",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG115_SJR116_16": {
+      "feature_id": "SJR116",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG115_SJR116_16",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG116_MCD052_17": {
+      "feature_id": "MCD052",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG116_MCD052_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG117_MCD048_17": {
+      "feature_id": "MCD048",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG117_MCD048_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG118_MCD042_17": {
+      "feature_id": "MCD042",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG118_MCD042_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG119_MCD036_17": {
+      "feature_id": "MCD036",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG119_MCD036_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG120_MCD028_17": {
+      "feature_id": "MCD028",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG120_MCD028_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG121_MCD021_17": {
+      "feature_id": "MCD021",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG121_MCD021_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG122_MCD014_17": {
+      "feature_id": "MCD014",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG122_MCD014_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG123_MCD009_17": {
+      "feature_id": "MCD009",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG123_MCD009_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG124_MCD002_17": {
+      "feature_id": "MCD002",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG124_MCD002_17",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG125_SJR116_18": {
+      "feature_id": "SJR116",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG125_SJR116_18",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG126_SJR111_18": {
+      "feature_id": "SJR111",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG126_SJR111_18",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG127_SJR106_18": {
+      "feature_id": "SJR106",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG127_SJR106_18",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG128_ORT014_19": {
+      "feature_id": "ORT014",
+      "feature_kind": "node",
+      "c_part": "CHANNEL-SEEPAGE",
+      "b_part": "SG128_ORT014_19",
+      "units": "CFS",
+      "kind": "CHANNEL-SEEPAGE"
+    },
+    "SG129_ORT009_19": {
+      "feature_id": "ORT009",
+      "feature_kind": "node",
+      "c_part": "CHANNEL-SEEPAGE",
+      "b_part": "SG129_ORT009_19",
+      "units": "CFS",
+      "kind": "CHANNEL-SEEPAGE"
+    },
+    "SG130_ORT001_19": {
+      "feature_id": "ORT001",
+      "feature_kind": "node",
+      "c_part": "CHANNEL-SEEPAGE",
+      "b_part": "SG130_ORT001_19",
+      "units": "CFS",
+      "kind": "CHANNEL-SEEPAGE"
+    },
+    "SG131_SJR106_20": {
+      "feature_id": "SJR106",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG131_SJR106_20",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG132_SJR096_20": {
+      "feature_id": "SJR096",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG132_SJR096_20",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG133_SJR090_20": {
+      "feature_id": "SJR090",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG133_SJR090_20",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG134_SJR081_20": {
+      "feature_id": "SJR081",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG134_SJR081_20",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG135_TUO053_21": {
+      "feature_id": "TUO053",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG135_TUO053_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG136_TUO047_21": {
+      "feature_id": "TUO047",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG136_TUO047_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG137_TUO043_21": {
+      "feature_id": "TUO043",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG137_TUO043_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG138_TUO036_21": {
+      "feature_id": "TUO036",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG138_TUO036_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG139_TUO030_21": {
+      "feature_id": "TUO030",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG139_TUO030_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG140_TUO022_21": {
+      "feature_id": "TUO022",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG140_TUO022_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG141_TUO015_21": {
+      "feature_id": "TUO015",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG141_TUO015_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG142_TUO010_21": {
+      "feature_id": "TUO010",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG142_TUO010_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG143_TUO003_21": {
+      "feature_id": "TUO003",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG143_TUO003_21",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG144_SJR081_22": {
+      "feature_id": "SJR081",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG144_SJR081_22",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG145_SJR072_22": {
+      "feature_id": "SJR072",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG145_SJR072_22",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG146_STS058_23": {
+      "feature_id": "STS058",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG146_STS058_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG147_STS053_23": {
+      "feature_id": "STS053",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG147_STS053_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG148_STS050_23": {
+      "feature_id": "STS050",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG148_STS050_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG149_STS043_23": {
+      "feature_id": "STS043",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG149_STS043_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG150_STS036_23": {
+      "feature_id": "STS036",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG150_STS036_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG151_STS030_23": {
+      "feature_id": "STS030",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG151_STS030_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG152_STS020_23": {
+      "feature_id": "STS020",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG152_STS020_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG153_STS011_23": {
+      "feature_id": "STS011",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG153_STS011_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG154_STS011_23": {
+      "feature_id": "STS011",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG154_STS011_23",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG155_SJR072_24": {
+      "feature_id": "SJR072",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG155_SJR072_24",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG156_SJR062_24": {
+      "feature_id": "SJR062",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG156_SJR062_24",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG157_SJR056_24": {
+      "feature_id": "SJR056",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG157_SJR056_24",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG158_SJR048_24": {
+      "feature_id": "SJR048",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG158_SJR048_24",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG159_SJR042_24": {
+      "feature_id": "SJR042",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG159_SJR042_24",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG160_SJR038_24": {
+      "feature_id": "SJR038",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG160_SJR038_24",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG161_CLV035_25": {
+      "feature_id": "CLV035",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG161_CLV035_25",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG162_CLV028_25": {
+      "feature_id": "CLV028",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG162_CLV028_25",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG163_CLV023_25": {
+      "feature_id": "CLV023",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG163_CLV023_25",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG164_CLV016_25": {
+      "feature_id": "CLV016",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG164_CLV016_25",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG165_CLV010_25": {
+      "feature_id": "CLV010",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG165_CLV010_25",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG166_CLV004_25": {
+      "feature_id": "CLV004",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG166_CLV004_25",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG167_CLV004_25": {
+      "feature_id": "CLV004",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG167_CLV004_25",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG168_SJR038_26": {
+      "feature_id": "SJR038",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG168_SJR038_26",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG169_SJR033_26": {
+      "feature_id": "SJR033",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG169_SJR033_26",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG170_SJR028_26": {
+      "feature_id": "SJR028",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG170_SJR028_26",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG171_SJR023_26": {
+      "feature_id": "SJR023",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG171_SJR023_26",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG172_SJR022_26": {
+      "feature_id": "SJR022",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG172_SJR022_26",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG174_CMCHE_27": {
+      "feature_id": "CMCHE",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG174_CMCHE_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG175_CMCHE_27": {
+      "feature_id": "CMCHE",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG175_CMCHE_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG176_MOK055_27": {
+      "feature_id": "MOK055",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG176_MOK055_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG177_MOK050_27": {
+      "feature_id": "MOK050",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG177_MOK050_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG178_MOK044_27": {
+      "feature_id": "MOK044",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG178_MOK044_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG179_MOK035_27": {
+      "feature_id": "MOK035",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG179_MOK035_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG180_MOK028_27": {
+      "feature_id": "MOK028",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG180_MOK028_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG181_MOK022_27": {
+      "feature_id": "MOK022",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG181_MOK022_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG182_DSC035_28": {
+      "feature_id": "DSC035",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG182_DSC035_28",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG183_DSC028_28": {
+      "feature_id": "DSC028",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG183_DSC028_28",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG184_DSC023_28": {
+      "feature_id": "DSC023",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG184_DSC023_28",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG185_DSC016_28": {
+      "feature_id": "DSC016",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG185_DSC016_28",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG186_DSC008_28": {
+      "feature_id": "DSC008",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG186_DSC008_28",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG187_DSC008_28": {
+      "feature_id": "DSC008",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG187_DSC008_28",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG188_CSM033_29": {
+      "feature_id": "CSM033",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG188_CSM033_29",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG189_CSM026_29": {
+      "feature_id": "CSM026",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG189_CSM026_29",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG190_CSM021_29": {
+      "feature_id": "CSM021",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG190_CSM021_29",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG191_CSM016_29": {
+      "feature_id": "CSM016",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG191_CSM016_29",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG192_CSM011_29": {
+      "feature_id": "CSM011",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG192_CSM011_29",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG193_CSM005_29": {
+      "feature_id": "CSM005",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG193_CSM005_29",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG194_CSM005_29": {
+      "feature_id": "CSM005",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG194_CSM005_29",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG195_MOK022_27": {
+      "feature_id": "MOK022",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG195_MOK022_27",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG196_MOK019_30": {
+      "feature_id": "MOK019",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG196_MOK019_30",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
     "SG197_MOK014_30": {
       "feature_id": "SG197_MOK014_30",
       "feature_kind": "arc",
@@ -36642,6 +38522,46 @@
       "feature_kind": "arc",
       "c_part": "RIVER-SEEPAGE",
       "b_part": "SG198_MOK004_30",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG199_MOK004_30": {
+      "feature_id": "MOK004",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG199_MOK004_30",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG200_SJR022_31": {
+      "feature_id": "SJR022",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG200_SJR022_31",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG201_SJR013_31": {
+      "feature_id": "SJR013",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG201_SJR013_31",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG202_SJR009_31": {
+      "feature_id": "SJR009",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG202_SJR009_31",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG203_SJR006_31": {
+      "feature_id": "SJR006",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG203_SJR006_31",
       "units": "CFS",
       "kind": "RIVER-SEEPAGE"
     },
@@ -37541,6 +39461,14 @@
       "units": "CFS",
       "kind": "STREAM-GAIN"
     },
+    "SG333_BSL001_58": {
+      "feature_id": "BSL001",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG333_BSL001_58",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
     "SG334_SBP031_58": {
       "feature_id": "SG334_SBP031_58",
       "feature_kind": "arc",
@@ -37722,6 +39650,14 @@
       "feature_kind": "arc",
       "c_part": "STREAM-GAIN",
       "b_part": "SG356_FTR012_61",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG357_CMPFW_62": {
+      "feature_id": "CMPFW",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG357_CMPFW_62",
       "units": "CFS",
       "kind": "STREAM-GAIN"
     },
@@ -38045,6 +39981,22 @@
       "units": "CFS",
       "kind": "STREAM-GAIN"
     },
+    "SG398_YBP023_68": {
+      "feature_id": "YBP023",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG398_YBP023_68",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG399_YBP020_68": {
+      "feature_id": "YBP020",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG399_YBP020_68",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
     "SG400_PTH024_69": {
       "feature_id": "SG400_PTH024_69",
       "feature_kind": "arc",
@@ -38090,6 +40042,62 @@
       "feature_kind": "arc",
       "c_part": "STREAM-GAIN",
       "b_part": "SG405_PTH007_69",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG406_YBP020_70": {
+      "feature_id": "YBP020",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG406_YBP020_70",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG407_YBP016_70": {
+      "feature_id": "YBP016",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG407_YBP016_70",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG408_YBP014_70": {
+      "feature_id": "YBP014",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG408_YBP014_70",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG409_YBP011_70": {
+      "feature_id": "YBP011",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG409_YBP011_70",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG410_YBP007_70": {
+      "feature_id": "YBP007",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG410_YBP007_70",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG411_YBP002_70": {
+      "feature_id": "YBP002",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG411_YBP002_70",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG412_YBP002_70": {
+      "feature_id": "YBP002",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG412_YBP002_70",
       "units": "CFS",
       "kind": "STREAM-GAIN"
     },
@@ -38140,6 +40148,446 @@
       "b_part": "SG418_SAC000_72",
       "units": "CFS",
       "kind": "STREAM-GAIN"
+    },
+    "SG453_CWD018_77": {
+      "feature_id": "CWD018",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG453_CWD018_77",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG455_CWD009_77": {
+      "feature_id": "CWD009",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG455_CWD009_77",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG456_CWD009_78": {
+      "feature_id": "CWD009",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG456_CWD009_78",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG457_CWD004_78": {
+      "feature_id": "CWD004",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG457_CWD004_78",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG463_SCW008_81": {
+      "feature_id": "SCW008",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG463_SCW008_81",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG472_CBD049_83": {
+      "feature_id": "CBD049",
+      "feature_kind": "node",
+      "c_part": "STREAM-GAIN",
+      "b_part": "SG472_CBD049_83",
+      "units": "CFS",
+      "kind": "STREAM-GAIN"
+    },
+    "SG51_FSL012_4": {
+      "feature_id": "FSL012",
+      "feature_kind": "node",
+      "c_part": "CHANNEL-SEEPAGE",
+      "b_part": "SG51_FSL012_4",
+      "units": "CFS",
+      "kind": "CHANNEL-SEEPAGE"
+    },
+    "SG52_FSL005_4": {
+      "feature_id": "FSL005",
+      "feature_kind": "node",
+      "c_part": "CHANNEL-SEEPAGE",
+      "b_part": "SG52_FSL005_4",
+      "units": "CFS",
+      "kind": "CHANNEL-SEEPAGE"
+    },
+    "SG53_FSL005_4": {
+      "feature_id": "FSL005",
+      "feature_kind": "node",
+      "c_part": "CHANNEL-SEEPAGE",
+      "b_part": "SG53_FSL005_4",
+      "units": "CFS",
+      "kind": "CHANNEL-SEEPAGE"
+    },
+    "SG54_SJR263_7": {
+      "feature_id": "SJR263",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG54_SJR263_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG55_SJR256_7": {
+      "feature_id": "SJR256",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG55_SJR256_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG56_SJR249_7": {
+      "feature_id": "SJR249",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG56_SJR249_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG57_SJR242_7": {
+      "feature_id": "SJR242",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG57_SJR242_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG58_SJR235_7": {
+      "feature_id": "SJR235",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG58_SJR235_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG59_SJR227_7": {
+      "feature_id": "SJR227",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG59_SJR227_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG60_SJR221_7": {
+      "feature_id": "SJR221",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG60_SJR221_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG61_SJR214_7": {
+      "feature_id": "SJR214",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG61_SJR214_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG62_SJR205_7": {
+      "feature_id": "SJR205",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG62_SJR205_7",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG63_SJR205_8": {
+      "feature_id": "SJR205",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG63_SJR205_8",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG64_SJR198_8": {
+      "feature_id": "SJR198",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG64_SJR198_8",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG65_SJR192_8": {
+      "feature_id": "SJR192",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG65_SJR192_8",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG66_SJR185_8": {
+      "feature_id": "SJR185",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG66_SJR185_8",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG67_SJR180_8": {
+      "feature_id": "SJR180",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG67_SJR180_8",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG68_SJR173_8": {
+      "feature_id": "SJR173",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG68_SJR173_8",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG69_FRS045_9": {
+      "feature_id": "FRS045",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG69_FRS045_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG70_FRS039_9": {
+      "feature_id": "FRS039",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG70_FRS039_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG71_FRS036_9": {
+      "feature_id": "FRS036",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG71_FRS036_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG72_FRS032_9": {
+      "feature_id": "FRS032",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG72_FRS032_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG73_FRS025_9": {
+      "feature_id": "FRS025",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG73_FRS025_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG74_FRS020_9": {
+      "feature_id": "FRS020",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG74_FRS020_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG75_FRS016_9": {
+      "feature_id": "FRS016",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG75_FRS016_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG76_FRS016_9": {
+      "feature_id": "FRS016",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG76_FRS016_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG77_FRS016_9": {
+      "feature_id": "FRS016",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG77_FRS016_9",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG78_SJR173_10": {
+      "feature_id": "SJR173",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG78_SJR173_10",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG79_SJR166_10": {
+      "feature_id": "SJR166",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG79_SJR166_10",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG80_CHW031_11": {
+      "feature_id": "CHW031",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG80_CHW031_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG81_CHW028_11": {
+      "feature_id": "CHW028",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG81_CHW028_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG82_CHW024_11": {
+      "feature_id": "CHW024",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG82_CHW024_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG83_CHW021_11": {
+      "feature_id": "CHW021",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG83_CHW021_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG84_CHW017_11": {
+      "feature_id": "CHW017",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG84_CHW017_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG85_CHW011_11": {
+      "feature_id": "CHW011",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG85_CHW011_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG86_CHW006_11": {
+      "feature_id": "CHW006",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG86_CHW006_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG87_EBP030_11": {
+      "feature_id": "EBP030",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG87_EBP030_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG88_EBP030_11": {
+      "feature_id": "EBP030",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG88_EBP030_11",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG89_SJR166_12": {
+      "feature_id": "SJR166",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG89_SJR166_12",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG90_SJR157_12": {
+      "feature_id": "SJR157",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG90_SJR157_12",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG91_SJR152_12": {
+      "feature_id": "SJR152",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG91_SJR152_12",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG92_SJR145_12": {
+      "feature_id": "SJR145",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG92_SJR145_12",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG93_DED044_13": {
+      "feature_id": "DED044",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG93_DED044_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG94_DED038_13": {
+      "feature_id": "DED038",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG94_DED038_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG95_DED035_13": {
+      "feature_id": "DED035",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG95_DED035_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG96_DED032_13": {
+      "feature_id": "DED032",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG96_DED032_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG97_DED025_13": {
+      "feature_id": "DED025",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG97_DED025_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG98_DED019_13": {
+      "feature_id": "DED019",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG98_DED019_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
+    },
+    "SG99_DED010_13": {
+      "feature_id": "DED010",
+      "feature_kind": "node",
+      "c_part": "RIVER-SEEPAGE",
+      "b_part": "SG99_DED010_13",
+      "units": "CFS",
+      "kind": "RIVER-SEEPAGE"
     },
     "SL_12_NU1": {
       "feature_id": "12_NU1",
@@ -45221,6 +47669,14 @@
       "units": "CFS",
       "kind": "APPLIED-WATER"
     },
+    "I_ALD002": {
+      "feature_id": "I_ALD002",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_ALD002",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
     "I_ALD004": {
       "feature_id": "I_ALD004",
       "feature_kind": "arc",
@@ -45258,6 +47714,14 @@
       "feature_kind": "arc",
       "c_part": "INFLOW",
       "b_part": "I_ANG017",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
+    "I_ANT011": {
+      "feature_id": "I_ANT011",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_ANT011",
       "units": "CFS",
       "kind": "INFLOW"
     },
@@ -45562,6 +48026,14 @@
       "feature_kind": "arc",
       "c_part": "INFLOW",
       "b_part": "I_CWD018",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
+    "I_CYN009": {
+      "feature_id": "I_CYN009",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_CYN009",
       "units": "CFS",
       "kind": "INFLOW"
     },
@@ -46205,6 +48677,14 @@
       "units": "CFS",
       "kind": "INFLOW"
     },
+    "I_NFA016": {
+      "feature_id": "I_NFA016",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_NFA016",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
     "I_NFA022": {
       "feature_id": "I_NFA022",
       "feature_kind": "arc",
@@ -46250,6 +48730,14 @@
       "feature_kind": "arc",
       "c_part": "INFLOW",
       "b_part": "I_NFM010",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
+    "I_NFS005": {
+      "feature_id": "I_NFS005",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_NFS005",
       "units": "CFS",
       "kind": "INFLOW"
     },
@@ -46429,6 +48917,14 @@
       "units": "CFS",
       "kind": "INFLOW"
     },
+    "I_RCK001": {
+      "feature_id": "I_RCK001",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_RCK001",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
     "I_RLIEF": {
       "feature_id": "I_RLIEF",
       "feature_kind": "arc",
@@ -46554,6 +49050,22 @@
       "feature_kind": "arc",
       "c_part": "INFLOW",
       "b_part": "I_SFR006",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
+    "I_SFS030": {
+      "feature_id": "I_SFS030",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_SFS030",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
+    "I_SFS033": {
+      "feature_id": "I_SFS033",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_SFS033",
       "units": "CFS",
       "kind": "INFLOW"
     },
@@ -46722,6 +49234,14 @@
       "feature_kind": "arc",
       "c_part": "INFLOW",
       "b_part": "I_STS059",
+      "units": "CFS",
+      "kind": "INFLOW"
+    },
+    "I_STS072": {
+      "feature_id": "I_STS072",
+      "feature_kind": "arc",
+      "c_part": "INFLOW",
+      "b_part": "I_STS072",
       "units": "CFS",
       "kind": "INFLOW"
     },
@@ -47958,7 +50478,6 @@
       "DN_24_NA3",
       "DP_24_NA3",
       "D_STH003_24_NA3",
-      "D_STH005_24_NA3",
       "D_WSE006_24_NA3",
       "EV_24_NA3",
       "GP_24_NA3",
@@ -48141,7 +50660,6 @@
       "DL_60S_PA1",
       "DN_60S_PA1",
       "DP_60S_PA1",
-      "D_LJC022_60S_PA1",
       "EV_60S_PA1",
       "GP_60S_PA1",
       "LF_60S_PA1",
@@ -48216,8 +50734,6 @@
       "DP_61_NA3",
       "DP_TUO015_61_NA3",
       "DP_TUO047_61_NA3",
-      "D_TUO015_61_NA3",
-      "D_TUO047_61_NA3",
       "EV_61_NA3",
       "EV_TUO015_61_NA3",
       "EV_TUO047_61_NA3",
@@ -48424,8 +50940,6 @@
       "DP_62_NA4",
       "DP_TUO015_62_NA4",
       "DP_TUO047_62_NA4",
-      "D_TUO015_62_NA4",
-      "D_TUO047_62_NA4",
       "EV_62_NA4",
       "EV_TUO015_62_NA4",
       "EV_TUO047_62_NA4",
@@ -49616,20 +52130,6 @@
     "CVY009": [
       "C_CVY009"
     ],
-    "FRMAN": [
-      "C_FRMAN",
-      "E_FRMAN",
-      "F_FRMAN",
-      "S_FRMAN",
-      "S_FRMAN_1",
-      "S_FRMAN_2",
-      "S_FRMAN_3",
-      "S_FRMAN_4",
-      "S_FRMAN_5"
-    ],
-    "OMR027": [
-      "C_ISF001_OMR027"
-    ],
     "LLOYD": [
       "C_LLOYD",
       "E_LLOYD",
@@ -49643,36 +52143,15 @@
     "MAQ057": [
       "C_MAQ057"
     ],
-    "NFF020": [
-      "C_NFF020"
-    ],
-    "NFM026": [
-      "C_NFM026"
-    ],
     "PSC033": [
       "C_PSC033"
-    ],
-    "RCK001": [
-      "C_RCK001"
     ],
     "RFS13": [
       "C_RFS13"
     ],
-    "SAC000": [
-      "C_SAC000"
-    ],
     "SAC097": [
       "C_SAC097_0",
       "C_SAC097_1"
-    ],
-    "SBA000": [
-      "C_SBA000"
-    ],
-    "SFA011": [
-      "C_SFA011"
-    ],
-    "SFA044": [
-      "C_SFA044"
     ],
     "11_NU1": [
       "DG_11_NU1",
@@ -49851,7 +52330,6 @@
       "DG_26S_NU3",
       "DL_26S_NU3",
       "DN_26S_NU3",
-      "D_WTPFBN_26S_NU3",
       "EL_26S_NU3",
       "GP_26S_NU3",
       "SL_26S_NU3"
@@ -49935,7 +52413,6 @@
       "DL_60N_NU1",
       "DN_60N_NU1",
       "DP_60N_NU1",
-      "D_MOK035_60N_NU1",
       "EV_60N_NU1",
       "GP_60N_NU1",
       "R_60N_NU1"
@@ -50034,8 +52511,6 @@
       "DG_ELDID_NA2",
       "DL_ELDID_NA2",
       "DN_ELDID_NA2",
-      "D_EDC021_ELDID_NA2",
-      "D_JNKSN_ELDID_NA2",
       "D_WRT000_ELDID_NA2",
       "EL_ELDID_NA2",
       "SL_ELDID_NA2",
@@ -50096,17 +52571,11 @@
     "EDC021": [
       "D_ALD004_EDC021"
     ],
-    "BCK006": [
-      "D_BCK033_BCK006"
-    ],
     "NAPA": [
       "D_BKR004_NBA009_NAPA"
     ],
     "CYN009": [
       "D_BRR072_CYN009"
-    ],
-    "KLR005": [
-      "D_CBD000_KLR005"
     ],
     "LCA001": [
       "D_CHY006_LCA001"
@@ -50114,214 +52583,14 @@
     "TUO105": [
       "D_CPT012_TUO105"
     ],
-    "UTC000": [
-      "D_CVT005_UTC000"
-    ],
-    "TWL005": [
-      "D_CYN010_TWL005"
-    ],
-    "WLF017": [
-      "D_DES006_WLF017",
-      "R_NIDDC_NA1_WLF017"
-    ],
-    "DRM001": [
-      "D_DRM000_DRM001"
-    ],
-    "SYC001": [
-      "D_DRM002_SYC001"
-    ],
-    "BRR074": [
-      "D_DRM003_BRR074"
-    ],
-    "ELC001": [
-      "D_ECHOL_ELC001"
-    ],
-    "SFA059": [
-      "D_EDC007_SFA059"
-    ],
-    "JNKSN": [
-      "D_EDC014_JNKSN",
-      "E_JNKSN",
-      "F_JNKSN",
-      "S_JNKSN",
-      "S_JNKSN_1",
-      "S_JNKSN_2",
-      "S_JNKSN_3",
-      "S_JNKSN_4",
-      "S_JNKSN_5"
-    ],
-    "TBAUD": [
-      "D_ELT000_TBAUD"
-    ],
-    "EBP050": [
-      "D_ESC005_EBP050"
-    ],
     "CCWD": [
       "D_FPT013_FSC013_CCWD"
-    ],
-    "WTPWAL": [
-      "D_GDD010_WTPWAL",
-      "D_NFA016_WTPWAL"
-    ],
-    "OMR024": [
-      "D_ISF001_OMR024"
-    ],
-    "TCN000": [
-      "D_LYONS_TCN000"
-    ],
-    "OXB000": [
-      "D_MFA026_OXB000"
-    ],
-    "DED010": [
-      "D_MID021_DED010"
-    ],
-    "WBF006": [
-      "D_MIO010_WBF006"
-    ],
-    "ELT000": [
-      "D_NFM006_ELT000"
     ],
     "SCVWD": [
       "D_SBA036_SCVWD"
     ],
-    "PHP000": [
-      "D_SFS030_PHP000"
-    ],
-    "ABN026": [
-      "D_STH002_ABN026"
-    ],
     "WTPFSS": [
       "D_STH003_WTPFSS"
-    ],
-    "NFM029": [
-      "D_TGR000_NFM029"
-    ],
-    "CACWD": [
-      "D_UTC000_CACWD"
-    ],
-    "MIL003": [
-      "D_UTC000_MIL003"
-    ],
-    "OWC000": [
-      "D_WPT005_OWC000"
-    ],
-    "ALMNR": [
-      "E_ALMNR",
-      "F_ALMNR",
-      "S_ALMNR",
-      "S_ALMNR_1",
-      "S_ALMNR_2",
-      "S_ALMNR_3",
-      "S_ALMNR_4",
-      "S_ALMNR_5"
-    ],
-    "ALOHA": [
-      "E_ALOHA",
-      "F_ALOHA",
-      "S_ALOHA",
-      "S_ALOHA_1",
-      "S_ALOHA_2",
-      "S_ALOHA_3",
-      "S_ALOHA_4",
-      "S_ALOHA_5"
-    ],
-    "ANTLP": [
-      "E_ANTLP",
-      "F_ANTLP",
-      "S_ANTLP",
-      "S_ANTLP_1",
-      "S_ANTLP_2",
-      "S_ANTLP_3",
-      "S_ANTLP_4",
-      "S_ANTLP_5"
-    ],
-    "BEARD": [
-      "E_BEARD",
-      "S_BEARD",
-      "S_BEARD_1",
-      "S_BEARD_2",
-      "S_BEARD_3",
-      "S_BEARD_4",
-      "S_BEARD_5"
-    ],
-    "BOWMN": [
-      "E_BOWMN",
-      "S_BOWMN",
-      "S_BOWMN_1",
-      "S_BOWMN_2",
-      "S_BOWMN_3",
-      "S_BOWMN_4",
-      "S_BOWMN_5",
-      "S_BOWMN_6"
-    ],
-    "BTVLY": [
-      "E_BTVLY",
-      "F_BTVLY",
-      "S_BTVLY",
-      "S_BTVLY_1",
-      "S_BTVLY_2",
-      "S_BTVLY_3",
-      "S_BTVLY_4",
-      "S_BTVLY_5"
-    ],
-    "BUCKS": [
-      "E_BUCKS",
-      "F_BUCKS",
-      "S_BUCKS",
-      "S_BUCKS_1",
-      "S_BUCKS_2",
-      "S_BUCKS_3",
-      "S_BUCKS_4",
-      "S_BUCKS_5"
-    ],
-    "CAPLS": [
-      "E_CAPLS",
-      "F_CAPLS",
-      "S_CAPLS",
-      "S_CAPLS_1",
-      "S_CAPLS_2",
-      "S_CAPLS_3",
-      "S_CAPLS_4",
-      "S_CAPLS_5"
-    ],
-    "CMCHE": [
-      "E_CMCHE",
-      "F_CMCHE",
-      "SL_CMCHE",
-      "S_CMCHE",
-      "S_CMCHE_1",
-      "S_CMCHE_2",
-      "S_CMCHE_3",
-      "S_CMCHE_4",
-      "S_CMCHE_5"
-    ],
-    "DAVIS": [
-      "E_DAVIS",
-      "F_DAVIS",
-      "S_DAVIS",
-      "S_DAVIS_1",
-      "S_DAVIS_2",
-      "S_DAVIS_3",
-      "S_DAVIS_4",
-      "S_DAVIS_5"
-    ],
-    "DONLL": [
-      "E_DONLL",
-      "S_DONLL",
-      "S_DONLL_1",
-      "S_DONLL_2",
-      "S_DONLL_3",
-      "S_DONLL_4",
-      "S_DONLL_5"
-    ],
-    "ECHOL": [
-      "E_ECHOL",
-      "S_ECHOL",
-      "S_ECHOL_1",
-      "S_ECHOL_2",
-      "S_ECHOL_3",
-      "S_ECHOL_4",
-      "S_ECHOL_5"
     ],
     "ELENR": [
       "E_ELENR",
@@ -50331,25 +52600,6 @@
       "S_ELENR_3",
       "S_ELENR_4",
       "S_ELENR_5"
-    ],
-    "ESTMN": [
-      "E_ESTMN",
-      "S_ESTMN",
-      "S_ESTMN_1",
-      "S_ESTMN_2",
-      "S_ESTMN_3",
-      "S_ESTMN_4",
-      "S_ESTMN_5"
-    ],
-    "FRDYC": [
-      "E_FRDYC",
-      "S_FRDYC",
-      "S_FRDYC_1",
-      "S_FRDYC_2",
-      "S_FRDYC_3",
-      "S_FRDYC_4",
-      "S_FRDYC_5",
-      "S_FRDYC_6"
     ],
     "FRMDW": [
       "E_FRMDW",
@@ -50362,45 +52612,6 @@
       "S_FRMDW_5",
       "S_FRMDW_6"
     ],
-    "FRNCH": [
-      "E_FRNCH",
-      "S_FRNCH",
-      "S_FRNCH_1",
-      "S_FRNCH_2",
-      "S_FRNCH_3",
-      "S_FRNCH_4",
-      "S_FRNCH_5",
-      "S_FRNCH_6"
-    ],
-    "GERLE": [
-      "E_GERLE",
-      "F_GERLE",
-      "S_GERLE",
-      "S_GERLE_1",
-      "S_GERLE_2",
-      "S_GERLE_3",
-      "S_GERLE_4",
-      "S_GERLE_5"
-    ],
-    "HHOLE": [
-      "E_HHOLE",
-      "S_HHOLE",
-      "S_HHOLE_1",
-      "S_HHOLE_2",
-      "S_HHOLE_3",
-      "S_HHOLE_4",
-      "S_HHOLE_5",
-      "S_HHOLE_6"
-    ],
-    "HNSLY": [
-      "E_HNSLY",
-      "S_HNSLY",
-      "S_HNSLY_1",
-      "S_HNSLY_2",
-      "S_HNSLY_3",
-      "S_HNSLY_4",
-      "S_HNSLY_5"
-    ],
     "HTCHY": [
       "E_HTCHY",
       "MF_HTCHYDV",
@@ -50411,81 +52622,6 @@
       "S_HTCHY_4",
       "S_HTCHY_5"
     ],
-    "ICEHS": [
-      "E_ICEHS",
-      "F_ICEHS",
-      "S_ICEHS",
-      "S_ICEHS_1",
-      "S_ICEHS_2",
-      "S_ICEHS_3",
-      "S_ICEHS_4",
-      "S_ICEHS_5"
-    ],
-    "JKSMD": [
-      "E_JKSMD",
-      "S_JKSMD",
-      "S_JKSMD_1",
-      "S_JKSMD_2",
-      "S_JKSMD_3",
-      "S_JKSMD_4",
-      "S_JKSMD_5",
-      "S_JKSMD_6"
-    ],
-    "LBEAR": [
-      "E_LBEAR",
-      "S_LBEAR",
-      "S_LBEAR_1",
-      "S_LBEAR_2",
-      "S_LBEAR_3",
-      "S_LBEAR_4",
-      "S_LBEAR_5",
-      "S_LBEAR_6"
-    ],
-    "LOONL": [
-      "E_LOONL",
-      "F_LOONL",
-      "S_LOONL",
-      "S_LOONL_1",
-      "S_LOONL_2",
-      "S_LOONL_3",
-      "S_LOONL_4",
-      "S_LOONL_5"
-    ],
-    "LYONS": [
-      "E_LYONS",
-      "S_LYONS",
-      "S_LYONS_1",
-      "S_LYONS_2",
-      "S_LYONS_3",
-      "S_LYONS_4",
-      "S_LYONS_5"
-    ],
-    "MCLRE": [
-      "E_MCLRE",
-      "S_MCLRE",
-      "S_MCLRE_1",
-      "S_MCLRE_2",
-      "S_MCLRE_3",
-      "S_MCLRE_4",
-      "S_MCLRE_5"
-    ],
-    "MDSTO": [
-      "E_MDSTO",
-      "S_MDSTO",
-      "S_MDSTO_1",
-      "S_MDSTO_2",
-      "S_MDSTO_3",
-      "S_MDSTO_4"
-    ],
-    "MELON": [
-      "E_MELON",
-      "S_MELON",
-      "S_MELON_1",
-      "S_MELON_2",
-      "S_MELON_3",
-      "S_MELON_4",
-      "S_MELON_5"
-    ],
     "MLRTN": [
       "E_MLRTN",
       "S_MLRTN",
@@ -50495,166 +52631,23 @@
       "S_MLRTN_4",
       "S_MLRTN_5"
     ],
-    "MTMDW": [
-      "E_MTMDW",
-      "F_MTMDW",
-      "S_MTMDW",
-      "S_MTMDW_1",
-      "S_MTMDW_2",
-      "S_MTMDW_3",
-      "S_MTMDW_4",
-      "S_MTMDW_5"
+    "ALMNR": [
+      "F_ALMNR",
+      "S_ALMNR",
+      "S_ALMNR_1",
+      "S_ALMNR_2",
+      "S_ALMNR_3",
+      "S_ALMNR_4",
+      "S_ALMNR_5"
     ],
-    "NHGAN": [
-      "E_NHGAN",
-      "S_NHGAN",
-      "S_NHGAN_1",
-      "S_NHGAN_2",
-      "S_NHGAN_3",
-      "S_NHGAN_4",
-      "S_NHGAN_5"
-    ],
-    "PARDE": [
-      "E_PARDE",
-      "F_PARDE",
-      "SL_PARDE",
-      "S_PARDE",
-      "S_PARDE_1",
-      "S_PARDE_2",
-      "S_PARDE_3",
-      "S_PARDE_4",
-      "S_PARDE_5"
-    ],
-    "PCRST": [
-      "E_PCRST",
-      "S_PCRST",
-      "S_PCRST_1",
-      "S_PCRST_2",
-      "S_PCRST_3",
-      "S_PCRST_4",
-      "S_PCRST_5"
-    ],
-    "PEDRO": [
-      "E_PEDRO",
-      "S_PEDRO",
-      "S_PEDRO_1",
-      "S_PEDRO_2",
-      "S_PEDRO_3",
-      "S_PEDRO_4",
-      "S_PEDRO_5"
-    ],
-    "RLIEF": [
-      "E_RLIEF",
-      "S_RLIEF",
-      "S_RLIEF_1",
-      "S_RLIEF_2",
-      "S_RLIEF_3",
-      "S_RLIEF_4",
-      "S_RLIEF_5"
-    ],
-    "SCOTF": [
-      "E_SCOTF",
-      "S_SCOTF",
-      "S_SCOTF_1",
-      "S_SCOTF_2",
-      "S_SCOTF_3",
-      "S_SCOTF_4",
-      "S_SCOTF_5",
-      "S_SCOTF_6"
-    ],
-    "SILVR": [
-      "E_SILVR",
-      "F_SILVR",
-      "S_SILVR",
-      "S_SILVR_1",
-      "S_SILVR_2",
-      "S_SILVR_3",
-      "S_SILVR_4",
-      "S_SILVR_5"
-    ],
-    "SLTSP": [
-      "E_SLTSP",
-      "S_SLTSP",
-      "S_SLTSP_1",
-      "S_SLTSP_2",
-      "S_SLTSP_3",
-      "S_SLTSP_4",
-      "S_SLTSP_5",
-      "S_SLTSP_6"
-    ],
-    "SPICE": [
-      "E_SPICE",
-      "S_SPICE",
-      "S_SPICE_1",
-      "S_SPICE_2",
-      "S_SPICE_3",
-      "S_SPICE_4",
-      "S_SPICE_5"
-    ],
-    "SPLDG": [
-      "E_SPLDG",
-      "S_SPLDG",
-      "S_SPLDG_1",
-      "S_SPLDG_2",
-      "S_SPLDG_3",
-      "S_SPLDG_4",
-      "S_SPLDG_5",
-      "S_SPLDG_6"
-    ],
-    "STMPY": [
-      "E_STMPY",
-      "F_STMPY",
-      "S_STMPY",
-      "S_STMPY_1",
-      "S_STMPY_2",
-      "S_STMPY_3",
-      "S_STMPY_4",
-      "S_STMPY_5"
-    ],
-    "TRLCK": [
-      "E_TRLCK",
-      "S_TRLCK",
-      "S_TRLCK_1",
-      "S_TRLCK_2",
-      "S_TRLCK_3",
-      "S_TRLCK_4"
-    ],
-    "TULOC": [
-      "E_TULOC",
-      "S_TULOC",
-      "S_TULOC_1",
-      "S_TULOC_2",
-      "S_TULOC_3",
-      "S_TULOC_4",
-      "S_TULOC_5"
-    ],
-    "UBEAR": [
-      "E_UBEAR",
-      "S_UBEAR",
-      "S_UBEAR_1",
-      "S_UBEAR_2",
-      "S_UBEAR_3",
-      "S_UBEAR_4",
-      "S_UBEAR_5",
-      "S_UBEAR_6"
-    ],
-    "UNVLY": [
-      "E_UNVLY",
-      "F_UNVLY",
-      "S_UNVLY",
-      "S_UNVLY_1",
-      "S_UNVLY_2",
-      "S_UNVLY_3",
-      "S_UNVLY_4",
-      "S_UNVLY_5"
-    ],
-    "WDWRD": [
-      "E_WDWRD",
-      "S_WDWRD",
-      "S_WDWRD_1",
-      "S_WDWRD_2",
-      "S_WDWRD_3",
-      "S_WDWRD_4"
+    "ALOHA": [
+      "F_ALOHA",
+      "S_ALOHA",
+      "S_ALOHA_1",
+      "S_ALOHA_2",
+      "S_ALOHA_3",
+      "S_ALOHA_4",
+      "S_ALOHA_5"
     ],
     "AMADR": [
       "F_AMADR",
@@ -50664,6 +52657,63 @@
       "S_AMADR_3",
       "S_AMADR_4",
       "S_AMADR_5"
+    ],
+    "ANTLP": [
+      "F_ANTLP",
+      "S_ANTLP",
+      "S_ANTLP_1",
+      "S_ANTLP_2",
+      "S_ANTLP_3",
+      "S_ANTLP_4",
+      "S_ANTLP_5"
+    ],
+    "BTVLY": [
+      "F_BTVLY",
+      "S_BTVLY",
+      "S_BTVLY_1",
+      "S_BTVLY_2",
+      "S_BTVLY_3",
+      "S_BTVLY_4",
+      "S_BTVLY_5"
+    ],
+    "BUCKS": [
+      "F_BUCKS",
+      "S_BUCKS",
+      "S_BUCKS_1",
+      "S_BUCKS_2",
+      "S_BUCKS_3",
+      "S_BUCKS_4",
+      "S_BUCKS_5"
+    ],
+    "CAPLS": [
+      "F_CAPLS",
+      "S_CAPLS",
+      "S_CAPLS_1",
+      "S_CAPLS_2",
+      "S_CAPLS_3",
+      "S_CAPLS_4",
+      "S_CAPLS_5"
+    ],
+    "CMCHE": [
+      "F_CMCHE",
+      "SG174_CMCHE_27",
+      "SG175_CMCHE_27",
+      "SL_CMCHE",
+      "S_CMCHE",
+      "S_CMCHE_1",
+      "S_CMCHE_2",
+      "S_CMCHE_3",
+      "S_CMCHE_4",
+      "S_CMCHE_5"
+    ],
+    "DAVIS": [
+      "F_DAVIS",
+      "S_DAVIS",
+      "S_DAVIS_1",
+      "S_DAVIS_2",
+      "S_DAVIS_3",
+      "S_DAVIS_4",
+      "S_DAVIS_5"
     ],
     "FOLSM": [
       "F_FOLSM",
@@ -50675,6 +52725,60 @@
       "S_FOLSM_5",
       "S_FOLSM_6"
     ],
+    "FRMAN": [
+      "F_FRMAN",
+      "S_FRMAN",
+      "S_FRMAN_1",
+      "S_FRMAN_2",
+      "S_FRMAN_3",
+      "S_FRMAN_4",
+      "S_FRMAN_5"
+    ],
+    "GERLE": [
+      "F_GERLE",
+      "S_GERLE",
+      "S_GERLE_1",
+      "S_GERLE_2",
+      "S_GERLE_3",
+      "S_GERLE_4",
+      "S_GERLE_5"
+    ],
+    "ICEHS": [
+      "F_ICEHS",
+      "S_ICEHS",
+      "S_ICEHS_1",
+      "S_ICEHS_2",
+      "S_ICEHS_3",
+      "S_ICEHS_4",
+      "S_ICEHS_5"
+    ],
+    "JNKSN": [
+      "F_JNKSN",
+      "S_JNKSN",
+      "S_JNKSN_1",
+      "S_JNKSN_2",
+      "S_JNKSN_3",
+      "S_JNKSN_4",
+      "S_JNKSN_5"
+    ],
+    "LOONL": [
+      "F_LOONL",
+      "S_LOONL",
+      "S_LOONL_1",
+      "S_LOONL_2",
+      "S_LOONL_3",
+      "S_LOONL_4",
+      "S_LOONL_5"
+    ],
+    "MTMDW": [
+      "F_MTMDW",
+      "S_MTMDW",
+      "S_MTMDW_1",
+      "S_MTMDW_2",
+      "S_MTMDW_3",
+      "S_MTMDW_4",
+      "S_MTMDW_5"
+    ],
     "NTOMA": [
       "F_NTOMA",
       "S_NTOMA",
@@ -50683,6 +52787,43 @@
       "S_NTOMA_3",
       "S_NTOMA_4",
       "S_NTOMA_5"
+    ],
+    "PARDE": [
+      "F_PARDE",
+      "SL_PARDE",
+      "S_PARDE",
+      "S_PARDE_1",
+      "S_PARDE_2",
+      "S_PARDE_3",
+      "S_PARDE_4",
+      "S_PARDE_5"
+    ],
+    "SILVR": [
+      "F_SILVR",
+      "S_SILVR",
+      "S_SILVR_1",
+      "S_SILVR_2",
+      "S_SILVR_3",
+      "S_SILVR_4",
+      "S_SILVR_5"
+    ],
+    "STMPY": [
+      "F_STMPY",
+      "S_STMPY",
+      "S_STMPY_1",
+      "S_STMPY_2",
+      "S_STMPY_3",
+      "S_STMPY_4",
+      "S_STMPY_5"
+    ],
+    "UNVLY": [
+      "F_UNVLY",
+      "S_UNVLY",
+      "S_UNVLY_1",
+      "S_UNVLY_2",
+      "S_UNVLY_3",
+      "S_UNVLY_4",
+      "S_UNVLY_5"
     ],
     "02_NU": [
       "GP_02_NU"
@@ -50825,43 +52966,11 @@
     "YUB024": [
       "MF_YUB024"
     ],
-    "CBD044": [
-      "R_06_NA_CBD044"
-    ],
-    "STN009": [
-      "R_06_PA_STN009"
-    ],
-    "MOK019": [
-      "R_26S_NA_MOK019"
-    ],
-    "SJR056": [
-      "R_61_NA6_SJR056"
-    ],
-    "EBP048": [
-      "R_63_PR1_EBP048"
-    ],
-    "SJR235": [
-      "R_64_PA1_SJR235"
-    ],
-    "SJR091": [
-      "R_71_PA5_SJR091"
-    ],
     "71_PA7": [
       "R_71_PA7"
     ],
     "EDWWTP": [
       "R_EIDEH_EDWWTP"
-    ],
-    "NFA011": [
-      "R_GDPUD_NA_NFA011",
-      "R_GDPUD_NU_NFA011",
-      "R_GDPUD_PU_NFA011"
-    ],
-    "DER011": [
-      "R_NIDDC_NA1_DER011"
-    ],
-    "DER002": [
-      "R_NIDDC_NA2_DER002"
     ],
     "RLLNS": [
       "R_NIDDC_RLLNS",
@@ -50875,6 +52984,465 @@
     "WLF021": [
       "R_NIDDC_WLF021"
     ],
+    "DED003": [
+      "SG100_DED003_13",
+      "SG101_DED003_13"
+    ],
+    "SJR145": [
+      "SG102_SJR145_14",
+      "SG92_SJR145_12"
+    ],
+    "SJR141": [
+      "SG103_SJR141_14"
+    ],
+    "SJR134": [
+      "SG104_SJR134_14",
+      "SG113_SJR134_16"
+    ],
+    "BCK040": [
+      "SG105_BCK040_15"
+    ],
+    "BCK035": [
+      "SG106_BCK035_15"
+    ],
+    "BCK031": [
+      "SG107_BCK031_15"
+    ],
+    "BCK024": [
+      "SG108_BCK024_15"
+    ],
+    "BCK017": [
+      "SG109_BCK017_15"
+    ],
+    "BCK010": [
+      "SG110_BCK010_15"
+    ],
+    "BCK006": [
+      "SG111_BCK006_15",
+      "SG112_BCK006_15"
+    ],
+    "SJR123": [
+      "SG114_SJR123_16"
+    ],
+    "SJR116": [
+      "SG115_SJR116_16",
+      "SG125_SJR116_18"
+    ],
+    "MCD052": [
+      "SG116_MCD052_17"
+    ],
+    "MCD048": [
+      "SG117_MCD048_17"
+    ],
+    "MCD042": [
+      "SG118_MCD042_17"
+    ],
+    "MCD036": [
+      "SG119_MCD036_17"
+    ],
+    "MCD028": [
+      "SG120_MCD028_17"
+    ],
+    "MCD021": [
+      "SG121_MCD021_17"
+    ],
+    "MCD014": [
+      "SG122_MCD014_17"
+    ],
+    "MCD009": [
+      "SG123_MCD009_17"
+    ],
+    "MCD002": [
+      "SG124_MCD002_17"
+    ],
+    "SJR111": [
+      "SG126_SJR111_18"
+    ],
+    "SJR106": [
+      "SG127_SJR106_18",
+      "SG131_SJR106_20"
+    ],
+    "ORT014": [
+      "SG128_ORT014_19"
+    ],
+    "ORT009": [
+      "SG129_ORT009_19"
+    ],
+    "ORT001": [
+      "SG130_ORT001_19"
+    ],
+    "SJR096": [
+      "SG132_SJR096_20"
+    ],
+    "SJR090": [
+      "SG133_SJR090_20"
+    ],
+    "SJR081": [
+      "SG134_SJR081_20",
+      "SG144_SJR081_22"
+    ],
+    "TUO053": [
+      "SG135_TUO053_21"
+    ],
+    "TUO047": [
+      "SG136_TUO047_21"
+    ],
+    "TUO043": [
+      "SG137_TUO043_21"
+    ],
+    "TUO036": [
+      "SG138_TUO036_21"
+    ],
+    "TUO030": [
+      "SG139_TUO030_21"
+    ],
+    "TUO022": [
+      "SG140_TUO022_21"
+    ],
+    "TUO015": [
+      "SG141_TUO015_21"
+    ],
+    "TUO010": [
+      "SG142_TUO010_21"
+    ],
+    "TUO003": [
+      "SG143_TUO003_21"
+    ],
+    "SJR072": [
+      "SG145_SJR072_22",
+      "SG155_SJR072_24"
+    ],
+    "STS058": [
+      "SG146_STS058_23"
+    ],
+    "STS053": [
+      "SG147_STS053_23"
+    ],
+    "STS050": [
+      "SG148_STS050_23"
+    ],
+    "STS043": [
+      "SG149_STS043_23"
+    ],
+    "STS036": [
+      "SG150_STS036_23"
+    ],
+    "STS030": [
+      "SG151_STS030_23"
+    ],
+    "STS020": [
+      "SG152_STS020_23"
+    ],
+    "STS011": [
+      "SG153_STS011_23",
+      "SG154_STS011_23"
+    ],
+    "SJR062": [
+      "SG156_SJR062_24"
+    ],
+    "SJR056": [
+      "SG157_SJR056_24"
+    ],
+    "SJR048": [
+      "SG158_SJR048_24"
+    ],
+    "SJR042": [
+      "SG159_SJR042_24"
+    ],
+    "SJR038": [
+      "SG160_SJR038_24",
+      "SG168_SJR038_26"
+    ],
+    "CLV035": [
+      "SG161_CLV035_25"
+    ],
+    "CLV028": [
+      "SG162_CLV028_25"
+    ],
+    "CLV023": [
+      "SG163_CLV023_25"
+    ],
+    "CLV016": [
+      "SG164_CLV016_25"
+    ],
+    "CLV010": [
+      "SG165_CLV010_25"
+    ],
+    "CLV004": [
+      "SG166_CLV004_25",
+      "SG167_CLV004_25"
+    ],
+    "SJR033": [
+      "SG169_SJR033_26"
+    ],
+    "SJR028": [
+      "SG170_SJR028_26"
+    ],
+    "SJR023": [
+      "SG171_SJR023_26"
+    ],
+    "SJR022": [
+      "SG172_SJR022_26",
+      "SG200_SJR022_31"
+    ],
+    "MOK055": [
+      "SG176_MOK055_27"
+    ],
+    "MOK050": [
+      "SG177_MOK050_27"
+    ],
+    "MOK044": [
+      "SG178_MOK044_27"
+    ],
+    "MOK035": [
+      "SG179_MOK035_27"
+    ],
+    "MOK028": [
+      "SG180_MOK028_27"
+    ],
+    "MOK022": [
+      "SG181_MOK022_27",
+      "SG195_MOK022_27"
+    ],
+    "DSC035": [
+      "SG182_DSC035_28"
+    ],
+    "DSC028": [
+      "SG183_DSC028_28"
+    ],
+    "DSC023": [
+      "SG184_DSC023_28"
+    ],
+    "DSC016": [
+      "SG185_DSC016_28"
+    ],
+    "DSC008": [
+      "SG186_DSC008_28",
+      "SG187_DSC008_28"
+    ],
+    "CSM033": [
+      "SG188_CSM033_29"
+    ],
+    "CSM026": [
+      "SG189_CSM026_29"
+    ],
+    "CSM021": [
+      "SG190_CSM021_29"
+    ],
+    "CSM016": [
+      "SG191_CSM016_29"
+    ],
+    "CSM011": [
+      "SG192_CSM011_29"
+    ],
+    "CSM005": [
+      "SG193_CSM005_29",
+      "SG194_CSM005_29"
+    ],
+    "MOK019": [
+      "SG196_MOK019_30"
+    ],
+    "MOK004": [
+      "SG199_MOK004_30"
+    ],
+    "SJR013": [
+      "SG201_SJR013_31"
+    ],
+    "SJR009": [
+      "SG202_SJR009_31"
+    ],
+    "SJR006": [
+      "SG203_SJR006_31"
+    ],
+    "BSL001": [
+      "SG333_BSL001_58"
+    ],
+    "CMPFW": [
+      "SG357_CMPFW_62",
+      "S_CMPFW",
+      "S_CMPFW_1",
+      "S_CMPFW_2",
+      "S_CMPFW_3",
+      "S_CMPFW_4",
+      "S_CMPFW_5"
+    ],
+    "YBP023": [
+      "SG398_YBP023_68"
+    ],
+    "YBP020": [
+      "SG399_YBP020_68",
+      "SG406_YBP020_70"
+    ],
+    "YBP016": [
+      "SG407_YBP016_70"
+    ],
+    "YBP014": [
+      "SG408_YBP014_70"
+    ],
+    "YBP011": [
+      "SG409_YBP011_70"
+    ],
+    "YBP007": [
+      "SG410_YBP007_70"
+    ],
+    "YBP002": [
+      "SG411_YBP002_70",
+      "SG412_YBP002_70"
+    ],
+    "CWD018": [
+      "SG453_CWD018_77"
+    ],
+    "CWD009": [
+      "SG455_CWD009_77",
+      "SG456_CWD009_78"
+    ],
+    "CWD004": [
+      "SG457_CWD004_78"
+    ],
+    "SCW008": [
+      "SG463_SCW008_81"
+    ],
+    "CBD049": [
+      "SG472_CBD049_83"
+    ],
+    "FSL012": [
+      "SG51_FSL012_4"
+    ],
+    "FSL005": [
+      "SG52_FSL005_4",
+      "SG53_FSL005_4"
+    ],
+    "SJR263": [
+      "SG54_SJR263_7"
+    ],
+    "SJR256": [
+      "SG55_SJR256_7"
+    ],
+    "SJR249": [
+      "SG56_SJR249_7"
+    ],
+    "SJR242": [
+      "SG57_SJR242_7"
+    ],
+    "SJR235": [
+      "SG58_SJR235_7"
+    ],
+    "SJR227": [
+      "SG59_SJR227_7"
+    ],
+    "SJR221": [
+      "SG60_SJR221_7"
+    ],
+    "SJR214": [
+      "SG61_SJR214_7"
+    ],
+    "SJR205": [
+      "SG62_SJR205_7",
+      "SG63_SJR205_8"
+    ],
+    "SJR198": [
+      "SG64_SJR198_8"
+    ],
+    "SJR192": [
+      "SG65_SJR192_8"
+    ],
+    "SJR185": [
+      "SG66_SJR185_8"
+    ],
+    "SJR180": [
+      "SG67_SJR180_8"
+    ],
+    "SJR173": [
+      "SG68_SJR173_8",
+      "SG78_SJR173_10"
+    ],
+    "FRS045": [
+      "SG69_FRS045_9"
+    ],
+    "FRS039": [
+      "SG70_FRS039_9"
+    ],
+    "FRS036": [
+      "SG71_FRS036_9"
+    ],
+    "FRS032": [
+      "SG72_FRS032_9"
+    ],
+    "FRS025": [
+      "SG73_FRS025_9"
+    ],
+    "FRS020": [
+      "SG74_FRS020_9"
+    ],
+    "FRS016": [
+      "SG75_FRS016_9",
+      "SG76_FRS016_9",
+      "SG77_FRS016_9"
+    ],
+    "SJR166": [
+      "SG79_SJR166_10",
+      "SG89_SJR166_12"
+    ],
+    "CHW031": [
+      "SG80_CHW031_11"
+    ],
+    "CHW028": [
+      "SG81_CHW028_11"
+    ],
+    "CHW024": [
+      "SG82_CHW024_11"
+    ],
+    "CHW021": [
+      "SG83_CHW021_11"
+    ],
+    "CHW017": [
+      "SG84_CHW017_11"
+    ],
+    "CHW011": [
+      "SG85_CHW011_11"
+    ],
+    "CHW006": [
+      "SG86_CHW006_11"
+    ],
+    "EBP030": [
+      "SG87_EBP030_11",
+      "SG88_EBP030_11"
+    ],
+    "SJR157": [
+      "SG90_SJR157_12"
+    ],
+    "SJR152": [
+      "SG91_SJR152_12"
+    ],
+    "DED044": [
+      "SG93_DED044_13"
+    ],
+    "DED038": [
+      "SG94_DED038_13"
+    ],
+    "DED035": [
+      "SG95_DED035_13"
+    ],
+    "DED032": [
+      "SG96_DED032_13"
+    ],
+    "DED025": [
+      "SG97_DED025_13"
+    ],
+    "DED019": [
+      "SG98_DED019_13"
+    ],
+    "DED010": [
+      "SG99_DED010_13"
+    ],
+    "BEARD": [
+      "S_BEARD",
+      "S_BEARD_1",
+      "S_BEARD_2",
+      "S_BEARD_3",
+      "S_BEARD_4",
+      "S_BEARD_5"
+    ],
     "BLUMD": [
       "S_BLUMD",
       "S_BLUMD_1",
@@ -50883,6 +53451,15 @@
       "S_BLUMD_4",
       "S_BLUMD_5",
       "S_BLUMD_6"
+    ],
+    "BOWMN": [
+      "S_BOWMN",
+      "S_BOWMN_1",
+      "S_BOWMN_2",
+      "S_BOWMN_3",
+      "S_BOWMN_4",
+      "S_BOWMN_5",
+      "S_BOWMN_6"
     ],
     "BRYSA": [
       "S_BRYSA",
@@ -50908,13 +53485,21 @@
       "S_CMBIE_4",
       "S_CMBIE_5"
     ],
-    "CMPFW": [
-      "S_CMPFW",
-      "S_CMPFW_1",
-      "S_CMPFW_2",
-      "S_CMPFW_3",
-      "S_CMPFW_4",
-      "S_CMPFW_5"
+    "DONLL": [
+      "S_DONLL",
+      "S_DONLL_1",
+      "S_DONLL_2",
+      "S_DONLL_3",
+      "S_DONLL_4",
+      "S_DONLL_5"
+    ],
+    "ECHOL": [
+      "S_ECHOL",
+      "S_ECHOL_1",
+      "S_ECHOL_2",
+      "S_ECHOL_3",
+      "S_ECHOL_4",
+      "S_ECHOL_5"
     ],
     "ENGLB": [
       "S_ENGLB",
@@ -50925,6 +53510,49 @@
       "S_ENGLB_5",
       "S_ENGLB_6"
     ],
+    "ESTMN": [
+      "S_ESTMN",
+      "S_ESTMN_1",
+      "S_ESTMN_2",
+      "S_ESTMN_3",
+      "S_ESTMN_4",
+      "S_ESTMN_5"
+    ],
+    "FRDYC": [
+      "S_FRDYC",
+      "S_FRDYC_1",
+      "S_FRDYC_2",
+      "S_FRDYC_3",
+      "S_FRDYC_4",
+      "S_FRDYC_5",
+      "S_FRDYC_6"
+    ],
+    "FRNCH": [
+      "S_FRNCH",
+      "S_FRNCH_1",
+      "S_FRNCH_2",
+      "S_FRNCH_3",
+      "S_FRNCH_4",
+      "S_FRNCH_5",
+      "S_FRNCH_6"
+    ],
+    "HHOLE": [
+      "S_HHOLE",
+      "S_HHOLE_1",
+      "S_HHOLE_2",
+      "S_HHOLE_3",
+      "S_HHOLE_4",
+      "S_HHOLE_5",
+      "S_HHOLE_6"
+    ],
+    "HNSLY": [
+      "S_HNSLY",
+      "S_HNSLY_1",
+      "S_HNSLY_2",
+      "S_HNSLY_3",
+      "S_HNSLY_4",
+      "S_HNSLY_5"
+    ],
     "INDVL": [
       "S_INDVL",
       "S_INDVL_1",
@@ -50932,6 +53560,15 @@
       "S_INDVL_3",
       "S_INDVL_4",
       "S_INDVL_5"
+    ],
+    "JKSMD": [
+      "S_JKSMD",
+      "S_JKSMD_1",
+      "S_JKSMD_2",
+      "S_JKSMD_3",
+      "S_JKSMD_4",
+      "S_JKSMD_5",
+      "S_JKSMD_6"
     ],
     "KSWCK": [
       "S_KSWCK",
@@ -50941,6 +53578,15 @@
       "S_KSWCK_4",
       "S_KSWCK_5",
       "MF_KSWCK"
+    ],
+    "LBEAR": [
+      "S_LBEAR",
+      "S_LBEAR_1",
+      "S_LBEAR_2",
+      "S_LBEAR_3",
+      "S_LBEAR_4",
+      "S_LBEAR_5",
+      "S_LBEAR_6"
     ],
     "LCBRF": [
       "S_LCBRF",
@@ -50970,6 +53616,37 @@
     "LWSTN": [
       "S_LWSTN"
     ],
+    "LYONS": [
+      "S_LYONS",
+      "S_LYONS_1",
+      "S_LYONS_2",
+      "S_LYONS_3",
+      "S_LYONS_4",
+      "S_LYONS_5"
+    ],
+    "MCLRE": [
+      "S_MCLRE",
+      "S_MCLRE_1",
+      "S_MCLRE_2",
+      "S_MCLRE_3",
+      "S_MCLRE_4",
+      "S_MCLRE_5"
+    ],
+    "MDSTO": [
+      "S_MDSTO",
+      "S_MDSTO_1",
+      "S_MDSTO_2",
+      "S_MDSTO_3",
+      "S_MDSTO_4"
+    ],
+    "MELON": [
+      "S_MELON",
+      "S_MELON_1",
+      "S_MELON_2",
+      "S_MELON_3",
+      "S_MELON_4",
+      "S_MELON_5"
+    ],
     "MERLC": [
       "S_MERLC",
       "S_MERLC_1",
@@ -50984,6 +53661,14 @@
       "S_NBLDB_5",
       "S_NBLDB_6"
     ],
+    "NHGAN": [
+      "S_NHGAN",
+      "S_NHGAN_1",
+      "S_NHGAN_2",
+      "S_NHGAN_3",
+      "S_NHGAN_4",
+      "S_NHGAN_5"
+    ],
     "OROVL": [
       "S_OROVL",
       "S_OROVL_1",
@@ -50993,11 +53678,44 @@
       "S_OROVL_5",
       "S_OROVL_6"
     ],
+    "PCRST": [
+      "S_PCRST",
+      "S_PCRST_1",
+      "S_PCRST_2",
+      "S_PCRST_3",
+      "S_PCRST_4",
+      "S_PCRST_5"
+    ],
+    "PEDRO": [
+      "S_PEDRO",
+      "S_PEDRO_1",
+      "S_PEDRO_2",
+      "S_PEDRO_3",
+      "S_PEDRO_4",
+      "S_PEDRO_5"
+    ],
+    "RLIEF": [
+      "S_RLIEF",
+      "S_RLIEF_1",
+      "S_RLIEF_2",
+      "S_RLIEF_3",
+      "S_RLIEF_4",
+      "S_RLIEF_5"
+    ],
     "RVPHB": [
       "S_RVPHB",
       "S_RVPHB_1",
       "S_RVPHB_2",
       "S_RVPHB_3"
+    ],
+    "SCOTF": [
+      "S_SCOTF",
+      "S_SCOTF_1",
+      "S_SCOTF_2",
+      "S_SCOTF_3",
+      "S_SCOTF_4",
+      "S_SCOTF_5",
+      "S_SCOTF_6"
     ],
     "SHSTA": [
       "S_SHSTA",
@@ -51007,6 +53725,15 @@
       "S_SHSTA_4",
       "S_SHSTA_5",
       "S_SHSTA_6"
+    ],
+    "SLTSP": [
+      "S_SLTSP",
+      "S_SLTSP_1",
+      "S_SLTSP_2",
+      "S_SLTSP_3",
+      "S_SLTSP_4",
+      "S_SLTSP_5",
+      "S_SLTSP_6"
     ],
     "SLUIS": [
       "S_SLUIS"
@@ -51019,6 +53746,23 @@
       "S_SLYCK_4",
       "S_SLYCK_5"
     ],
+    "SPICE": [
+      "S_SPICE",
+      "S_SPICE_1",
+      "S_SPICE_2",
+      "S_SPICE_3",
+      "S_SPICE_4",
+      "S_SPICE_5"
+    ],
+    "SPLDG": [
+      "S_SPLDG",
+      "S_SPLDG_1",
+      "S_SPLDG_2",
+      "S_SPLDG_3",
+      "S_SPLDG_4",
+      "S_SPLDG_5",
+      "S_SPLDG_6"
+    ],
     "THRMA": [
       "S_THRMA",
       "S_THRMA_1",
@@ -51030,6 +53774,13 @@
     "THRMF": [
       "S_THRMF"
     ],
+    "TRLCK": [
+      "S_TRLCK",
+      "S_TRLCK_1",
+      "S_TRLCK_2",
+      "S_TRLCK_3",
+      "S_TRLCK_4"
+    ],
     "TRNTY": [
       "S_TRNTY",
       "S_TRNTY_1",
@@ -51037,6 +53788,30 @@
       "S_TRNTY_3",
       "S_TRNTY_4",
       "S_TRNTY_5"
+    ],
+    "TULOC": [
+      "S_TULOC",
+      "S_TULOC_1",
+      "S_TULOC_2",
+      "S_TULOC_3",
+      "S_TULOC_4",
+      "S_TULOC_5"
+    ],
+    "UBEAR": [
+      "S_UBEAR",
+      "S_UBEAR_1",
+      "S_UBEAR_2",
+      "S_UBEAR_3",
+      "S_UBEAR_4",
+      "S_UBEAR_5",
+      "S_UBEAR_6"
+    ],
+    "WDWRD": [
+      "S_WDWRD",
+      "S_WDWRD_1",
+      "S_WDWRD_2",
+      "S_WDWRD_3",
+      "S_WDWRD_4"
     ],
     "WKYTN": [
       "S_WKYTN",
