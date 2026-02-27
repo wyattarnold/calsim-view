@@ -4,6 +4,7 @@ Pydantic response models for the CalSim View API.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
@@ -62,6 +63,7 @@ class NodeDetail(BaseModel):
     solver_active: bool = True
     dss_variables: List[str] = []
     missing_arcs: List[str] = []
+    seepage_vars: List[str] = []
 
     @classmethod
     def from_geo(cls, n: "GeoNode") -> "NodeDetail":
@@ -72,8 +74,9 @@ class NodeDetail(BaseModel):
             nearest_gage=n.nearest_gage or None, stream_code=n.stream_code or None,
             river_mile=n.river_mile or None, calsim2_id=n.calsim2_id or None,
             lon=n.lon, lat=n.lat,
-            solver_active=bool(n.dss_variables),
+            solver_active=bool(n.dss_variables) or bool(n.missing_arcs) or bool(n.inflow_arcs) or bool(n.outflow_arcs),
             dss_variables=list(n.dss_variables), missing_arcs=list(n.missing_arcs),
+            seepage_vars=[v for v in n.dss_variables if re.match(r'^SG\d+_', v, re.IGNORECASE)],
         )
 
 
@@ -162,3 +165,29 @@ class FeatureResultSeries(BaseModel):
     # Set when results belong to a suggested WRESL counterpart arc rather than
     # the requested feature directly (arc_endpoint_suggestion diagnostic match).
     wresl_suggestion_used: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# GW Budget
+# ---------------------------------------------------------------------------
+
+class GwBudgetMeta(BaseModel):
+    """Metadata about available groundwater budget data."""
+    available: bool
+    wba_ids: List[str]
+    wba_ids_with_polygon: List[str]
+    c_parts: List[str]
+    c_part_labels: Dict[str, str]
+    units: str
+
+
+class GwBudgetResponse(BaseModel):
+    """Groundwater budget time series for one Water Budget Area.
+
+    ``series`` is keyed by C-part name (e.g. "PUMPING", "NET_DEEP_PERC").
+    Each value is a list of ``[ISO-date-str, float]`` rows.
+    """
+    wba_id: str
+    units: str
+    c_part_labels: Dict[str, str]
+    series: Dict[str, List[List]]

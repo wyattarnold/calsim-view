@@ -5,6 +5,7 @@ Study API router — serves pre-built Parquet study results.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -12,11 +13,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from csview.app.schemas import (
     FeatureResultSeries,
+    GwBudgetResponse,
+    GwBudgetMeta,
     StudyInfo,
     StudyListResponse,
 )
 from csview.app.state import AppState, get_state
-from csview.study.store import StudyStore
+from csview.study.store import StudyStore, GwBudgetStore
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -61,7 +64,12 @@ def _collect_arc_series(
     series_out: Dict[str, List[List]],
     meta_out: Dict[str, dict],
 ) -> None:
-    """Append connected-arc time series for a node into *series_out*/*meta_out*."""
+    """Append connected-arc time series for a node into *series_out*/*meta_out*.
+
+    Iterates GeoSchematic arcs connected to this node **and** any
+    ``missing_arcs`` (WRESL-only arcs with no geometry) that may still
+    have DSS data in the study.
+    """
     upper_id = node_cs3_id.upper()
     for arc in network.arcs.values():
         from_n = (arc.from_node or "").upper()
@@ -79,6 +87,61 @@ def _collect_arc_series(
             arc_meta["direction"] = direction
             series_out[var] = _series_to_rows(arc_series)
             meta_out[var]   = arc_meta
+
+    # Also try missing arcs (WRESL-only, no GeoSchematic geometry).
+    # These include:
+    #   - C_ arcs through phantom pass-through nodes (inflows by convention)
+    #   - D_ delivery / R_ return arcs that have a WRESL define but no geo
+    #     (e.g. D_BKR004_NBA009_SCWA_B alongside its geo sibling D_BKR004_NBA009)
+    # Use the global arc_connectivity dict for authoritative direction; fall
+    # back to "in" for C_/I_/E_/S_ and "out" for D_/R_ as a heuristic.
+    _ARC_PREFIXES = ("C_", "E_", "I_", "D_", "F_", "R_", "S_")
+    _DELIVERY_PREFIXES = ("D_", "R_", "RP_", "RU_", "F_")
+    geo_node_ids = set(n.upper() for n in network.nodes)
+    global_arc_conn = getattr(network, "arc_connectivity", {})
+    node = network.lookup_node(node_cs3_id)
+    if node is not None:
+        for arc_id in node.missing_arcs:
+            if arc_id in series_out:
+                continue  # already collected via geo arc
+            # Determine direction: use global arc_connectivity if available,
+            # otherwise heuristic based on prefix (D_/R_ = out, others = in).
+            arc_upper = arc_id.upper()
+            direction = global_arc_conn.get(arc_upper)
+            if direction is None:
+                direction = "out" if arc_upper.startswith(_DELIVERY_PREFIXES) else "in"
+            # Try direct DSS match first
+            arc_series_map = store.get_feature_series(arc_id)
+            if arc_series_map:
+                for var, arc_series in arc_series_map.items():
+                    arc_meta = dict(store.get_variable_meta(var))
+                    arc_meta["direction"] = direction
+                    series_out[var] = _series_to_rows(arc_series)
+                    meta_out[var]   = arc_meta
+                continue
+            # No DSS data — try proxy through phantom node.
+            # Extract phantom node from arc name (e.g. C_SCW004 → SCW004).
+            phantom = None
+            for pfx in _ARC_PREFIXES:
+                if arc_upper.startswith(pfx):
+                    phantom = arc_upper[len(pfx):]
+                    break
+            if not phantom or phantom == upper_id or phantom in geo_node_ids:
+                continue  # not a phantom pass-through
+            # Find geo arcs whose to_node is the phantom → same flow
+            for geo_arc in network.arcs.values():
+                if (geo_arc.to_node or "").upper() != phantom:
+                    continue
+                proxy_data = store.get_feature_series(geo_arc.arc_id)
+                if not proxy_data:
+                    continue
+                for var, s in proxy_data.items():
+                    if var in series_out:
+                        continue  # avoid duplicates
+                    proxy_meta = dict(store.get_variable_meta(var))
+                    proxy_meta["direction"] = "in"
+                    series_out[var] = _series_to_rows(s)
+                    meta_out[var]   = proxy_meta
 
 
 def _try_wresl_suggestion(
@@ -176,6 +239,29 @@ def get_feature_result(
                 if var.upper().startswith("E_") and "direction" not in meta_out[var]:
                     meta_out[var] = dict(meta_out[var], direction="out")
 
+            # Tag SG_ seepage node variables with direction derived from the
+            # WRESL constraints-Connectivity equations (stored in catalog.json
+            # as node.inflow_arcs / node.outflow_arcs).  This is authoritative
+            # for both geo arcs and phantom/no-geo SG arcs.
+            _SG_RE = re.compile(r'^SG\d+_', re.IGNORECASE)
+            node_inflow_set  = {a.upper() for a in (node.inflow_arcs  or [])}
+            node_outflow_set = {a.upper() for a in (node.outflow_arcs or [])}
+            global_arc_conn  = getattr(network, 'arc_connectivity', {})
+            for var in list(meta_out.keys()):
+                if _SG_RE.match(var) and "direction" not in meta_out[var]:
+                    var_upper = var.upper()
+                    if var_upper in node_inflow_set:
+                        direction = "in"
+                    elif var_upper in node_outflow_set:
+                        direction = "out"
+                    else:
+                        # SG variable from a different node's equation (e.g.
+                        # SG455_CWD009_77 in CWD013's eq, a non-geo node).
+                        # Fall back to the global arc-connectivity index.
+                        direction = global_arc_conn.get(var_upper)
+                    if direction:
+                        meta_out[var] = dict(meta_out[var], direction=direction)
+
     if series_out:
         return FeatureResultSeries(
             feature_id=feature_id,
@@ -231,4 +317,65 @@ def get_variable_result(
         study=store.name,
         series={prmname: _series_to_rows(series)},
         metadata={prmname: meta},
+    )
+
+
+# ---------------------------------------------------------------------------
+# GW Budget endpoints
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/gw_budget/meta",
+    response_model=GwBudgetMeta,
+    summary="GW budget metadata (available WBAs, C-parts, units)",
+)
+def gw_budget_meta(
+    study: Optional[str] = Query(default=None),
+    state: AppState = Depends(get_state),
+) -> GwBudgetMeta:
+    """Return metadata about the groundwater budget dataset."""
+    gw = state.get_gw_budget(study)
+    if gw is None:
+        raise HTTPException(status_code=404, detail="No GW budget data available")
+    return GwBudgetMeta(
+        available=True,
+        wba_ids=gw.wba_ids,
+        wba_ids_with_polygon=gw.wba_ids_with_polygon,
+        c_parts=gw.c_parts,
+        c_part_labels=gw.c_part_labels,
+        units=gw.units,
+    )
+
+
+@router.get(
+    "/gw_budget/{wba_id}",
+    response_model=GwBudgetResponse,
+    summary="GW budget time series for a Water Budget Area",
+)
+def get_gw_budget(
+    wba_id: str,
+    study: Optional[str] = Query(default=None),
+    state: AppState = Depends(get_state),
+) -> GwBudgetResponse:
+    """Return all groundwater budget component series for *wba_id*."""
+    gw = state.get_gw_budget(study)
+    if gw is None:
+        raise HTTPException(status_code=404, detail="No GW budget data available")
+
+    budget = gw.get_wba_budget(wba_id)
+    if not budget:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No GW budget data for WBA '{wba_id}'",
+        )
+
+    series_out: Dict[str, List[List]] = {}
+    for c_part, s in budget.items():
+        series_out[c_part] = _series_to_rows(s)
+
+    return GwBudgetResponse(
+        wba_id=wba_id,
+        units=gw.units,
+        c_part_labels=gw.c_part_labels,
+        series=series_out,
     )

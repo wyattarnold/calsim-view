@@ -239,6 +239,8 @@ def get_overlay(layer: str, state: AppState = Depends(get_state)) -> dict:
         "watersheds": state.network.watersheds_geojson,
         "water_budget": state.network.water_budget_geojson,
         "demand_unit": state.network.demand_unit_geojson,
+        "c2vsim_elements": state.network.c2vsim_elements_geojson,
+        "c2vsim_subregions": state.network.c2vsim_subregions_geojson,
     }
     data = mapping.get(layer)
     if data is None:
