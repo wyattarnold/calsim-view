@@ -15,6 +15,7 @@ const DEFAULT_GRAPH_WIDTH = 300;
 
 export default function App() {
   const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedWba, setSelectedWba] = useState(null);
   const [flyToFeature, setFlyToFeature] = useState(null);
   const [activeStudy, setActiveStudy] = useState(null);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -86,17 +87,27 @@ export default function App() {
   // ---------------------------------------------------------------------------
   function handleFeatureClick(featureId) {
     setSelectedNode(featureId);
+    setSelectedWba(null);
+    setPanelOpen(true);
+  }
+
+  function handleWbaClick(wbaId) {
+    setSelectedWba(wbaId);
+    // Don't clear selectedNode — keeps the neighbourhood graph visible
+    // so the layout doesn't jump when switching to a WBA.
     setPanelOpen(true);
   }
 
   function handleNeighborhoodNodeClick(featureId) {
     setSelectedNode(featureId);
+    setSelectedWba(null);
     setPanelOpen(true);
     setFlyToFeature(featureId);
   }
 
   function handleEdgeClick(featureId) {
     setSelectedNode(featureId);
+    setSelectedWba(null);
     setPanelOpen(true);
     setFlyToFeature(featureId);
   }
@@ -104,10 +115,11 @@ export default function App() {
   function handlePanelClose() {
     setPanelOpen(false);
     setSelectedNode(null);
+    setSelectedWba(null);
   }
 
-  const showPanel = panelOpen && !!selectedNode;
-  const showGraph = showPanel && graphOpen;
+  const showPanel = panelOpen && (!!selectedNode || !!selectedWba);
+  const showGraph = showPanel && graphOpen && !!selectedNode;
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden">
@@ -171,7 +183,7 @@ export default function App() {
           </>
         )}
 
-        {/* Middle: NodePanel */}
+        {/* Middle: NodePanel or GwBudgetPanel */}
         {showPanel && (
           <>
             <aside
@@ -181,6 +193,7 @@ export default function App() {
               <ErrorBoundary>
                 <NodePanel
                   featureId={selectedNode}
+                  wbaId={selectedWba}
                   activeStudy={_study}
                   onClose={handlePanelClose}
                 />
@@ -202,6 +215,7 @@ export default function App() {
             selectedFeature={selectedNode}
             flyToFeature={flyToFeature}
             onFeatureClick={handleFeatureClick}
+            onWbaClick={handleWbaClick}
           />
         </div>
       </div>

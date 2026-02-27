@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet-arrowheads";
 import { fetchNetwork } from "../api/client.js";
+import RegionalLayers from "./RegionalLayers.jsx";
 import {
   NODE_STYLE,
   DEFAULT_NODE_STYLE,
@@ -25,43 +26,48 @@ const ARROW_MIN_ZOOM = 11;
 // Style helpers
 // ---------------------------------------------------------------------------
 
-function nodePointStyle(feature, selectedFeature, highlightType) {
+function nodePointStyle(feature, selectedFeature, highlightType, muted, highlightedFeatureIds) {
   const { feature_id, node_type } = feature.properties;
   const isSelected = feature_id === selectedFeature;
+  const isHighlighted = highlightedFeatureIds && highlightedFeatureIds.has(feature_id);
   const ns = NODE_STYLE[node_type] || DEFAULT_NODE_STYLE;
   const dimmed = highlightType && node_type !== highlightType && !isSelected;
+  const effectiveMuted = muted && !isHighlighted;
 
   return {
-    radius: isSelected ? ns.r + 4 : ns.r,
+    radius: isSelected ? ns.r + 4 : isHighlighted ? ns.r + 2 : ns.r,
     fillColor: ns.color,
     color: isSelected ? "#ffffff" : "#111827",
     weight: isSelected ? 2.5 : ns.w,
-    opacity: dimmed ? 0.15 : 1,
-    fillOpacity: isSelected ? 1 : dimmed ? 0.08 : ns.fo,
+    opacity: effectiveMuted ? 0.18 : dimmed ? 0.15 : 1,
+    fillOpacity: isSelected ? 1 : isHighlighted ? 1.0 : effectiveMuted ? 0.10 : dimmed ? 0.08 : ns.fo,
   };
 }
 
-function arcLineStyle(feature, selectedFeature, highlightType) {
+function arcLineStyle(feature, selectedFeature, highlightType, muted, highlightedFeatureIds) {
   const { feature_id, arc_type, solver_active, wresl_suggestion } = feature.properties;
   const isSelected = feature_id === selectedFeature;
+  const isHighlighted = highlightedFeatureIds && highlightedFeatureIds.has(feature_id);
   const as = ARC_STYLE[arc_type] || DEFAULT_ARC_STYLE;
   const dimmed = highlightType && arc_type !== highlightType && !isSelected;
   // Only truly inactive if solver_active is false AND no suggestion match
   const inactive = solver_active === false && !wresl_suggestion;
+  // Highlighted features stay visible even when network is muted
+  const effectiveMuted = muted && !isHighlighted;
 
   const baseOpacity = as.o ?? 0.75;
   return {
-    color: isSelected ? "#facc15" : as.color,
-    weight: isSelected ? as.w + 1.5 : as.w,
-    opacity: isSelected ? 1.0 : dimmed ? 0.08 : inactive ? (baseOpacity * 0.4) : baseOpacity,
+    color: isSelected ? "#facc15" : isHighlighted ? "#38bdf8" : as.color,
+    weight: isSelected ? as.w + 1.5 : isHighlighted ? as.w + 0.5 : effectiveMuted ? Math.max(as.w * 0.6, 0.8) : as.w,
+    opacity: isSelected ? 1.0 : isHighlighted ? 0.9 : effectiveMuted ? 0.15 : dimmed ? 0.08 : inactive ? (baseOpacity * 0.4) : baseOpacity,
     dashArray: inactive && !isSelected ? "5 5" : undefined,
   };
 }
 
-function featureStyle(feature, selectedFeature, highlightType) {
+function featureStyle(feature, selectedFeature, highlightType, muted, highlightedFeatureIds) {
   const { feature_kind } = feature.properties;
-  if (feature_kind === "node") return nodePointStyle(feature, selectedFeature, highlightType);
-  return arcLineStyle(feature, selectedFeature, highlightType);
+  if (feature_kind === "node") return nodePointStyle(feature, selectedFeature, highlightType, muted, highlightedFeatureIds);
+  return arcLineStyle(feature, selectedFeature, highlightType, muted, highlightedFeatureIds);
 }
 
 function pointToLayer(feature, latlng) {
@@ -119,7 +125,7 @@ function MapFlyTo({ featureId, geojson }) {
 // GeoJSON Layer — mounted once, styles updated reactively
 // ---------------------------------------------------------------------------
 
-function GeoJSONLayer({ geojson, selectedFeature, highlightType, onFeatureClick }) {
+function GeoJSONLayer({ geojson, selectedFeature, highlightType, onFeatureClick, muted, highlightedFeatureIds }) {
   const layerRef = useRef(null);
   const map = useMap();
   const [mapZoom, setMapZoom] = useState(() => map.getZoom());
@@ -149,13 +155,14 @@ function GeoJSONLayer({ geojson, selectedFeature, highlightType, onFeatureClick 
     const showArrows = mapZoom >= ARROW_MIN_ZOOM;
     layerRef.current.eachLayer((layer) => {
       if (!layer.feature || !layer.setStyle) return;
-      layer.setStyle(featureStyle(layer.feature, selectedFeature, highlightType));
+      layer.setStyle(featureStyle(layer.feature, selectedFeature, highlightType, muted, highlightedFeatureIds));
       // leaflet-arrowheads renders separate SVG layers — update their opacity independently
       if (layer._arrowheads) {
         const { feature_id, arc_type } = layer.feature.properties;
         const isSelected = feature_id === selectedFeature;
+        const isHighlighted = highlightedFeatureIds && highlightedFeatureIds.has(feature_id);
         const dimmed = highlightType && arc_type !== highlightType && !isSelected;
-        const arrowOpacity = !showArrows ? 0 : isSelected ? 1.0 : dimmed ? 0.08 : 0.75;
+        const arrowOpacity = !showArrows ? 0 : isHighlighted ? 0.85 : muted ? 0.1 : isSelected ? 1.0 : dimmed ? 0.08 : 0.75;
         layer._arrowheads.eachLayer((ah) =>
           ah.setStyle({ opacity: arrowOpacity, fillOpacity: arrowOpacity })
         );
@@ -167,7 +174,7 @@ function GeoJSONLayer({ geojson, selectedFeature, highlightType, onFeatureClick 
         layer.bringToFront();
       }
     });
-  }, [selectedFeature, highlightType, mapZoom, moveSeq]);
+  }, [selectedFeature, highlightType, mapZoom, moveSeq, muted, highlightedFeatureIds]);
 
   if (!geojson) return null;
 
@@ -175,7 +182,7 @@ function GeoJSONLayer({ geojson, selectedFeature, highlightType, onFeatureClick 
     <GeoJSON
       ref={layerRef}
       data={geojson}
-      style={(feature) => featureStyle(feature, selectedFeature, highlightType)}
+      style={(feature) => featureStyle(feature, selectedFeature, highlightType, muted, highlightedFeatureIds)}
       pointToLayer={pointToLayer}
       onEachFeature={(feature, layer) => {
         const { feature_id, node_type, arc_type, feature_kind, description, name } = feature.properties;
@@ -272,12 +279,22 @@ function Legend({ highlightType, onHighlight }) {
 // Main export
 // ---------------------------------------------------------------------------
 
-export default function NetworkMap({ selectedFeature, flyToFeature, onFeatureClick }) {
+export default function NetworkMap({ selectedFeature, flyToFeature, onFeatureClick, onWbaClick }) {
   const [highlightType, setHighlightType] = useState(null);
+  const [activeLayers, setActiveLayers] = useState([]);
+  const [highlightedFeatureIds, setHighlightedFeatureIds] = useState(null);
   const { data: geojson, isLoading } = useQuery({
     queryKey: ["network"],
     queryFn: fetchNetwork,
   });
+
+  const handleToggleLayer = (key) => {
+    setActiveLayers((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const networkMuted = activeLayers.length > 0;
 
   if (isLoading) {
     return (
@@ -307,6 +324,15 @@ export default function NetworkMap({ selectedFeature, flyToFeature, onFeatureCli
               selectedFeature={selectedFeature}
               highlightType={highlightType}
               onFeatureClick={onFeatureClick}
+              muted={networkMuted}
+              highlightedFeatureIds={highlightedFeatureIds}
+            />
+            <RegionalLayers
+              activeLayers={activeLayers}
+              onToggle={handleToggleLayer}
+              onHighlightFeatures={setHighlightedFeatureIds}
+              onFeatureClick={onFeatureClick}
+              onWbaClick={onWbaClick}
             />
             <MapResizeHandler />
             <MapFlyTo featureId={flyToFeature} geojson={geojson} />

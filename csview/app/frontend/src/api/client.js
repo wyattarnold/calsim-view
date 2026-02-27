@@ -45,6 +45,10 @@ export const fetchNodeTypes = () => get("/network/types");
 /** Distinct arc types. */
 export const fetchArcTypes = () => get("/network/arc-types");
 
+/** Overlay GeoJSON layer (watersheds, water_budget, demand_unit, c2vsim_elements, c2vsim_subregions). */
+export const fetchOverlay = (layer) =>
+  get(`/network/overlays/${encodeURIComponent(layer)}`);
+
 // ---------------------------------------------------------------------------
 // Results
 // ---------------------------------------------------------------------------
@@ -60,4 +64,20 @@ export const fetchStudies = () => get("/study/studies");
 export const fetchFeatureResults = (featureId, study = null) => {
   const params = study ? `?study=${encodeURIComponent(study)}` : "";
   return get(`/study/feature/${encodeURIComponent(featureId)}${params}`);
+};
+
+// ---------------------------------------------------------------------------
+// GW Budget
+// ---------------------------------------------------------------------------
+
+/** GW budget metadata (available WBAs, C-parts, units). */
+export const fetchGwBudgetMeta = (study = null) => {
+  const params = study ? `?study=${encodeURIComponent(study)}` : "";
+  return get(`/study/gw_budget/meta${params}`);
+};
+
+/** GW budget time series for a Water Budget Area. */
+export const fetchGwBudget = (wbaId, study = null) => {
+  const params = study ? `?study=${encodeURIComponent(study)}` : "";
+  return get(`/study/gw_budget/${encodeURIComponent(wbaId)}${params}`);
 };
