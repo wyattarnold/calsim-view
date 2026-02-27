@@ -32,6 +32,8 @@ ARCS_FILE = "i12_CalSim3Model_Arcs_20221021.geojson"
 WATERSHEDS_FILE = "i12_CalSim3Model_Allwatersheds_20221021.geojson"
 WATER_BUDGET_FILE = "i12_CalSim3Model_WaterBudgetAreas_20221021.geojson"
 DEMAND_UNIT_FILE = "i12_CalSim3Model_DemandUnit_20221021.geojson"
+C2VSIM_ELEMENTS_FILE = "C2VSimCG_Elements.geojson"
+C2VSIM_SUBREGIONS_FILE = "C2VSimCG_Subregions.geojson"
 
 CATALOG_FILE = "catalog.json"
 
@@ -116,7 +118,8 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
     for arc_id_upper, d in cat.get("arcs", {}).items():
         gn.arcs[arc_id_upper] = GeoArc.from_dict(d)
 
-    gn.variable_to_node = cat.get("variable_to_node", {})
+    gn.variable_to_node  = cat.get("variable_to_node",  {})
+    gn.arc_connectivity  = cat.get("arc_connectivity",  {})
 
     # GeoJSON FeatureCollection
     geojson_path = catalog_dir / "network.geojson"
@@ -131,6 +134,8 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
         ("watersheds_geojson", "watersheds.geojson"),
         ("water_budget_geojson", "water_budget_areas.geojson"),
         ("demand_unit_geojson", "demand_units.geojson"),
+        ("c2vsim_elements_geojson", "c2vsim_elements.geojson"),
+        ("c2vsim_subregions_geojson", "c2vsim_subregions.geojson"),
     ):
         p = catalog_dir / fname
         if p.exists():
@@ -237,6 +242,8 @@ def _load_overlays(gn: GeoNetwork, geo_dir: Path) -> None:
         ("watersheds_geojson", WATERSHEDS_FILE),
         ("water_budget_geojson", WATER_BUDGET_FILE),
         ("demand_unit_geojson", DEMAND_UNIT_FILE),
+        ("c2vsim_elements_geojson", C2VSIM_ELEMENTS_FILE),
+        ("c2vsim_subregions_geojson", C2VSIM_SUBREGIONS_FILE),
     ):
         p = geo_dir / fname
         if p.exists():

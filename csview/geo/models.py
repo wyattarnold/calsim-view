@@ -128,6 +128,12 @@ class GeoNode:
     # geometry in the GeoSchematic (arc_no_geo diagnostic hits).
     missing_arcs: List[str] = field(default_factory=list)
 
+    # Arc IDs (uppercase) that appear as inflows / outflows for this node in
+    # the WRESL constraints-Connectivity equations.  Includes both geo arcs
+    # and phantom/no-geo arcs (e.g. SG seepage variables).
+    inflow_arcs:  List[str] = field(default_factory=list)
+    outflow_arcs: List[str] = field(default_factory=list)
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to a dict suitable for catalog.json."""
         return {
@@ -146,6 +152,8 @@ class GeoNode:
             "calsim2_id":   self.calsim2_id,
             "dss_variables": self.dss_variables,
             "missing_arcs":  self.missing_arcs,
+            "inflow_arcs":   self.inflow_arcs,
+            "outflow_arcs":  self.outflow_arcs,
         }
 
     @classmethod
@@ -167,6 +175,8 @@ class GeoNode:
             calsim2_id=d.get("calsim2_id", ""),
             dss_variables=d.get("dss_variables", []),
             missing_arcs=d.get("missing_arcs", []),
+            inflow_arcs=d.get("inflow_arcs", []),
+            outflow_arcs=d.get("outflow_arcs", []),
         )
 
 
@@ -266,10 +276,18 @@ class GeoNetwork:
     # Populated when results are built (or via WRESL catalog).
     variable_to_node: Dict[str, str] = field(default_factory=dict)
 
+    # Global arc-direction lookup built from ALL WRESL connectivity equations
+    # (including non-geo nodes).  Key = arc_id.upper(), value = "in" or "out".
+    # An arc is "in" if it appears on the positive side of any node balance, 
+    # "out" if only on the negative side.
+    arc_connectivity: Dict[str, str] = field(default_factory=dict)
+
     # Overlay layers (pass-through GeoJSON, loaded at build time)
     watersheds_geojson: Dict[str, Any] = field(default_factory=dict)
     water_budget_geojson: Dict[str, Any] = field(default_factory=dict)
     demand_unit_geojson: Dict[str, Any] = field(default_factory=dict)
+    c2vsim_elements_geojson: Dict[str, Any] = field(default_factory=dict)
+    c2vsim_subregions_geojson: Dict[str, Any] = field(default_factory=dict)
 
     # -----------------------------------------------------------------------
     # Lookup helpers
