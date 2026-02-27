@@ -97,21 +97,28 @@ C:\Users\warnold\Miniconda3\envs\py38\python.exe -m csview.geo ^
 
 Runs in ~10 s; safe to run foreground/blocking.
 
-## Running the study builder (SLOW — 3–5 min)
+## Running the study builder
 
-**Always** use `run_in_terminal` with `isBackground=true` and a log file, then
-call `await_terminal` with a generous timeout (≥ 360 000 ms) before reading
-the log. Never run it blocking/foreground and never assume it finished until
-`results_meta.json` shows a new `built_at` timestamp.
+**Always use `--cache-dir`** to read from the DSS pickle cache instead of the
+raw DSS files. The cache lives in `data/study/study_a/.dss_cache/` and makes
+the build complete in seconds rather than minutes:
 
 ```bat
 C:\Users\warnold\Miniconda3\envs\py38\python.exe -m csview.study ^
     --source reference/calsim-studies/study_a ^
     --catalog data/network/catalog.json ^
-    --out data/study/study_a/ > build_log.txt 2>&1
+    --out data/study/study_a/ ^
+    --cache-dir data/study/study_a/.dss_cache
 ```
 
-After `await_terminal` completes, verify with:
+With the cache this runs in ~10 s; safe to run foreground/blocking.
+
+Without `--cache-dir` the builder falls back to pydsstools and takes 3–5 min.
+Only omit `--cache-dir` when the DSS files have changed and the cache needs
+regenerating (the cache will be rebuilt automatically on the next run with
+`--cache-dir` if the DSS file's mtime is newer than the pickle).
+
+After the build, verify with:
 
 ```bat
 type build_log.txt

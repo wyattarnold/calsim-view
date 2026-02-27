@@ -40,10 +40,11 @@ calsim-view/
 │   │   └── __main__.py               ← CLI: build catalog.json + network.geojson
 │   │
 │   ├── study/                        ← Parquet-backed study results + DSS reader
-│   │   ├── store.py                  ← StudyStore (lazy Parquet load, timeseries queries)
+│   │   ├── store.py                  ← StudyStore + GwBudgetStore (lazy Parquet load)
 │   │   ├── dss_reader.py             ← HEC-DSS binary reader (pydsstools wrapper)
 │   │   ├── dss_cache.py              ← Pickle cache layer (skip pydsstools on rebuild)
-│   │   └── __main__.py               ← CLI: DSS → results.parquet + results_meta.json
+│   │   ├── gw_budget.py              ← GW budget pipeline: crosswalk → DSS → WBA parquet
+│   │   └── __main__.py               ← CLI: DSS → results.parquet + results_meta.json + gw_budget
 │   │
 │   └── app/                          ← FastAPI application
 │       ├── __main__.py               ← CLI entry point (uvicorn runner)
@@ -66,7 +67,9 @@ calsim-view/
 │               │   └── mapStyles.js       ← shared node/arc color + style maps
 │               └── components/
 │                   ├── NetworkMap.jsx      ← Leaflet map, GeoJSON rendering, legend
+│                   ├── RegionalLayers.jsx  ← toggle control + GeoJSON overlays for regional polygon layers
 │                   ├── NodePanel.jsx       ← feature detail + timeseries chart
+│                   ├── GwBudgetPanel.jsx   ← GW budget stacked bar chart per WBA
 │                   ├── ResultsChart.jsx    ← stacked/line charts (Recharts)
 │                   ├── YearRangeSlider.jsx ← dual-thumb date-range slider + drought pills
 │                   ├── NeighborhoodGraph.jsx ← force-directed subgraph
@@ -84,11 +87,15 @@ calsim-view/
 │   │   ├── network_diagnostics.json  ← topology issue report (written by --diagnose)
 │   │   ├── watersheds.geojson
 │   │   ├── water_budget_areas.geojson
-│   │   └── demand_units.geojson
+│   │   ├── demand_units.geojson
+│   │   ├── c2vsim_elements.geojson
+│   │   └── c2vsim_subregions.geojson
 │   └── study/
 │       └── study_a/
 │           ├── results.parquet       ← wide DataFrame (1 200 rows × 4 834 cols)
-│           └── results_meta.json     ← study name, variable metadata, date range
+│           ├── results_meta.json     ← study name, variable metadata, date range
+│           ├── gw_budget.parquet     ← GW budget: 50 WBAs × 11 C-parts (1 199 rows)
+│           └── gw_budget_meta.json   ← GW budget WBA list, C-part labels, units
 │
 └── reference/                        ← local-only, gitignored
     ├── geoschematic/                 ← source GeoJSON (CalSim3_GeoSchematic_20221227)
@@ -160,7 +167,7 @@ Reads raw GeoSchematic GeoJSON + WRESL system tables. Writes:
 - `catalog.json` — node/arc metadata + `variable_to_node` mapping
 - `network.geojson` — FeatureCollection (arcs as LineStrings, nodes as Points)
 - Overlay files: `watersheds.geojson`, `water_budget_areas.geojson`,
-  `demand_units.geojson`
+  `demand_units.geojson`, `c2vsim_elements.geojson`, `c2vsim_subregions.geojson`
 - `network_diagnostics.json` — topology issue report (with `--diagnose`)
 
 **`--diagnose`** runs 7 checks against WRESL connectivity equations:
@@ -168,7 +175,7 @@ Reads raw GeoSchematic GeoJSON + WRESL system tables. Writes:
 | Check | Kind constant | What it detects |
 |---|---|---|
 | 1 | `arc_no_connectivity` | Geo arc absent from all WRESL equations (193 arcs) |
-| 1b | (same) | Delivery arc whose `define` is commented out in WRESL |
+| 1b | (same) | Delivery arc whose `define` is commented out in WRESL, OR a `D_`/`R_` arc with no geo sibling (e.g. `D_BKR004_NBA009_SCWA_B`) |
 | 2 | `arc_no_geo` | WRESL arc absent from GeoJSON (`C_/I_/E_/S_` only, 265) |
 | 3 | `from_node_mismatch` | Geo from_node ≠ WRESL-derived from node (15) |
 | 4 | `to_node_mismatch` | Geo to_node ≠ WRESL-derived to node (85) |
@@ -177,8 +184,25 @@ Reads raw GeoSchematic GeoJSON + WRESL system tables. Writes:
 | 7 | `arc_endpoint_suggestion` | Geo arc + WRESL arc share `(type_prefix, from_node)` but differ in downstream label (60 pairs → 47 arcs annotated) |
 
 Side effects of `--diagnose`:
-- Sets `solver_active=false` on `arc_no_connectivity` arcs (193)
-- Populates `missing_arcs` on nodes referenced by `arc_no_geo` arcs (112 nodes)
+- Sets `solver_active=false` on `arc_no_connectivity` arcs **unless** the arc
+  has an active WRESL `define` entry in `wresl_cat` (i.e. it is a known solver
+  variable whose continuity `goal` is commented out — e.g. `C_ORP000`,
+  `I_LOSVQ`).  Currently 181 arcs deactivated; 12 kept active via this exemption.
+- Populates `missing_arcs` on nodes referenced by `arc_no_geo` arcs (C_/I_/E_/S_ only).
+  **Also** adds `D_`/`R_` arcs from connectivity equations that are WRESL-defined
+  (in `wresl_cat`) but absent from `gn.arcs` — e.g. `D_BKR004_NBA009_SCWA_B`
+  alongside its geo sibling `D_BKR004_NBA009`.  Produces 203 additional annotations.
+- Populates `inflow_arcs` / `outflow_arcs` on nodes directly from the parsed
+  connectivity equations (1,170 nodes).  Arc IDs are uppercase and include
+  both geo arcs and SG/phantom arcs.  Used by the study router for
+  authoritative direction tagging without data-sign heuristics.
+- Builds a global `arc_connectivity: Dict[str, str]` index from **all** node
+  equations (including non-geo nodes not stored in `catalog.json` nodes).
+  Key = arc_id.upper(), value = `"in"` or `"out"`.  Stored at top level of
+  `catalog.json` and loaded into `GeoNetwork.arc_connectivity`.  Used as
+  fallback when an SG variable's node name doesn't match the queried node —
+  e.g. `SG455_CWD009_77` appears in CWD013's equation (a non-geo node) but
+  is mapped to CWD009 by name; the global index resolves direction = "in".
 - Populates `wresl_suggestion` on arcs matched by check 7 (47 arcs)
 
 **`--fix-topology`** (requires `--diagnose`): patches `from_node`/`to_node`
@@ -198,10 +222,13 @@ python -m csview.study \
     --cache-dir data/study/study_a/.dss_cache
 ```
 
-> **SLOW (3–5 min)**. Run in background with a log file. The `--cache-dir` flag
-> enables pickle caching of DSS data — after the first run, subsequent builds
-> read from `.dss.pkl` files instead of calling `pydsstools`, cutting rebuild
-> time significantly.
+> **Always use `--cache-dir`.** The DSS pickle cache
+> (`data/study/study_a/.dss_cache/`) stores every DSS variable as a
+> `.dss.pkl` file. With the cache the build takes ~10 s; without it
+> `pydsstools` reads the raw DSS files (3–5 min). The cache auto-regenerates
+> when the DSS file's mtime is newer than the pickle, so `--cache-dir` is
+> safe to use unconditionally. **Never omit `--cache-dir`** unless the
+> pickle files are suspected to be corrupt (delete them first if so).
 
 Reads DV, GWOUT, and SV DSS files. Matches each variable against:
 1. `arc_ids` from catalog (includes `wresl_suggestion` target arc IDs)
@@ -213,7 +240,25 @@ Writes `results.parquet` + `results_meta.json`. Optionally patches
 If `study_meta.json` exists in `--source`, the builder reads `name`,
 `dv_file`, `gwout_file`, `sv_file`, and `simulation_period` from it.
 
-### 3c. Frontend
+### 3c. GW budget (automatic — runs inside study builder)
+
+The study builder auto-discovers `*GroundwaterBudget*.dss` in `DSS/output/`
+and the crosswalk file `CVElementsToCalsimRegions*.dat` in
+`Run/CVGroundwater/Data/`. When both are found the GW budget pipeline runs
+automatically after the main parquet build. Writes:
+
+- `gw_budget.parquet` — wide DataFrame: rows = monthly timestamps, columns =
+  `{WBA_ID}__{C_PART}` (e.g. `07N__PUMPING`). 50 WBAs × 11 C-parts = 550 cols.
+- `gw_budget_meta.json` — WBA IDs, C-part list, human-readable labels, units.
+
+The pipeline reads the crosswalk file to map CalSim SR (groundwater region)
+numbers to Water Budget Area (WBA) IDs, then sums DSS values per WBA per
+C-part. Exterior-area SRs (e.g. `indxEA_60N`) are folded into their parent
+WBA. Uses a dedicated `.gwbudget.pkl` cache (separate from the main DSS cache)
+because the GW budget DSS has 11 C-parts per SR that must be kept distinct
+(the standard cache merges C-parts).
+
+### 3d. Frontend
 
 ```bash
 cd csview/app/frontend && npm install && npm run build
@@ -237,7 +282,9 @@ Compiles React/Vite source into `csview/app/static/`.
       "lon": -122.41, "lat": 40.72,
       "hydro_region": "SAC",
       "dss_variables": ["S_SHSTA", "E_SHSTA"],   // filled by study builder
-      "missing_arcs": ["E_SPICE"]                 // WRESL arcs with no geometry (--diagnose)
+      "missing_arcs": ["E_SPICE"],                // WRESL arcs with no geometry (--diagnose)
+      "inflow_arcs":  ["C_SPICE", "SG456_SHSTA_78"],  // uppercase; from connectivity (--diagnose)
+      "outflow_arcs": ["C_SHSTA_WHL"]                  // uppercase; from connectivity (--diagnose)
     }
   },
   "arcs": {
@@ -257,6 +304,11 @@ Compiles React/Vite source into `csview/app/static/`.
   "variable_to_node": {
     "S_SHSTA": "SHSTA",
     "GP_07N_NU": "07N_NU"
+  },
+  "arc_connectivity": {
+    "SG455_CWD009_77": "in",   // direction of arc in its WRESL continuity equation
+    "SG456_CWD009_78": "in",   // covers ALL nodes incl. non-geo; 3,173 entries
+    "C_CWD009": "out"
   }
 }
 ```
@@ -274,7 +326,7 @@ Compiles React/Vite source into `csview/app/static/`.
 ### `results.parquet`
 
 Wide DataFrame: rows = monthly `DatetimeIndex` (1 200 rows, 1921-10 → 2021-09),
-columns = CalSim variable names (~5 859 columns). All TAF variables are
+columns = CalSim variable names (~6 026 columns). All TAF variables are
 converted to CFS during build except storage and storage-zone (which
 remain in TAF).  The `_KEEP_TAF_KINDS` set controls exemptions.
 
@@ -296,6 +348,31 @@ remain in TAF).  The `_KEEP_TAF_KINDS` set controls exemptions.
 }
 ```
 
+### `gw_budget.parquet`
+
+Wide DataFrame: rows = monthly `DatetimeIndex` (1 199 rows, 1921-11 → 2021-09),
+columns = `{WBA_ID}__{C_PART}` (550 columns, 50 WBAs × 11 C-parts). Values
+in AC.FT. (acre-feet). WBA IDs use zero-padded two-digit numbers (e.g. `02`,
+`07N`, `60S`). 42 WBAs have matching polygons in `water_budget_areas.geojson`;
+8 have no polygon (GWR15–GWR21 in Tulare Basin + NBAY).
+
+### `gw_budget_meta.json`
+
+```jsonc
+{
+  "built_at": "2026-02-27T...",
+  "units": "AC.FT.",
+  "date_range": {"start": "1921-11-30", "end": "2021-09-30"},
+  "c_parts": ["CHANGE_STORAGE", "FLOW_BC", "GHB", ...],  // 11 components
+  "c_part_labels": {
+    "PUMPING": "Pumping", "NET_DEEP_PERC": "Net Deep Percolation", ...
+  },
+  "wba_ids": ["02", "04", "07N", "60S", "GWR15", ...],  // 50 total
+  "wba_ids_with_polygon": ["02", "04", "07N", ...],       // 42 matched
+  "wba_ids_without_polygon": ["GWR15", ..., "NBAY"]       // 8 unmatched
+}
+```
+
 ### `study_meta.json` (in source dir)
 
 ```jsonc
@@ -305,9 +382,14 @@ remain in TAF).  The `_KEEP_TAF_KINDS` set controls exemptions.
   "dv_file":    "DSS/output/DCR2023_DV_9.3.1_Danube_Hist_v1.7.dss",
   "gwout_file": "DSS/output/CVGroundwaterOut.dss",
   "sv_file":    "DSS/input/DCR2023_SV_Danube_Hist_v1.7.dss",
+  "gw_budget_file": "DSS/output/CVGroundwaterBudget.dss",
+  "gw_crosswalk_file": "Run/CVGroundwater/Data/CVElementsToCalsimRegions_20190927.dat",
   "simulation_period": {"start": "1920-10", "end": "2021-09"}
 }
 ```
+
+Optional fields `gw_budget_file` and `gw_crosswalk_file` allow explicit
+paths; when absent, the builder auto-discovers them by glob.
 
 ---
 
@@ -317,7 +399,7 @@ remain in TAF).  The `_KEEP_TAF_KINDS` set controls exemptions.
 
 | Symbol | Purpose |
 |---|---|
-| `GeoNode` | Dataclass: `cs3_id`, lat/lon, `node_type`, `hydro_region`, `dss_variables`, `missing_arcs: List[str]`. Has `to_dict()` / `from_dict()` classmethods. |
+| `GeoNode` | Dataclass: `cs3_id`, lat/lon, `node_type`, `hydro_region`, `dss_variables`, `missing_arcs: List[str]`, `inflow_arcs: List[str]`, `outflow_arcs: List[str]`. Has `to_dict()` / `from_dict()` classmethods. `inflow_arcs`/`outflow_arcs` hold uppercase arc IDs from WRESL connectivity equations (populated by `--diagnose`). |
 | `GeoArc` | Dataclass: `arc_id`, `from_node`, `to_node`, `arc_type`, `coordinates`, `capacity_cfs: Optional[float]`, `solver_active: bool`, `wresl_suggestion: Optional[str]`. Has `to_dict()` / `from_dict()` classmethods. |
 | `GeoNetwork` | Container: `nodes`, `arcs`, `geojson`, `variable_to_node` dicts + `lookup_node()`, `lookup_arc()`, `get_feature()` helpers |
 | `node_type_from_description()` | Derives node_type from NodeDescription text |
@@ -369,6 +451,22 @@ Connectivity file discovery uses `rglob("*.wresl")` filtered by
 
 Internally, `_upper_to_col` dict is built on first load for O(1) case-insensitive column lookups.
 
+### `csview.study.store` — `GwBudgetStore`
+
+Separate dataclass for GW budget data, loaded from `gw_budget.parquet` +
+`gw_budget_meta.json`.
+
+| Method / Property | Purpose |
+|---|---|
+| `GwBudgetStore.from_dir(dir)` | Constructor; returns `None` if files missing |
+| `.wba_ids` | All WBA IDs (50, incl. unmatched) |
+| `.wba_ids_with_polygon` | WBA IDs that match `water_budget_areas.geojson` (42) |
+| `.c_parts` | List of C-part names (11) |
+| `.c_part_labels` | Human-readable C-part names |
+| `.units` | Data units (AC.FT.) |
+| `.get_wba_budget(wba_id)` | Returns `{c_part: pd.Series}` for one WBA |
+| `.has_wba(wba_id)` | O(1) membership check |
+
 ### `csview.study.dss_cache`
 
 Pickle-based cache layer to skip repeated `pydsstools` reads on rebuilds.
@@ -389,6 +487,13 @@ first (direct match), then strips 34 node prefixes longest-first. The `arc_ids`
 set includes `wresl_suggestion` target arcs from catalog so their DSS data is
 extracted even though they have no GeoSchematic geometry.
 
+**SG seepage variables** (`SG{num}_{node}_{c2vsim_element}`) use a dynamic
+prefix that doesn't fit the static prefix table. `_strip_prefix` handles
+them with a dedicated regex (`_SG_PREFIX_RE`) that strips `SG{digits}_` and
+the trailing C2VSim element number to match the embedded node ID
+(e.g. `SG456_CWD009_78` → `CWD009`). `_DLL` (deep-layer leakage) variants
+are excluded as duplicates of the base SG variable.
+
 After prefix stripping, `_strip_prefix` applies three fallback strategies:
 1. Strip known trailing tags (e.g. `DV`).
 2. Strip a trailing `_\d+` suffix for **storage zone** variables
@@ -398,24 +503,48 @@ After prefix stripping, `_strip_prefix` applies three fallback strategies:
    -> `09_NA` matches).  This catches ~900 delivery/contract/loss variables
    whose name embeds a source channel before the destination demand node.
 
-CLI options include `--cache-dir` to use the pickle cache layer (`dss_cache.py`).
+**`--cache-dir` is mandatory** — always pass it to use the pickle cache layer
+(`dss_cache.py`). Without it the builder falls back to pydsstools and takes
+3–5 min instead of ~10 s.
 Helper `_merge_secondary_dss()` consolidates the DV/GWOUT/SV merge pattern.
+
+### `csview.study.gw_budget`
+
+Self-contained pipeline for groundwater budget data: crosswalk parsing, DSS
+reading by C-part, WBA-level aggregation, and parquet output.
+
+| Symbol | Purpose |
+|---|---|
+| `parse_crosswalk(path)` | Reads `CVElementsToCalsimRegions*.dat` → `{SR_name: wba_id}` mapping (66 entries) |
+| `_normalize_wba_id(indx_name)` | Converts `indxWBA_7N` → `"07N"`, `indxEA_60N` → `"60N"`, `indxGWR15` → `"GWR15"` |
+| `_pad_wba_num(s)` | Zero-pads single-digit WBA numbers (`"2"` → `"02"`) to match GeoJSON IDs |
+| `read_gw_budget_by_cpart(dss_path, cache_dir)` | Reads DSS grouped by C-part → `{(SR, cpart): Series}`; uses `.gwbudget.pkl` cache |
+| `build_gw_budget(dss_path, crosswalk_path, out_dir, cache_dir, ...)` | Orchestrates full pipeline → writes parquet + meta |
+| `CPART_LABELS` | Dict of C-part → human-readable name (11 entries) |
+| `_WBA_IDS` | Set of valid WBA IDs from `water_budget_areas.geojson` (42 entries) |
+
+The `.gwbudget.pkl` cache is separate from the standard DSS cache because the
+GW budget DSS has 11 C-parts per variable that must be stored distinctly
+(the standard cache merges C-parts by keeping only the first).
 
 ### `csview.app.state`
 
 `AppState` singleton: `.network` (`GeoNetwork`), `.studies` (`Dict[str, StudyStore]`),
-`.active_study`. Loaded at startup via `lifespan` context.
+`.gw_budgets` (`Dict[str, GwBudgetStore]`), `.active_study`. Loaded at startup
+via `lifespan` context. `get_gw_budget(name)` returns `GwBudgetStore` or `None`.
 
 ### `csview.app.schemas`
 
 | Model | Used for |
 |---|---|
 | `FeatureSummary` | `/api/network/features` list items |
-| `NodeDetail` | Feature detail when node (includes `solver_active`) |
+| `NodeDetail` | Feature detail when node (includes `solver_active`, `seepage_vars`) |
 | `ArcDetail` | Feature detail when arc (includes `wresl_suggestion`) |
 | `NeighborhoodResponse` | Subgraph response |
 | `StudyInfo` / `StudyListResponse` | Study listing |
 | `FeatureResultSeries` | Time series response (includes `wresl_suggestion_used`) |
+| `GwBudgetMeta` | GW budget availability + WBA/C-part metadata |
+| `GwBudgetResponse` | Per-WBA budget series for all C-parts |
 
 `FeatureSummary`, `NodeDetail`, and `ArcDetail` have factory classmethods
 (`from_node()`, `from_arc()`, `from_geo()`) that construct instances directly
@@ -454,6 +583,8 @@ the routers.
 | GET | `/api/study/studies/{name}/variables` | `List[str]` |
 | GET | `/api/study/feature/{id}` | `FeatureResultSeries` |
 | GET | `/api/study/variable/{prmname}` | `FeatureResultSeries` |
+| GET | `/api/study/gw_budget/meta` | `GwBudgetMeta` |
+| GET | `/api/study/gw_budget/{wba_id}` | `GwBudgetResponse` |
 
 **Feature results enrichment** (study router):
 
@@ -513,8 +644,39 @@ via `SUPPRESSED_KINDS`.
 ### GET /api/study/variable/{prmname}
 Query: `study` (optional). Returns `FeatureResultSeries` for one variable.
 
+### GET /api/study/gw_budget/meta
+Query: `study` (optional). Returns `GwBudgetMeta`:
+
+```jsonc
+{
+  "available": true,
+  "wba_ids": ["02", "04", ...],          // 50 total
+  "wba_ids_with_polygon": ["02", ...],   // 42 matched
+  "c_parts": ["CHANGE_STORAGE", ...],    // 11 components
+  "c_part_labels": {"PUMPING": "Pumping", ...},
+  "units": "AC.FT."
+}
+```
+
+### GET /api/study/gw_budget/{wba_id}
+Query: `study` (optional). Returns `GwBudgetResponse` with all C-part time
+series for the given WBA:
+
+```jsonc
+{
+  "wba_id": "07N",
+  "units": "AC.FT.",
+  "c_part_labels": {"PUMPING": "Pumping", ...},
+  "series": {
+    "PUMPING": [["1921-11-30", -12345.6], ...],
+    "NET_DEEP_PERC": [["1921-11-30", 8901.2], ...],
+    ...
+  }
+}
+```
+
 ### GET /api/network/overlays/{layer}
-`layer` ∈ `watersheds`, `water_budget`, `demand_unit`.
+`layer` ∈ `watersheds`, `water_budget`, `demand_unit`, `c2vsim_elements`, `c2vsim_subregions`.
 
 ---
 
@@ -530,8 +692,10 @@ state.  The graph panel appears only when a feature is selected and
 `graphOpen` is true; a header toggle button (graph icon + "Graph") lets the
 user show/hide it.  Two independent `col-resize` drag handles separate the
 three areas.
-State: `selectedNode`, `flyToFeature`, `activeStudy`, `panelOpen`,
+State: `selectedNode`, `selectedWba`, `flyToFeature`, `activeStudy`, `panelOpen`,
 `graphOpen`, `panelWidth`, `graphWidth`.
+When `selectedWba` is set, the right panel shows `GwBudgetPanel` instead of
+`NodePanel`; the neighbourhood graph is hidden.
 
 ### `NetworkMap.jsx`
 - GeoJSON loaded once (React Query, cached indefinitely)
@@ -558,6 +722,18 @@ Deep Percolation (gray `#6b7280`), Tile Drain (stone `#78716c`), Groundwater
 `#7dd3fc`), Closure Term (gray `#4b5563`), Delta Accretion (violet `#a78bfa`),
 Delta Depletion (pink `#f472b6`), default (gray `#4b5563`).
 
+### `RegionalLayers.jsx`
+Collapsible toggle panel (top-right of map) for regional polygon overlays.
+Five layers: Watersheds, Water Budget Areas, Demand Units, C2VSim Elements,
+C2VSim Subregions.  Each layer is fetched lazily via React Query on first
+toggle and cached indefinitely.  When any regional layer is active, the
+network `GeoJSONLayer` is muted (reduced opacity/weight) so regional
+polygons are clearly visible while the schematic stays in context.
+Clicking a polygon zooms to its bounds.  Water Budget Area polygons route
+clicks to `onWbaSelect` (opening the GW budget panel) instead of the
+standard network-select handler.  A badge on the toggle button shows
+the count of active layers.
+
 ### `NodePanel.jsx`
 Feature detail panel with sections:
 - **Header**: feature_id, name/description, type badge, close button
@@ -566,9 +742,13 @@ Feature detail panel with sections:
   solver badge, region), then arc-specific (from/to node, capacity),
   then node-specific (river, gage, lat/lon).  Solver badge shows for both
   arcs and nodes (`solver_active` — nodes are active when they have DSS
-  variables).  `wresl_suggestion` shown as subtle gray note.
-- **Solver-Only Arcs** (node features): collapsible list of `missing_arcs`
-  with gray tags (`text-gray-400 border-gray-700`)
+  variables, missing_arcs, inflow_arcs, or outflow_arcs).  `wresl_suggestion` shown as subtle gray note.
+  The Solver row shows:
+  - Green **solver active** OR gray **schematic only** badge (per `solver_active`)
+  - Yellow **solver-only arcs** pill (when `missing_arcs` non-empty)
+  - Indigo **seepage** pill (when `seepage_vars` non-empty)
+- **Solver-Only Arcs** (node features): collapsible section showing `missing_arcs`
+  (gray tags) and `seepage_vars` (indigo tags). Opens when either is non-empty.
 - **Model Results**: `ResultsChart` with date-range slider; gray "No DSS
   output" message when both arc and suggestion lack data
 
@@ -578,6 +758,20 @@ controlled props (`displayUnit` / `onDisplayUnitChange`, `aggMode` /
 `onAggModeChange`).  The year-range slider likewise persists: on feature
 change, existing indices are *clamped* to the new years array instead of
 reset, so the user's zoom level is preserved.
+
+### `GwBudgetPanel.jsx`
+Stacked bar chart (Recharts `BarChart` with `stackOffset="sign"`) showing
+groundwater budget components for a selected Water Budget Area. Props:
+`wbaId`, `activeStudy`, `onClose`.
+
+- Fetches all 11 C-part series via `fetchGwBudget(wbaId, study)`
+- **Aggregation modes**: Time Series (monthly) or Water Year (annual sum)
+- **Toggleable legend**: click a component name to hide/show its bars
+- **Custom tooltip**: lists per-component values + net total
+- **Color scheme**: warm tones for outflows (PUMPING = red `#ef4444`),
+  cool tones for inflows (NET_DEEP_PERC = blue `#3b82f6`)
+- **Chart layout**: positive bars stack upward (recharge), negative stack
+  downward (extraction); a zero reference line separates them
 
 ### `ResultsChart.jsx`
 `splitSeries()` partitions variables into four buckets:
@@ -670,11 +864,12 @@ python -m csview.geo \
     --out     data/network/ \
     --diagnose --fix-topology
 
-# 2. Study results (slow, 3-5 min — run with log file)
+# 2. Study results (~10s with cache; always use --cache-dir)
 python -m csview.study \
     --source  reference/calsim-studies/study_a \
     --catalog data/network/catalog.json \
-    --out     data/study/study_a/
+    --out     data/study/study_a/ \
+    --cache-dir data/study/study_a/.dss_cache
 
 # 3. Frontend
 cd csview/app/frontend && npm install && npm run build
@@ -693,8 +888,9 @@ for multi-study mode with `--default-study`.
 
 ### Current study
 
-`danube_hist` (slug: `study_a`): 4 834 variables × 1 200 monthly time steps
-(1921-10 → 2021-09). 2 478 arc variables, 2 356 node variables.
+`danube_hist` (slug: `study_a`): ~6 026 variables × 1 200 monthly time steps
+(1921-10 → 2021-09). Includes ~356 SG (stream-groundwater seepage) node
+variables matched via the `SG{num}_` dynamic prefix.
 
 ---
 
@@ -712,4 +908,4 @@ for multi-study mode with `--default-study`.
 
 ---
 
-*Last updated: 2026-02-26*
+*Last updated: 2026-02-27*  <!-- GW budget pipeline: gw_budget.py, GwBudgetStore, GwBudgetPanel, WBA click routing -->

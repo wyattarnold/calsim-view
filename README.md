@@ -65,14 +65,18 @@ python -m csview.geo ^
     --out     data/network/
 ```
 
-### 2. Rebuild study results (slow — 3–5 min)
+### 2. Rebuild study results
 
 ```bat
 python -m csview.study ^
     --source  reference/calsim-studies/study_a ^
     --catalog data/network/catalog.json ^
-    --out     data/study/study_a/
+    --out     data/study/study_a/ ^
+    --cache-dir data/study/study_a/.dss_cache
 ```
+
+Always use `--cache-dir` to read from the DSS pickle cache (~10 s).
+Without it the builder falls back to pydsstools and takes 3–5 min.
 
 ### 3. Rebuild the frontend
 
