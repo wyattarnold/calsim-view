@@ -199,3 +199,108 @@ class StudyStore:
         if df.empty:
             return None, None
         return str(df.index.min().date()), str(df.index.max().date())
+
+
+# ---------------------------------------------------------------------------
+# GW Budget Store — per-WBA groundwater budget time series
+# ---------------------------------------------------------------------------
+
+GW_BUDGET_PARQUET = "gw_budget.parquet"
+GW_BUDGET_META = "gw_budget_meta.json"
+
+
+@dataclass
+class GwBudgetStore:
+    """Pre-built groundwater budget results aggregated by Water Budget Area.
+
+    Backed by ``gw_budget.parquet`` with columns like ``"02__PUMPING"``.
+    Loaded lazily on first access.
+    """
+
+    study_dir: Path
+    _df: Optional[pd.DataFrame] = field(default=None, repr=False)
+    _meta: Optional[Dict[str, Any]] = field(default=None, repr=False)
+
+    @classmethod
+    def from_dir(cls, study_dir: Path) -> Optional["GwBudgetStore"]:
+        """Return a GwBudgetStore if gw_budget.parquet exists, else None."""
+        study_dir = Path(study_dir)
+        if not (study_dir / GW_BUDGET_PARQUET).exists():
+            return None
+        return cls(study_dir=study_dir)
+
+    @property
+    def available(self) -> bool:
+        return (self.study_dir / GW_BUDGET_PARQUET).exists()
+
+    def _ensure_loaded(self) -> pd.DataFrame:
+        if self._df is None:
+            path = self.study_dir / GW_BUDGET_PARQUET
+            logger.info("Loading GW budget from %s", path)
+            self._df = pd.read_parquet(path)
+            logger.info(
+                "  GW budget: %d columns × %d rows",
+                len(self._df.columns), len(self._df),
+            )
+        return self._df
+
+    def _ensure_meta(self) -> Dict[str, Any]:
+        if self._meta is None:
+            meta_path = self.study_dir / GW_BUDGET_META
+            if meta_path.exists():
+                self._meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            else:
+                self._meta = {}
+        return self._meta
+
+    @property
+    def wba_ids(self) -> List[str]:
+        """All WBA IDs that have budget data."""
+        meta = self._ensure_meta()
+        return meta.get("wba_ids", [])
+
+    @property
+    def wba_ids_with_polygon(self) -> List[str]:
+        """WBA IDs that have matching GeoJSON polygons."""
+        meta = self._ensure_meta()
+        return meta.get("wba_ids_with_polygon", [])
+
+    @property
+    def c_parts(self) -> List[str]:
+        """Available C-part (budget component) names."""
+        meta = self._ensure_meta()
+        return meta.get("c_parts", [])
+
+    @property
+    def c_part_labels(self) -> Dict[str, str]:
+        """Human-readable labels for C-parts."""
+        meta = self._ensure_meta()
+        return meta.get("c_part_labels", {})
+
+    @property
+    def units(self) -> str:
+        meta = self._ensure_meta()
+        return meta.get("units", "")
+
+    def get_wba_budget(self, wba_id: str) -> Dict[str, pd.Series]:
+        """Return all budget component series for *wba_id*.
+
+        Returns
+        -------
+        dict
+            ``{"PUMPING": pd.Series, "NET_DEEP_PERC": pd.Series, ...}``
+        """
+        df = self._ensure_loaded()
+        prefix = f"{wba_id}__"
+        result: Dict[str, pd.Series] = {}
+        for col in df.columns:
+            if col.startswith(prefix):
+                c_part = col[len(prefix):]
+                s = df[col].dropna()
+                if not s.empty:
+                    result[c_part] = s
+        return result
+
+    def has_wba(self, wba_id: str) -> bool:
+        """Return True if budget data exists for *wba_id*."""
+        return wba_id in self.wba_ids

@@ -131,20 +131,53 @@ ARC_DSS_OVERRIDES: Dict[str, List[str]] = {
 # After stripping the prefix, also try removing these to find a node match.
 _NODE_TRAILING_TAGS = ("DV",)
 
+# Regex for stream-groundwater seepage variables: SG{num}_{node}_{c2vsim_element}
+# _DLL (deep-layer leakage) variants are duplicates and are skipped.
+# Examples: SG456_CWD009_78, SG218_CWD004_35
+_SG_PREFIX_RE = re.compile(r'^SG(\d+)_', re.IGNORECASE)
+
 
 def _strip_prefix(varname: str, cs3_ids: Set[str]) -> Optional[str]:
     """Return the cs3_id if varname maps to a GeoSchematic node, else None.
 
     Matching strategy (applied in order after stripping each known prefix):
       1. Direct match of the remainder against cs3_ids.
-      2. Strip known trailing tags (e.g. "DV").
+      2. Strip known trailing tags (e.g. "DV", "DLL").
       3. Strip a trailing ``_N`` digit suffix (storage-zone variables).
       4. Progressively remove leading ``_``-separated segments.  Many CalSim
          DV variables embed a source or channel ID before the destination
          node (e.g. ``WR_ESL010_09_NA`` -> ``09_NA``).  We peel one leading
          segment at a time and check the remainder.
+
+    SG (stream-groundwater seepage) variables use a dynamic prefix
+    ``SG{digits}_`` that doesn't fit the static prefix table.  These are
+    handled separately before the main prefix loop.  ``_DLL`` (deep-layer
+    leakage) variants are near-duplicates of the base SG variable and are
+    excluded to avoid double-counting.
     """
     upper = varname.upper()
+
+    # --- SG seepage variables: SG{num}_{node}_{c2vsim} ---------------------
+    sg_m = _SG_PREFIX_RE.match(upper)
+    if sg_m:
+        # Skip _DLL variants — they duplicate the base SG variable
+        if upper.endswith("_DLL"):
+            return None
+        candidate = upper[sg_m.end():]          # e.g. "CWD009_78"
+        if candidate in cs3_ids:
+            return candidate
+        # Strip trailing _N c2vsim element number (e.g. CWD009_78 -> CWD009)
+        m = re.match(r'^(.+?)_(\d+)$', candidate)
+        if m and m.group(1) in cs3_ids:
+            return m.group(1)
+        # Progressive segment stripping
+        parts = candidate.split("_")
+        for i in range(1, len(parts)):
+            suffix = "_".join(parts[i:])
+            if suffix in cs3_ids:
+                return suffix
+
+    # --- Standard static prefixes -------------------------------------------
     for pfx in _NODE_PREFIXES:
         if upper.startswith(pfx):
             candidate = upper[len(pfx):]
@@ -423,11 +456,21 @@ def build_results(
         ws = arc_data.get("wresl_suggestion")
         if ws:
             suggestion_ids.add(ws.upper())
-    arc_ids_plus = arc_ids | suggestion_ids
+
+    # Also include missing_arcs from all nodes — these are solver-only arcs
+    # (e.g. D_BKR004_NBA009_SCWA_B) that appear in connectivity equations but
+    # have no GeoSchematic entry.  We want their DSS timeseries available so
+    # the NodePanel's Solver-Only Arcs section can show a chart for them.
+    missing_arc_ids: Set[str] = set()
+    for node_data in catalog.get("nodes", {}).values():
+        for ma in node_data.get("missing_arcs", []):
+            missing_arc_ids.add(ma.upper())
+
+    arc_ids_plus = arc_ids | suggestion_ids | missing_arc_ids
 
     logger.info(
-        "Catalog: %d arcs, %d nodes (+%d wresl_suggestion targets)",
-        len(arc_ids), len(cs3_ids), len(suggestion_ids),
+        "Catalog: %d arcs, %d nodes (+%d wresl_suggestion, +%d missing-arc targets)",
+        len(arc_ids), len(cs3_ids), len(suggestion_ids), len(missing_arc_ids),
     )
 
     # -----------------------------------------------------------------------
@@ -472,6 +515,43 @@ def build_results(
         sv_path = (preferred or sv_candidates or [None])[0]
         if sv_path:
             logger.info("SV file (auto-discovered): %s", sv_path)
+
+    # --- GW budget DSS -------------------------------------------------------
+    gw_budget_path: Optional[Path] = None
+    gw_budget_hint = source_meta.get("gw_budget_file")
+    if gw_budget_hint:
+        p = study_dir / gw_budget_hint
+        if p.exists():
+            gw_budget_path = p
+            logger.info("GW budget file: %s", gw_budget_path)
+        else:
+            logger.warning("gw_budget_file not found: %s — skipping", p)
+    else:
+        # Auto-discover CVGroundwaterBudget.dss in DSS/output/
+        output_dir = study_dir / "DSS" / "output"
+        gw_candidates = (
+            sorted(output_dir.glob("*GroundwaterBudget*.dss"))
+            if output_dir.exists() else []
+        )
+        gw_budget_path = gw_candidates[0] if gw_candidates else None
+        if gw_budget_path:
+            logger.info("GW budget file (auto-discovered): %s", gw_budget_path)
+
+    # --- GW budget crosswalk file ---
+    crosswalk_path: Optional[Path] = None
+    crosswalk_hint = source_meta.get("gw_crosswalk_file")
+    if crosswalk_hint:
+        p = study_dir / crosswalk_hint
+        if p.exists():
+            crosswalk_path = p
+    else:
+        # Auto-discover in Run/CVGroundwater/Data/
+        gw_data_dir = study_dir / "Run" / "CVGroundwater" / "Data"
+        if gw_data_dir.exists():
+            cw_candidates = sorted(gw_data_dir.glob("CVElementsToCalsimRegions*.dat"))
+            crosswalk_path = cw_candidates[0] if cw_candidates else None
+    if crosswalk_path:
+        logger.info("GW crosswalk: %s", crosswalk_path)
 
     # -----------------------------------------------------------------------
     # Read DV file
@@ -647,6 +727,25 @@ def build_results(
     # -----------------------------------------------------------------------
     if patch_catalog:
         _patch_catalog(catalog_path, var_to_node, node_dss_vars)
+
+    # -----------------------------------------------------------------------
+    # Build GW budget parquet (if CVGroundwaterBudget.dss + crosswalk found)
+    # -----------------------------------------------------------------------
+    if gw_budget_path and crosswalk_path:
+        from csview.study.gw_budget import build_gw_budget
+        logger.info("Building GW budget...")
+        build_gw_budget(
+            dss_path=gw_budget_path,
+            crosswalk_path=crosswalk_path,
+            out_dir=out_dir,
+            cache_dir=cache_dir,
+            sim_start=sim_start,
+            sim_end=sim_end,
+        )
+    elif gw_budget_path and not crosswalk_path:
+        logger.warning("GW budget DSS found but no crosswalk file — skipping GW budget")
+    else:
+        logger.info("No GW budget DSS found — skipping GW budget")
 
 
 def _infer_units(c_part: str, feature_kind: str) -> str:
