@@ -55,11 +55,13 @@ class AppState:
             sp = Path(sp)
             try:
                 store = StudyStore.from_dir(sp)
+                store._ensure_loaded()  # eager load — avoids blocking on first request
                 self.studies[store.name] = store
                 logger.info("Registered study: %s", store.name)
                 # Also check for GW budget
                 gw = GwBudgetStore.from_dir(sp)
                 if gw is not None:
+                    gw._ensure_loaded()  # eager load GW budget too
                     self.gw_budgets[store.name] = gw
                     logger.info("  GW budget available for %s", store.name)
             except FileNotFoundError as exc:

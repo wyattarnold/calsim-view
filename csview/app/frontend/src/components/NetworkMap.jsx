@@ -3,6 +3,9 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet-arrowheads";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { fetchNetwork } from "../api/client.js";
 import RegionalLayers from "./RegionalLayers.jsx";
 import {
@@ -15,9 +18,9 @@ import {
 // Fix Leaflet default icon paths broken by Vite bundling
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 });
 
 const ARROW_MIN_ZOOM = 11;
