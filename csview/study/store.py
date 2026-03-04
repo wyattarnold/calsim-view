@@ -1,5 +1,9 @@
 """
-StudyStore — fast in-memory access to pre-built Parquet results.
+StudyStore — memory-efficient access to pre-built Parquet results.
+
+Individual columns are read on demand from the Parquet file rather than
+loading the full DataFrame into memory.  This reduces per-study RAM from
+~60 MB to near-zero at a latency cost of ~1-2 ms per column read (SSD).
 
 File layout per compiled study directory
 -----------------------------------------
@@ -31,15 +35,19 @@ META_FILE = "results_meta.json"
 class StudyStore:
     """Pre-built results for one CalSim study (backed by a Parquet file).
 
-    The DataFrame is loaded lazily on first access and cached in memory.
-    All per-variable queries are O(1) column lookups on the in-memory frame.
+    A lightweight ``pyarrow.ParquetFile`` handle is held open so that
+    per-column reads avoid re-reading Parquet footer metadata.  Actual
+    column data is read on demand — either one-at-a-time via
+    ``get_series()`` or in bulk via ``get_series_batch()`` /
+    ``get_multi_feature_series()``.
     """
 
     name: str
     study_dir: Path
-    _df: Optional[pd.DataFrame] = field(default=None, repr=False)
     _meta: Optional[Dict[str, Any]] = field(default=None, repr=False)
     _upper_to_col: Optional[Dict[str, str]] = field(default=None, repr=False)
+    _pf: Optional[Any] = field(default=None, repr=False)  # cached pq.ParquetFile
+    _cached_index: Optional[Any] = field(default=None, repr=False)  # DatetimeIndex
 
     # ------------------------------------------------------------------
     # Construction helpers
@@ -80,24 +88,35 @@ class StudyStore:
         return self.study_dir / META_FILE
 
     # ------------------------------------------------------------------
-    # Lazy loading
+    # Schema / index loading (lightweight — no data read)
     # ------------------------------------------------------------------
 
-    def _ensure_loaded(self) -> pd.DataFrame:
-        if self._df is None:
-            logger.info("Loading results from %s", self.parquet_path)
-            self._df = pd.read_parquet(self.parquet_path)
-            # Timestamps in the Parquet are already end-of-month for the
-            # correct period (snapped by the DSS reader at build time).
-            # No additional shift is needed.
-            # Build case-insensitive lookup: UPPER → actual column name
-            self._upper_to_col = {c.upper(): c for c in self._df.columns}
-            logger.info(
-                "  Loaded: %d variables x %d time steps",
-                len(self._df.columns),
-                len(self._df),
-            )
-        return self._df
+    def _ensure_index(self) -> None:
+        """Open a cached ParquetFile handle and build the column index."""
+        if self._upper_to_col is not None:
+            return
+        import pyarrow.parquet as pq
+
+        self._pf = pq.ParquetFile(str(self.parquet_path))
+        cols = [n for n in self._pf.schema_arrow.names
+                if not n.startswith("__")]
+        self._upper_to_col = {c.upper(): c for c in cols}
+
+        # Cache the DatetimeIndex by reading one column with pd.read_parquet
+        # which correctly restores the pandas index from Parquet metadata.
+        if cols:
+            df_one = pd.read_parquet(self.parquet_path, columns=[cols[0]])
+            self._cached_index = df_one.index
+        else:
+            self._cached_index = pd.RangeIndex(0)
+
+        logger.info(
+            "Indexed %d variables from %s", len(cols), self.parquet_path
+        )
+
+    # Keep legacy name as an alias so callers (e.g. state.py eager-load)
+    # continue to work without loading the full DataFrame into memory.
+    _ensure_loaded = _ensure_index
 
     def _ensure_meta(self) -> Dict[str, Any]:
         if self._meta is None:
@@ -113,34 +132,59 @@ class StudyStore:
 
     @property
     def variables(self) -> List[str]:
-        """List all variable names available in this study store.
-
-        Uses pyarrow schema read so the Parquet file doesn't need to be fully
-        loaded into memory just to list columns.
-        """
-        if self._df is not None:
-            return list(self._df.columns)
-        try:
-            import pyarrow.parquet as pq
-            return pq.read_schema(str(self.parquet_path)).names
-        except Exception:
-            return list(self._ensure_loaded().columns)
+        """List all variable names available in this study store."""
+        self._ensure_index()
+        return list(self._upper_to_col.values())  # type: ignore[union-attr]
 
     def has_variable(self, prmname: str) -> bool:
-        self._ensure_loaded()
+        self._ensure_index()
         return prmname.upper() in self._upper_to_col  # type: ignore[arg-type]
 
     def get_series(self, prmname: str) -> Optional[pd.Series]:
         """Return the monthly time series for *prmname*, or None if not found.
 
-        The series has a DatetimeIndex and NaN values already dropped.
-        Uses a cached uppercase→column map for O(1) case-insensitive lookup.
+        Uses the cached ParquetFile handle to avoid re-reading footer
+        metadata.  Downcast to float32 to halve memory.
         """
-        df = self._ensure_loaded()
+        self._ensure_index()
         col = self._upper_to_col.get(prmname.upper())  # type: ignore[union-attr]
         if col is None:
             return None
-        return df[col].dropna()
+        table = self._pf.read(columns=[col])  # type: ignore[union-attr]
+        df = table.to_pandas()
+        df.index = self._cached_index
+        s = df.iloc[:, 0].dropna()
+        if s.dtype == "float64":
+            s = s.astype("float32")
+        return s
+
+    def get_series_batch(self, prmnames: List[str]) -> Dict[str, pd.Series]:
+        """Read multiple columns in one Parquet I/O pass.
+
+        Returns a dict keyed by the input *prmnames* (only those that exist
+        in the Parquet).  All float64 data is downcast to float32.
+        """
+        self._ensure_index()
+        to_read: Dict[str, str] = {}  # input name → actual column
+        for name in prmnames:
+            col = self._upper_to_col.get(name.upper())  # type: ignore[union-attr]
+            if col is not None:
+                to_read[name] = col
+        if not to_read:
+            return {}
+        unique_cols = list(dict.fromkeys(to_read.values()))  # dedupe, keep order
+        table = self._pf.read(columns=unique_cols)  # type: ignore[union-attr]
+        df = table.to_pandas()
+        df.index = self._cached_index
+        float_cols = df.select_dtypes("float64").columns
+        if len(float_cols):
+            df[float_cols] = df[float_cols].astype("float32")
+        result: Dict[str, pd.Series] = {}
+        for name, col in to_read.items():
+            s = df[col].dropna()
+            if not s.empty:
+                result[name] = s
+        return result
 
     def get_feature_series(self, feature_id: str) -> Dict[str, pd.Series]:
         """Return all series for a GeoSchematic *feature_id*.
@@ -149,29 +193,65 @@ class StudyStore:
         one series is returned.  For node features multiple DSS variables may
         map to the same node; this method returns all of them.
 
-        Returns a dict keyed by variable name.
+        All candidates are collected first and read in a single Parquet I/O
+        pass via :meth:`get_series_batch`.
         """
-        result: Dict[str, pd.Series] = {}
         meta = self._ensure_meta()
-        # Try direct match (arc features: arc_id == DSS variable name)
-        s = self.get_series(feature_id)
-        if s is not None:
-            result[feature_id] = s
-        # For node features without a direct match, look up node_dss_variables
-        if not result:
-            node_vars = meta.get("node_dss_variables", {}).get(feature_id.upper(), [])
-            for var in node_vars:
-                s = self.get_series(var)
-                if s is not None:
-                    result[var] = s
-        # For arc features with override DSS variable mappings, append them
-        # alongside any direct match (allows split-flow arcs like C_SAC000)
+        node_vars = meta.get("node_dss_variables", {}).get(feature_id.upper(), [])
         arc_vars = meta.get("arc_dss_variables", {}).get(feature_id.upper(), [])
+
+        # One batch read for all candidates
+        batch = self.get_series_batch([feature_id] + node_vars + arc_vars)
+
+        result: Dict[str, pd.Series] = {}
+        if feature_id in batch:
+            result[feature_id] = batch[feature_id]
+        # Node variables (only when no direct match)
+        if not result:
+            for var in node_vars:
+                if var in batch:
+                    result[var] = batch[var]
+        # Arc-level DSS variable overrides (always append)
         for var in arc_vars:
-            if var not in result:
-                s = self.get_series(var)
-                if s is not None:
-                    result[var] = s
+            if var not in result and var in batch:
+                result[var] = batch[var]
+        return result
+
+    def get_multi_feature_series(
+        self, feature_ids: List[str],
+    ) -> Dict[str, Dict[str, pd.Series]]:
+        """Batch :meth:`get_feature_series` for many feature IDs at once.
+
+        Returns ``{feature_id: {var: Series, ...}, ...}`` with a single
+        underlying Parquet I/O pass.
+        """
+        meta = self._ensure_meta()
+        all_candidates: List[str] = []
+        for fid in feature_ids:
+            all_candidates.append(fid)
+            all_candidates.extend(
+                meta.get("node_dss_variables", {}).get(fid.upper(), []))
+            all_candidates.extend(
+                meta.get("arc_dss_variables", {}).get(fid.upper(), []))
+
+        batch = self.get_series_batch(all_candidates)
+
+        result: Dict[str, Dict[str, pd.Series]] = {}
+        for fid in feature_ids:
+            node_vars = meta.get("node_dss_variables", {}).get(fid.upper(), [])
+            arc_vars = meta.get("arc_dss_variables", {}).get(fid.upper(), [])
+            per_fid: Dict[str, pd.Series] = {}
+            if fid in batch:
+                per_fid[fid] = batch[fid]
+            if not per_fid:
+                for var in node_vars:
+                    if var in batch:
+                        per_fid[var] = batch[var]
+            for var in arc_vars:
+                if var not in per_fid and var in batch:
+                    per_fid[var] = batch[var]
+            if per_fid:
+                result[fid] = per_fid
         return result
 
     def get_variable_meta(self, prmname: str) -> Dict[str, Any]:
@@ -185,8 +265,8 @@ class StudyStore:
         """Return (start_date, end_date) as ISO-format strings, or (None, None).
 
         Reads ``date_start``/``date_end`` from ``results_meta.json`` when
-        available so the full Parquet is *not* loaded just to list studies.
-        Falls back to the Parquet index only if the metadata fields are absent.
+        available so the full Parquet is *not* loaded into memory.
+        Falls back to reading a single Parquet column for the index range.
         """
         meta = self._ensure_meta()
         dr = meta.get("date_range", {})
@@ -194,8 +274,14 @@ class StudyStore:
         end = dr.get("end") if isinstance(dr, dict) else None
         if start and end:
             return start, end
-        # Fallback: derive from Parquet index (triggers full load)
-        df = self._ensure_loaded()
+        # Fallback: read one column via cached PF to derive index range
+        self._ensure_index()
+        if not self._upper_to_col:
+            return None, None
+        any_col = next(iter(self._upper_to_col.values()))
+        table = self._pf.read(columns=[any_col])  # type: ignore[union-attr]
+        df = table.to_pandas()
+        df.index = self._cached_index
         if df.empty:
             return None, None
         return str(df.index.min().date()), str(df.index.max().date())
@@ -238,6 +324,10 @@ class GwBudgetStore:
             path = self.study_dir / GW_BUDGET_PARQUET
             logger.info("Loading GW budget from %s", path)
             self._df = pd.read_parquet(path)
+            # Downcast float64 → float32 to halve memory (~5 MB → ~2.5 MB)
+            float_cols = self._df.select_dtypes("float64").columns
+            if len(float_cols):
+                self._df[float_cols] = self._df[float_cols].astype("float32")
             logger.info(
                 "  GW budget: %d columns × %d rows",
                 len(self._df.columns), len(self._df),

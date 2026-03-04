@@ -105,9 +105,11 @@ class AppState:
         yield from self.studies.values()
 
     def close(self) -> None:
-        """Release any held resources (Parquet frames, etc.)."""
+        """Release any held resources."""
         for store in self.studies.values():
-            store._df = None
+            store._pf = None
+            store._cached_index = None
+            store._upper_to_col = None
             store._meta = None
 
 

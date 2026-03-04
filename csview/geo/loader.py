@@ -109,6 +109,7 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
 
     cat = json.loads(cat_path.read_text(encoding="utf-8"))
     gn = GeoNetwork()
+    gn.network_dir = catalog_dir
 
     # Nodes
     for cs3_id_upper, d in cat.get("nodes", {}).items():
@@ -121,15 +122,14 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
     gn.variable_to_node  = cat.get("variable_to_node",  {})
     gn.arc_connectivity  = cat.get("arc_connectivity",  {})
 
-    # GeoJSON FeatureCollection
+    # GeoJSON FeatureCollection — deliberately NOT loaded into memory.
+    # The app serves the file directly with FileResponse to save ~80 MB RAM.
     geojson_path = catalog_dir / "network.geojson"
-    if geojson_path.exists():
-        gn.geojson = json.loads(geojson_path.read_text(encoding="utf-8"))
-    else:
+    if not geojson_path.exists():
         logger.warning("network.geojson not found in %s; rebuilding GeoJSON", catalog_dir)
         _build_geojson(gn)
 
-    # Overlay layers (optional)
+    # Overlay layers — also NOT loaded into memory; served via FileResponse.
     for attr, fname in (
         ("watersheds_geojson", "watersheds.geojson"),
         ("water_budget_geojson", "water_budget_areas.geojson"),
@@ -138,8 +138,8 @@ def load_from_catalog(catalog_dir: Path) -> GeoNetwork:
         ("c2vsim_subregions_geojson", "c2vsim_subregions.geojson"),
     ):
         p = catalog_dir / fname
-        if p.exists():
-            setattr(gn, attr, json.loads(p.read_text(encoding="utf-8")))
+        if not p.exists():
+            logger.info("Overlay %s not found, skipping", fname)
 
     logger.info(
         "GeoNetwork loaded from catalog: %d nodes, %d arcs, %d variable->node mappings",

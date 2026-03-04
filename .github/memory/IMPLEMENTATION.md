@@ -40,7 +40,7 @@ calsim-view/
 │   │   └── __main__.py               ← CLI: build catalog.json + network.geojson
 │   │
 │   ├── study/                        ← Parquet-backed study results + DSS reader
-│   │   ├── store.py                  ← StudyStore + GwBudgetStore (lazy Parquet load)
+│   │   ├── store.py                  ← StudyStore (column-on-demand Parquet) + GwBudgetStore
 │   │   ├── dss_reader.py             ← HEC-DSS binary reader (pydsstools wrapper)
 │   │   ├── dss_cache.py              ← Pickle cache layer (skip pydsstools on rebuild)
 │   │   ├── gw_budget.py              ← GW budget pipeline: crosswalk → DSS → WBA parquet
@@ -128,8 +128,8 @@ calsim-view/
 │                                                             │
 │  python -m csview.app serve --network-dir ... --study ...  │
 │       ├── AppState.load()                                   │
-│       │     ├── load_from_catalog() → GeoNetwork (in-memory)│
-│       │     └── StudyStore.from_dir() → lazy Parquet        │
+│       │     ├── load_from_catalog() → GeoNetwork (no GeoJSON)│
+│       │     └── StudyStore.from_dir() → schema-only index   │
 │       ├── /api/network/* → network router                   │
 │       ├── /api/study/*   → study router                     │
 │       └── /*             → React SPA (static files)         │
@@ -141,11 +141,14 @@ Key design decisions:
 - **Single identifier per feature**: `feature_id` is the canonical key —
   `cs3_id.upper()` for nodes, `arc_id.upper()` for arcs.
 - **GeoJSON baked at build time**: `network.geojson` is written once and served
-  as a static file; never regenerated at runtime.
-- **Lazy Parquet loading**: `StudyStore` loads `results.parquet` only on the
-  first `/api/study/feature/…` request; subsequent queries are O(1) column
-  lookups.  Parquet timestamps are already end-of-month for the correct
-  period — no runtime shift is applied.
+  directly from disk via `FileResponse` — the parsed dict is **not** held in
+  memory.  Overlay GeoJSON files are served the same way.
+- **Column-on-demand Parquet**: `StudyStore` loads only the Parquet schema
+  (column names) at startup.  Individual columns are read on demand via
+  `pd.read_parquet(path, columns=[col])` — approximately 1–2 ms per column on
+  SSD.  All float64 data is downcast to float32 on read (~50 % memory
+  reduction for any series held by the caller).  Parquet timestamps are
+  already end-of-month — no runtime shift is applied.
 - **Build order matters**: when rebuilding both, **network first** — the study
   builder reads `catalog.json` to decide which DSS variables to extract
   (including `wresl_suggestion` target arc IDs).
@@ -948,4 +951,4 @@ variables matched via the `SG{num}_` dynamic prefix.
 
 ---
 
-*Last updated: 2026-03-04*  <!-- hosted deployment: render.yaml, build.sh, bundle/serve --hosted CLI -->
+*Last updated: 2026-03-05*  <!-- memory optimisations: FileResponse GeoJSON, column-on-demand Parquet, float32 downcast -->

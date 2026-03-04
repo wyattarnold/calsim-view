@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse
 
 from csview.app.schemas import (
     ArcDetail,
@@ -21,17 +22,41 @@ from csview.geo.models import GeoArc, GeoNetwork, GeoNode
 
 router = APIRouter()
 
+# Map overlay layer names → on-disk filenames
+_OVERLAY_FILES = {
+    "watersheds": "watersheds.geojson",
+    "water_budget": "water_budget_areas.geojson",
+    "demand_unit": "demand_units.geojson",
+    "c2vsim_elements": "c2vsim_elements.geojson",
+    "c2vsim_subregions": "c2vsim_subregions.geojson",
+}
+
 
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
 
 @router.get("", summary="Full network as GeoJSON FeatureCollection")
-def get_network(state: AppState = Depends(get_state)) -> dict:
-    """Return all arcs and nodes as a merged GeoJSON FeatureCollection."""
+def get_network(state: AppState = Depends(get_state)):
+    """Return all arcs and nodes as a merged GeoJSON FeatureCollection.
+
+    Served directly from disk via FileResponse to avoid holding the
+    ~10 MB GeoJSON (~80 MB parsed) in memory.
+    """
     if state.network is None:
         return {"type": "FeatureCollection", "features": []}
-    return state.network.geojson
+    net_dir = state.network.network_dir
+    if net_dir is not None:
+        geojson_path = net_dir / "network.geojson"
+        if geojson_path.exists():
+            return FileResponse(
+                str(geojson_path),
+                media_type="application/geo+json",
+            )
+    # Fallback: in-memory dict (populated by builder or --rebuild)
+    if state.network.geojson:
+        return state.network.geojson
+    return {"type": "FeatureCollection", "features": []}
 
 
 @router.get("/features", response_model=List[FeatureSummary], summary="List all features")
@@ -232,9 +257,25 @@ def list_arc_types(state: AppState = Depends(get_state)) -> List[str]:
 
 
 @router.get("/overlays/{layer}", summary="Overlay GeoJSON (watersheds, water_budget, demand_unit)")
-def get_overlay(layer: str, state: AppState = Depends(get_state)) -> dict:
+def get_overlay(layer: str, state: AppState = Depends(get_state)):
+    """Serve an overlay GeoJSON directly from disk via FileResponse."""
     if state.network is None:
         raise HTTPException(status_code=503, detail="Network not loaded")
+
+    fname = _OVERLAY_FILES.get(layer)
+    if fname is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Layer '{layer}' not found. Available: {list(_OVERLAY_FILES.keys())}",
+        )
+
+    net_dir = state.network.network_dir
+    if net_dir is not None:
+        path = net_dir / fname
+        if path.exists():
+            return FileResponse(str(path), media_type="application/geo+json")
+
+    # Fallback: in-memory dict (builder mode or legacy)
     mapping = {
         "watersheds": state.network.watersheds_geojson,
         "water_budget": state.network.water_budget_geojson,
@@ -243,9 +284,6 @@ def get_overlay(layer: str, state: AppState = Depends(get_state)) -> dict:
         "c2vsim_subregions": state.network.c2vsim_subregions_geojson,
     }
     data = mapping.get(layer)
-    if data is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Layer '{layer}' not found. Available: {list(mapping.keys())}",
-        )
+    if not data:
+        raise HTTPException(status_code=404, detail=f"Layer '{layer}' has no data")
     return data

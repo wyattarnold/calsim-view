@@ -4,6 +4,7 @@ Data classes for the GeoSchematic-based CalSim 3 network.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
@@ -269,8 +270,14 @@ class GeoNetwork:
     nodes: Dict[str, GeoNode] = field(default_factory=dict)   # cs3_id.upper() → GeoNode
     arcs: Dict[str, GeoArc] = field(default_factory=dict)      # arc_id.upper() → GeoArc
 
-    # Pre-built GeoJSON FeatureCollection
+    # Pre-built GeoJSON FeatureCollection (populated by builder; left empty
+    # when loaded via ``load_from_catalog`` to save memory — the app serves
+    # the file directly with ``FileResponse``).
     geojson: Dict[str, Any] = field(default_factory=dict)
+
+    # Directory containing pre-built catalog files (set by load_from_catalog).
+    # Used at runtime to serve GeoJSON files directly from disk.
+    network_dir: Optional[Path] = None
 
     # Reverse index: DSS variable name (upper) → cs3_id
     # Populated when results are built (or via WRESL catalog).
