@@ -25,12 +25,16 @@ import {
   aggregateMonthlyAvg,
   aggregateWaterYear,
   aggregateWaterYearEnd,
+  computeYearTicks,
   WB_TERMS,
   WB_ORDER,
   WB_COLORS,
   WB_POSITIVE,
 } from "./charts/chartUtils.js";
 import { ToggleLegend, ChartTooltip } from "./charts/ChartParts.jsx";
+
+// Module-level constant — WB_TERMS keys never change at runtime
+const WB_TERMS_SET = new Set(Object.keys(WB_TERMS));
 
 // ---------------------------------------------------------------------------
 // Aggregation mode selector — shared by all sub-charts
@@ -143,11 +147,10 @@ function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, r
     return [Math.min(mn - pad, 0), Math.max(mx + pad, 0)];
   }, [hidden, data, zoneMax]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const yearTicks = useMemo(() => {
-    if (aggMode !== "raw") return undefined;
-    const seen = new Set();
-    return chartData.filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; }).map((r) => r.date);
-  }, [chartData, aggMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const yearTicks = useMemo(
+    () => aggMode === "raw" ? computeYearTicks(chartData) : undefined,
+    [chartData, aggMode] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   if (keys.length === 0 || chartData.length === 0) return null;
 
@@ -170,9 +173,9 @@ function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, r
         <ResponsiveContainer width="100%" height={180}>
           <ChartComp data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={xTickFmt}
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 10, fill: "#6b7280" }} tickFormatter={xTickFmt}
               interval={isAgg && aggMode !== "annual" ? 0 : undefined} />
-            <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
+            <YAxis domain={yDomain} tick={{ fontSize: 10, fill: "#6b7280" }}
               tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
             <Tooltip content={<ChartTooltip yUnit={yUnit} keyLabels={keyLabels} excludeKeys={hasZones ? zoneKeySet : null} />} />
             <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
@@ -181,7 +184,7 @@ function LineChartPanel({ title, series, metadata = {}, yUnit = "", dateRange, r
             )}
             {aggMode === "raw" && meanVal > 0 && (
               <ReferenceLine y={meanVal} stroke="#374151" strokeDasharray="4 2"
-                label={{ value: "avg", position: "right", fontSize: 8, fill: "#4b5563" }} />
+                label={{ value: "avg", position: "right", fontSize: 10, fill: "#4b5563" }} />
             )}
             {/* Storage zone shaded areas — stacked from bottom */}
             {hasZones && zoneKeys.map((zk, i) => (
@@ -322,18 +325,17 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
     return s;
   }, [stackedData, keys]);
 
-  const yearTicks = useMemo(() => {
-    if (aggMode !== "raw") return undefined;
-    const seen = new Set();
-    return data.filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; }).map((r) => r.date);
-  }, [data, aggMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const yearTicks = useMemo(
+    () => aggMode === "raw" ? computeYearTicks(data) : undefined,
+    [data, aggMode] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   if (keys.length === 0 || data.length === 0) return null;
 
   function toggle(key) { setHidden((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
 
   const isMonthly = aggMode === "monthly";
-  const xTickFmt = isMonthly ? undefined : aggMode === "annual" ? undefined : (v) => v.slice(0, 4);
+  const xTickFmt = aggMode === "raw" ? (v) => v.slice(0, 4) : undefined;
 
   return (
     <div className="mb-5">
@@ -362,9 +364,9 @@ function StackedFlowChart({ title, series, metadata, dateRange, convertFn = null
         <ResponsiveContainer width="100%" height={180}>
           <ComposedChart data={stackedData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={xTickFmt}
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 10, fill: "#6b7280" }} tickFormatter={xTickFmt}
               interval={isMonthly ? 0 : undefined} />
-            <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
+            <YAxis domain={yDomain} tick={{ fontSize: 10, fill: "#6b7280" }}
               tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
             <Tooltip content={<ChartTooltip yUnit={yUnit} keyLabels={keyLabels} />} />
             <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
@@ -452,31 +454,28 @@ function WaterBalanceChart({ series, metadata, dateRange, convertFn = null, aggM
   const data = useMemo(() => applyAggregation(rawData, presentLabels, aggMode, annualAvgLabels), [rawData, presentLabels, aggMode, annualAvgLabels]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const visibleLabels = presentLabels.filter((l) => !hidden.has(l));
-  const allVals = data.flatMap((row) =>
-    visibleLabels.map((l) => row[l]).filter((v) => v != null && !isNaN(v))
-  );
   const yDomain = useMemo(() => {
-    if (allVals.length === 0) return ["auto", "auto"];
-    const mn = Math.min(...allVals);
-    const mx = Math.max(...allVals);
+    const vals = data.flatMap((row) =>
+      visibleLabels.map((l) => row[l]).filter((v) => v != null && !isNaN(v))
+    );
+    if (vals.length === 0) return ["auto", "auto"];
+    const mn = Math.min(...vals);
+    const mx = Math.max(...vals);
     const pad = (mx - mn) * 0.05 || Math.abs(mx) * 0.05 || 1;
     return [Math.min(mn - pad, 0), Math.max(mx + pad, 0)];
   }, [hidden, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const yearTicks = useMemo(() => {
-    if (aggMode !== "raw") return undefined;
-    const seen = new Set();
-    return data
-      .filter((row) => { const y = row.date.slice(0, 4); if (seen.has(y)) return false; seen.add(y); return true; })
-      .map((r) => r.date);
-  }, [data, aggMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const yearTicks = useMemo(
+    () => aggMode === "raw" ? computeYearTicks(data) : undefined,
+    [data, aggMode] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   if (presentLabels.length === 0 || data.length === 0) return null;
 
   function toggle(l) { setHidden((p) => { const n = new Set(p); n.has(l) ? n.delete(l) : n.add(l); return n; }); }
 
   const isMonthly = aggMode === "monthly";
-  const xTickFmt = isMonthly ? undefined : aggMode === "annual" ? undefined : (v) => v.slice(0, 4);
+  const xTickFmt = aggMode === "raw" ? (v) => v.slice(0, 4) : undefined;
 
   return (
     <div className="mb-5">
@@ -502,9 +501,9 @@ function WaterBalanceChart({ series, metadata, dateRange, convertFn = null, aggM
         <ResponsiveContainer width="100%" height={180}>
           <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 8, fill: "#6b7280" }} tickFormatter={xTickFmt}
+            <XAxis dataKey="date" ticks={yearTicks} tick={{ fontSize: 10, fill: "#6b7280" }} tickFormatter={xTickFmt}
               interval={isMonthly ? 0 : undefined} />
-            <YAxis domain={yDomain} tick={{ fontSize: 8, fill: "#6b7280" }}
+            <YAxis domain={yDomain} tick={{ fontSize: 10, fill: "#6b7280" }}
               tickFormatter={(v) => Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)} />
             <Tooltip content={<ChartTooltip yUnit={yUnit} />} />
             <ReferenceLine y={0} stroke="#4b5563" strokeWidth={1} />
@@ -540,15 +539,14 @@ export default function ResultsChart({ series, metadata, dateRange, displayUnit,
   const showToggle = hasCfsArcFlows || hasCfsBalance;
   const storageUnit = (() => { for (const k of Object.keys(storage)) { const u = metadata?.[k]?.units; if (u) return ` ${u}`; } return " TAF"; })();
 
-  const wbCpartSet = useMemo(() => new Set(Object.keys(WB_TERMS)), []);
   const otherBalance = useMemo(() => {
     const out = {};
     for (const [k, v] of Object.entries(balance)) {
       const cp = (metadata?.[k]?.c_part || metadata?.[k]?.kind || "").toUpperCase().replace(/ /g, "-");
-      if (!wbCpartSet.has(cp)) out[k] = v;
+      if (!WB_TERMS_SET.has(cp)) out[k] = v;
     }
     return out;
-  }, [balance, metadata, wbCpartSet]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [balance, metadata]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasCfsOther = Object.keys(otherBalance).some((k) => (metadata?.[k]?.units || "").toUpperCase() === "CFS");
   const otherUnit = (() => {

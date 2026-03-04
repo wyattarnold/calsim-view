@@ -59,7 +59,7 @@ calsim-view/
 │           ├── package.json
 │           ├── vite.config.js
 │           └── src/
-│               ├── App.jsx           ← root layout, drag-resize, study selector
+│               ├── App.jsx           ← root layout, drag-resize, study selector, comparison mode toggle
 │               ├── index.css
 │               ├── api/
 │               │   └── client.js     ← fetch wrappers for all API endpoints
@@ -68,7 +68,7 @@ calsim-view/
 │               └── components/
 │                   ├── NetworkMap.jsx      ← Leaflet map, GeoJSON rendering, legend
 │                   ├── RegionalLayers.jsx  ← toggle control + GeoJSON overlays for regional polygon layers
-│                   ├── NodePanel.jsx       ← feature detail + timeseries chart
+│                   ├── NodePanel.jsx       ← feature detail + timeseries chart; comparison mode (multi-study overlay per variable)
 │                   ├── GwBudgetPanel.jsx   ← GW budget stacked bar chart per WBA
 │                   ├── ResultsChart.jsx    ← stacked/line charts (Recharts)
 │                   ├── YearRangeSlider.jsx ← dual-thumb date-range slider + drought pills
@@ -244,8 +244,11 @@ If `study_meta.json` exists in `--source`, the builder reads `name`,
 
 The study builder auto-discovers `*GroundwaterBudget*.dss` in `DSS/output/`
 and the crosswalk file `CVElementsToCalsimRegions*.dat` in
-`Run/CVGroundwater/Data/`. When both are found the GW budget pipeline runs
-automatically after the main parquet build. Writes:
+`Run/CVGroundwater/Data/`. When the study being built does not have its own
+`Run/` directory, the `--run-path` CLI option specifies an alternative
+study directory (e.g. `reference/calsim-studies/study_a`) whose `Run/` tree
+is used for auto-discovery. When both GW budget DSS and crosswalk are found
+the GW budget pipeline runs automatically after the main parquet build. Writes:
 
 - `gw_budget.parquet` — wide DataFrame: rows = monthly timestamps, columns =
   `{WBA_ID}__{C_PART}` (e.g. `07N__PUMPING`). 50 WBAs × 11 C-parts = 550 cols.
@@ -908,4 +911,4 @@ variables matched via the `SG{num}_` dynamic prefix.
 
 ---
 
-*Last updated: 2026-02-27*  <!-- GW budget pipeline: gw_budget.py, GwBudgetStore, GwBudgetPanel, WBA click routing -->
+*Last updated: 2026-03-03*  <!-- comparison mode: multi-study overlay chart in NodePanel; comparisonMode toggle in App.jsx -->

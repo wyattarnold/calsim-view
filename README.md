@@ -69,10 +69,11 @@ python -m csview.geo ^
 
 ```bat
 python -m csview.study ^
-    --source  reference/calsim-studies/study_a ^
+    --source  reference/calsim-studies/study_b ^
     --catalog data/network/catalog.json ^
-    --out     data/study/study_a/ ^
-    --cache-dir data/study/study_a/.dss_cache
+    --out     data/study/study_b/ ^
+    --cache-dir data/study/study_b/.dss_cache ^
+    --run-path reference/calsim-studies/study_a
 ```
 
 Always use `--cache-dir` to read from the DSS pickle cache (~10 s).

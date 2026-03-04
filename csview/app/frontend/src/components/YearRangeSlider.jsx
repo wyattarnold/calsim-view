@@ -14,6 +14,15 @@ const DROUGHT_PRESETS = [
 // YearRangeSlider — dual-thumb range with preset pills and pan
 // ---------------------------------------------------------------------------
 
+function findPresetIndices(years, startYear, endYear) {
+  const si = years.findIndex((y) => y >= startYear);
+  let ei = -1;
+  for (let i = years.length - 1; i >= 0; i--) {
+    if (years[i] <= endYear) { ei = i; break; }
+  }
+  return { si, ei };
+}
+
 export default function YearRangeSlider({ years, startIdx, endIdx, onStartChange, onEndChange }) {
   const [nearStart, setNearStart] = useState(false);
   const dragRef = useRef(null); // { startX, startStartIdx, startEndIdx, trackWidth }
@@ -70,11 +79,7 @@ export default function YearRangeSlider({ years, startIdx, endIdx, onStartChange
   }
 
   function applyPreset(startYear, endYear) {
-    const si = years.findIndex((y) => y >= startYear);
-    let ei = -1;
-    for (let i = years.length - 1; i >= 0; i--) {
-      if (years[i] <= endYear) { ei = i; break; }
-    }
+    const { si, ei } = findPresetIndices(years, startYear, endYear);
     if (si >= 0 && ei > si) { onStartChange(si); onEndChange(ei); }
   }
 
@@ -83,11 +88,7 @@ export default function YearRangeSlider({ years, startIdx, endIdx, onStartChange
       <div className="flex items-center gap-1.5">
         <span className="text-[10px] text-gray-600 shrink-0">Dry periods:</span>
         {DROUGHT_PRESETS.map((p) => {
-          const si = years.findIndex((y) => y >= p.start);
-          let ei = -1;
-          for (let i = years.length - 1; i >= 0; i--) {
-            if (years[i] <= p.end) { ei = i; break; }
-          }
+          const { si, ei } = findPresetIndices(years, p.start, p.end);
           const active = si >= 0 && ei >= 0 && startIdx === si && endIdx === ei;
           return (
             <button

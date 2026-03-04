@@ -405,6 +405,7 @@ def build_results(
     *,
     patch_catalog: bool = True,
     cache_dir: Optional[Path] = None,
+    run_path: Optional[Path] = None,
 ) -> None:
     """Build Parquet + metadata from a raw CalSim study directory.
 
@@ -422,6 +423,11 @@ def build_results(
         When provided, DSS data is cached as pickle files in this directory.
         Subsequent builds reuse the cache if the DSS file has not been modified,
         skipping the slow pydsstools read pass entirely.
+    run_path:
+        Path to a study directory whose ``Run/`` tree is used when
+        the primary *source_dir* does not contain its own ``Run/`` files
+        (e.g. ``reference/calsim-studies/study_a``).  Only the ``Run/``
+        sub-tree is read from this location.
     """
     study_dir = Path(source_dir)   # kept as study_dir internally for minimal diff
     out_dir = Path(out_dir)
@@ -545,11 +551,17 @@ def build_results(
         if p.exists():
             crosswalk_path = p
     else:
-        # Auto-discover in Run/CVGroundwater/Data/
-        gw_data_dir = study_dir / "Run" / "CVGroundwater" / "Data"
-        if gw_data_dir.exists():
-            cw_candidates = sorted(gw_data_dir.glob("CVElementsToCalsimRegions*.dat"))
-            crosswalk_path = cw_candidates[0] if cw_candidates else None
+        # Auto-discover in Run/CVGroundwater/Data/ — try study dir first,
+        # then fall back to the --run-path study dir if provided.
+        for run_root in (study_dir, run_path):
+            if run_root is None:
+                continue
+            gw_data_dir = run_root / "Run" / "CVGroundwater" / "Data"
+            if gw_data_dir.exists():
+                cw_candidates = sorted(gw_data_dir.glob("CVElementsToCalsimRegions*.dat"))
+                if cw_candidates:
+                    crosswalk_path = cw_candidates[0]
+                    break
     if crosswalk_path:
         logger.info("GW crosswalk: %s", crosswalk_path)
 
@@ -820,6 +832,14 @@ def main() -> None:
         help="Directory for DSS pickle cache files. When set, DSS data is "
              "cached as .dss.pkl files, making subsequent builds much faster.",
     )
+    parser.add_argument(
+        "--run-path",
+        type=Path,
+        default=None,
+        metavar="RUN_DIR",
+        help="Study directory whose Run/ tree is used when the "
+             "--source study has no Run/ files (e.g. reference/calsim-studies/study_a).",
+    )
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
 
@@ -835,6 +855,7 @@ def main() -> None:
         out_dir=args.out,
         patch_catalog=not args.no_patch_catalog,
         cache_dir=args.cache_dir,
+        run_path=args.run_path,
     )
     print("\nDone.")
 

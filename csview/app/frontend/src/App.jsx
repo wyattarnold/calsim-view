@@ -22,6 +22,8 @@ export default function App() {
   const [graphOpen, setGraphOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
   const [graphWidth, setGraphWidth] = useState(DEFAULT_GRAPH_WIDTH);
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   const dragging = useRef(null);   // "panel" | "graph" | null
 
@@ -38,31 +40,28 @@ export default function App() {
 
   const handlePanelDragStart = useCallback((e) => {
     e.preventDefault();
-    dragging.current = "panel";
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    dragging.current = { type: "panel", startX: clientX, startWidth: panelWidth };
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
-  }, []);
+  }, [panelWidth]);
 
   const handleGraphDragStart = useCallback((e) => {
     e.preventDefault();
-    dragging.current = "graph";
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    dragging.current = { type: "graph", startX: clientX, startWidth: graphWidth };
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
-  }, []);
+  }, [graphWidth]);
 
   useEffect(() => {
     const onMove = (e) => {
       if (!dragging.current) return;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      if (dragging.current === "graph") {
-        // Graph panel is far-left; its right edge tracks the mouse
-        setGraphWidth(Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, clientX)));
-      } else if (dragging.current === "panel") {
-        // NodePanel right edge.  Its left edge = graphWidth + 4 (drag handle).
-        const leftEdge = graphOpen ? graphWidth + 4 : 0;
-        const newW = clientX - leftEdge;
-        setPanelWidth(Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, newW)));
-      }
+      const { type, startX, startWidth } = dragging.current;
+      const newW = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, startWidth + (clientX - startX)));
+      if (type === "graph") setGraphWidth(newW);
+      else if (type === "panel") setPanelWidth(newW);
     };
     const onUp = () => {
       if (!dragging.current) return;
@@ -80,7 +79,7 @@ export default function App() {
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onUp);
     };
-  }, [graphOpen, graphWidth]);
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Feature selection
@@ -151,8 +150,101 @@ export default function App() {
             Graph
           </button>
         )}
+        {/* Comparison mode toggle — always visible */}
+        <button
+          onClick={() => setComparisonMode((m) => !m)}
+          className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-colors ${
+            comparisonMode
+              ? "border-orange-500 text-orange-400 bg-orange-950"
+              : "border-gray-600 text-gray-400 hover:border-orange-400 hover:text-orange-400"
+          }`}
+          title={comparisonMode ? "Exit comparison mode" : "Compare studies side-by-side"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
+            <line x1="4" y1="2" x2="4" y2="14" />
+            <line x1="12" y1="2" x2="12" y2="14" />
+            <polyline points="1,5 4,2 7,5" />
+            <polyline points="9,11 12,14 15,11" />
+          </svg>
+          Compare
+        </button>
         <div className="flex-1" />
+        {/* Info button */}
+        <button
+          onClick={() => setShowInfo(true)}
+          className="flex items-center justify-center w-7 h-7 rounded-full border border-gray-600 text-gray-400 hover:border-blue-400 hover:text-blue-400 transition-colors text-sm font-semibold shrink-0"
+          title="About CalSim View"
+          aria-label="About"
+        >
+          i
+        </button>
       </header>
+
+      {/* Info modal */}
+      {showInfo && (
+        <div
+          className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/75 backdrop-blur-sm"
+          onClick={() => setShowInfo(false)}
+        >
+          <div
+            className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-lg font-semibold text-blue-400">CalSim View</h2>
+              <button
+                onClick={() => setShowInfo(false)}
+                className="text-gray-500 hover:text-gray-200 text-xl leading-none ml-4"
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed mb-5">
+              CalSim View is an interactive viewer for CalSim 3 model results.
+              It lets you explore the water-resources network schematic, inspect
+              time-series results for arcs and nodes, review groundwater budget
+              summaries by region, and compare outcomes across multiple model
+              studies side-by-side.
+            </p>
+            <div className="space-y-3">
+              <a
+                href="https://github.com/wyattarnold/calsim-view"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 text-sm text-blue-400 hover:text-blue-300 transition-colors group"
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 shrink-0">
+                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                    -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+                    .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+                    -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0
+                    1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82
+                    1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
+                    1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"
+                  />
+                </svg>
+                <span className="group-hover:underline">GitHub repository</span>
+              </a>
+              <a
+                href="https://github.com/wyattarnold/calsim-view/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 text-sm text-amber-400 hover:text-amber-300 transition-colors group"
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 shrink-0">
+                  <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM0 8a8 8 0 1 1 16 0A8
+                    8 0 0 1 0 8zm9 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-.25-6.25a.75.75 0 0
+                    0-1.5 0v3.5a.75.75 0 0 0 1.5 0v-3.5z"
+                  />
+                </svg>
+                <span className="group-hover:underline">Submit an issue</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Layout: [Graph] [drag] [NodePanel] [drag] [Map] */}
       <div className="flex flex-1 overflow-hidden">
@@ -195,6 +287,8 @@ export default function App() {
                   featureId={selectedNode}
                   wbaId={selectedWba}
                   activeStudy={_study}
+                  comparisonMode={comparisonMode}
+                  allStudies={studiesData?.studies ?? []}
                   onClose={handlePanelClose}
                 />
               </ErrorBoundary>

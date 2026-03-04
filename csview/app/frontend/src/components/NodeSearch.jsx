@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchFeatures } from "../api/client.js";
 
@@ -14,14 +14,17 @@ export default function NodeSearch({ onSelect }) {
   });
 
   const q = query.trim().toLowerCase();
-  const results = q.length === 0 ? [] : features
-    .filter((f) =>
-      f.feature_id.toLowerCase().includes(q) ||
-      (f.description || "").toLowerCase().includes(q) ||
-      (f.name || "").toLowerCase().includes(q) ||
-      (f.hydro_region || "").toLowerCase().includes(q)
-    )
-    .slice(0, 12);
+  const results = useMemo(() => {
+    if (q.length === 0) return [];
+    return features
+      .filter((f) =>
+        f.feature_id.toLowerCase().includes(q) ||
+        (f.description || "").toLowerCase().includes(q) ||
+        (f.name || "").toLowerCase().includes(q) ||
+        (f.hydro_region || "").toLowerCase().includes(q)
+      )
+      .slice(0, 12);
+  }, [features, q]);
 
   // Close dropdown on outside click
   useEffect(() => {
