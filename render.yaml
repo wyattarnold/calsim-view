@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: calsim-view
+    runtime: python
+    plan: free
+    rootDir: csview/app
+    buildCommand: bash ./build.sh
+    startCommand: python -m csview.app serve --hosted --host 0.0.0.0 --port $PORT

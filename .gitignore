@@ -4,6 +4,9 @@
 *.log
 .dss_cache
 
+# Bundled data for hosted deployment (too large for git)
+csview/app/data.zip
+
 # Reference material (large PDFs, XML docs, raw CalSim source files incl. GeoSchematic) — local only, not tracked in git
 # network/ and study/ compiled artifacts ARE tracked
 reference/

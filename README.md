@@ -28,7 +28,7 @@ Pre-built artifacts (`data/network/` and `data/study/study_a/`) and a compiled
 frontend (`csview/app/static/`) are included. Simply run:
 
 ```bat
-python -m csview.app --network-dir data/network/ --study data/study/study_a
+python -m csview.app serve --network-dir data/network/ --study data/study/study_a
 ```
 
 Then open **http://localhost:8000** in your browser.
@@ -42,11 +42,12 @@ Then open **http://localhost:8000** in your browser.
 | `--reload` | off | Auto-reload on source changes (dev) |
 | `--verbose` | off | Debug logging |
 | `--default-study` | first loaded | Study shown on startup |
+| `--hosted` | off | Load from bundled data.zip (for Render deploy) |
 
 To load multiple studies:
 
 ```bat
-python -m csview.app ^
+python -m csview.app serve ^
     --network-dir data/network/ ^
     --study data/study/study_a ^
     --study data/study/study_b
@@ -85,4 +86,74 @@ Without it the builder falls back to pydsstools and takes 3–5 min.
 cd csview/app/frontend
 npm install
 npm run build
+```
+
+## Deploying on Render
+
+The app can be deployed to [Render](https://render.com) using the included
+`render.yaml`. The network and study artifacts are too large for git, so they
+are bundled into a `data.zip` file and hosted as a GitHub Release asset.
+
+### Step 1 — Build the data bundle
+
+From the repo root, run:
+
+```bat
+python -m csview.app bundle ^
+    --network-dir data/network/ ^
+    --study data/study/study_a ^
+    --study data/study/study_b
+```
+
+This writes `csview/app/data.zip` (~62 MB compressed). The file is gitignored
+and must be uploaded to GitHub separately.
+
+### Step 2 — Create a GitHub Release with the bundle
+
+1. Go to your GitHub repo → **Releases** → **Draft a new release**
+2. Click **Choose a tag** → type `v1.0-data` → click **Create new tag**
+3. Set the title to `Data bundle v1.0`
+4. Drag-drop `csview/app/data.zip` into the assets area at the bottom
+5. Click **Publish release**
+
+After publishing, copy the asset download URL from the release page. It will
+look like:
+```
+https://github.com/<owner>/calsim-view/releases/download/v1.0-data/data.zip
+```
+
+### Step 3 — Create the Render web service
+
+1. Log in to [Render](https://render.com) → **New** → **Web Service**
+2. Connect your GitHub account and select the `calsim-view` repository
+3. Render will detect `render.yaml` and pre-fill the settings. Verify:
+
+   | Setting | Value |
+   |---|---|
+   | **Runtime** | Python |
+   | **Root Directory** | `csview/app` |
+   | **Build Command** | `bash ./build.sh` |
+   | **Start Command** | `python -m csview.app serve --hosted --host 0.0.0.0 --port $PORT` |
+
+4. Under **Environment Variables**, add:
+   - **Key**: `DATA_ZIP_URL`
+   - **Value**: the asset URL from Step 2
+
+5. Click **Create Web Service** — Render will run `build.sh`, which:
+   - Installs the Python package (`pip install -e ../../.`)
+   - Downloads `data.zip` from `DATA_ZIP_URL`
+   - Builds the React frontend (`npm ci && npm run build`)
+
+6. Once the deploy completes, open the service URL in your browser.
+
+### Updating the data bundle
+
+After rebuilding network or study artifacts, re-run Step 1, upload the new
+`data.zip` to a new GitHub Release (e.g. tag `v1.1-data`), update `DATA_ZIP_URL`
+in Render, and trigger a manual redeploy.
+
+### Testing hosted mode locally
+
+```bat
+python -m csview.app serve --hosted
 ```

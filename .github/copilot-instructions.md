@@ -82,8 +82,25 @@ C:\Users\warnold\Miniconda3\envs\py38\python.exe
 ## Running the server
 
 ```bat
-python -m csview.app --network-dir data/network/ --study data/study/study_a
+python -m csview.app serve --network-dir data/network/ --study data/study/study_a
 ```
+
+## Hosted deployment (Render)
+
+```bat
+:: Bundle pre-built data for deployment
+python -m csview.app bundle ^
+    --network-dir data/network/ ^
+    --study data/study/study_a ^
+    --study data/study/study_b
+
+:: Serve locally from the bundle
+python -m csview.app serve --hosted
+```
+
+For Render deployment, set the `DATA_ZIP_URL` environment variable to a
+download URL for data.zip. The `build.sh` script downloads it during the
+build phase. See `render.yaml`.
 
 ## Running the network builder
 

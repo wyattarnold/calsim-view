@@ -47,10 +47,12 @@ calsim-view/
 │   │   └── __main__.py               ← CLI: DSS → results.parquet + results_meta.json + gw_budget
 │   │
 │   └── app/                          ← FastAPI application
-│       ├── __main__.py               ← CLI entry point (uvicorn runner)
+│       ├── __main__.py               ← CLI entry point (serve / bundle subcommands)
 │       ├── server.py                 ← create_app(), lifespan, router mounting
 │       ├── state.py                  ← AppState singleton (network + studies)
 │       ├── schemas.py                ← Pydantic response models
+│       ├── build.sh                  ← Render build script (pip install + npm build)
+│       ├── data.zip                  ← bundled data for hosted deploy (gitignored)
 │       ├── routers/
 │       │   ├── network.py            ← /api/network endpoints
 │       │   └── study.py              ← /api/study endpoints
@@ -124,7 +126,7 @@ calsim-view/
 
 ┌─────────────────── Runtime ─────────────────────────────────┐
 │                                                             │
-│  python -m csview.app --network-dir ... --study ...         │
+│  python -m csview.app serve --network-dir ... --study ...  │
 │       ├── AppState.load()                                   │
 │       │     ├── load_from_catalog() → GeoNetwork (in-memory)│
 │       │     └── StudyStore.from_dir() → lazy Parquet        │
@@ -560,7 +562,7 @@ the routers.
 
 ### Startup sequence
 
-1. `python -m csview.app` → `create_app()` → registers routers + lifespan
+1. `python -m csview.app serve` → `create_app()` → registers routers + lifespan
 2. Lifespan: `AppState.load()` — loads `GeoNetwork` + creates `StudyStore`s
 3. Uvicorn serves requests
 
@@ -881,13 +883,48 @@ cd csview/app/frontend && npm install && npm run build
 ### Start server
 
 ```bash
-python -m csview.app \
+python -m csview.app serve \
     --network-dir data/network/ \
     --study data/study/study_a
 ```
 
-Options: `--host`, `--port`, `--reload`, `--verbose`. Multiple `--study` flags
-for multi-study mode with `--default-study`.
+Options: `--host`, `--port`, `--reload`, `--verbose`, `--hosted`. Multiple
+`--study` flags for multi-study mode with `--default-study`.
+
+### Hosted deployment (Render)
+
+The app supports a `--hosted` mode that loads network and study data from a
+bundled `data.zip` file. This is designed for deployment on Render (or any
+container/PaaS host).
+
+Bundle pre-built data:
+
+```bash
+python -m csview.app bundle \
+    --network-dir data/network/ \
+    --study data/study/study_a \
+    --study data/study/study_b
+```
+
+This creates `csview/app/data.zip` (~62 MB) containing `network/` and
+`studies/` directories with all pre-built artifacts.
+
+Serve locally from the bundle:
+
+```bash
+python -m csview.app serve --hosted
+```
+
+For Render deployment:
+1. Push code to GitHub (data.zip is gitignored)
+2. Upload data.zip to a GitHub Release
+3. Set `DATA_ZIP_URL` environment variable in Render to the release asset URL
+4. The `build.sh` script downloads it during the Render build phase
+5. At startup, `--hosted` extracts data.zip to a temp directory
+
+Files:
+- `render.yaml` — Render service definition (web service, free plan)
+- `csview/app/build.sh` — Build script (pip install, data download, npm build)
 
 ### Current study
 
@@ -911,4 +948,4 @@ variables matched via the `SG{num}_` dynamic prefix.
 
 ---
 
-*Last updated: 2026-03-03*  <!-- comparison mode: multi-study overlay chart in NodePanel; comparisonMode toggle in App.jsx -->
+*Last updated: 2026-03-04*  <!-- hosted deployment: render.yaml, build.sh, bundle/serve --hosted CLI -->
