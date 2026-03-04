@@ -55,13 +55,11 @@ class AppState:
             sp = Path(sp)
             try:
                 store = StudyStore.from_dir(sp)
-                store._ensure_loaded()  # eager load — avoids blocking on first request
                 self.studies[store.name] = store
                 logger.info("Registered study: %s", store.name)
                 # Also check for GW budget
                 gw = GwBudgetStore.from_dir(sp)
                 if gw is not None:
-                    gw._ensure_loaded()  # eager load GW budget too
                     self.gw_budgets[store.name] = gw
                     logger.info("  GW budget available for %s", store.name)
             except FileNotFoundError as exc:
@@ -74,6 +72,13 @@ class AppState:
                 else next(iter(self.studies))
             )
             logger.info("Active study: %s", self.active_study)
+            # Eagerly load only the active study so the first user request
+            # doesn't block on Parquet I/O.  Non-active studies load lazily
+            # on first access (typically fast enough within request timeouts).
+            active_store = self.studies[self.active_study]
+            active_store._ensure_loaded()
+            if self.active_study in self.gw_budgets:
+                self.gw_budgets[self.active_study]._ensure_loaded()
 
         self._loaded = True
 
